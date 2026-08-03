@@ -19,7 +19,7 @@ const CELEBRATION_STYLES: { id: CelebrationStyle; name: string; desc: string }[]
 ];
 
 export const SettingsPage: React.FC = () => {
-  const { settings, updateSettings, showToast } = useApp();
+  const { settings, updateSettings, showToast, user, signInWithGoogle, logout } = useApp();
 
   const [theme, setTheme] = useState<ThemeOption>(settings.theme || 'dark');
   const [celebrationStyle, setCelebrationStyle] = useState<CelebrationStyle>(settings.celebrationStyle || 'confetti');
@@ -223,12 +223,63 @@ export const SettingsPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Security & Firebase Sync */}
-        <div className="glass-panel rounded-3xl p-6 sm:p-8 space-y-4" style={{ border: '1px solid var(--glass-border)' }}>
-          <h2 className="font-outfit text-xl font-bold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
-            <Shield className="w-5 h-5" style={{ color: 'var(--text-accent)' }} />
-            <span>Single-User Lock & Firebase Integration</span>
+        {/* Security & Firebase Cloud Sync */}
+        <div className="glass-panel rounded-3xl p-6 sm:p-8 space-y-6" style={{ border: '1px solid var(--glass-border)' }}>
+          <h2 className="font-outfit text-xl font-bold flex items-center justify-between" style={{ color: 'var(--text-primary)' }}>
+            <div className="flex items-center gap-2">
+              <Shield className="w-5 h-5" style={{ color: 'var(--text-accent)' }} />
+              <span>Google Account & Firebase Cloud Sync</span>
+            </div>
           </h2>
+
+          {/* Account Status Card */}
+          {user ? (
+            <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                {user.photoURL ? (
+                  <img src={user.photoURL} alt={user.displayName || 'User'} className="w-10 h-10 rounded-full border border-emerald-400 object-cover" />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-emerald-500 text-emerald-950 font-extrabold flex items-center justify-center">
+                    {user.displayName?.charAt(0) || 'U'}
+                  </div>
+                )}
+                <div>
+                  <h4 className="font-outfit font-bold text-sm" style={{ color: 'var(--text-primary)' }}>{user.displayName || 'Google User'}</h4>
+                  <p className="text-xs font-mono" style={{ color: 'var(--text-muted)' }}>{user.email}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <span className="text-xs font-bold text-emerald-400 bg-emerald-500/20 px-3 py-1 rounded-full border border-emerald-500/30 flex items-center gap-1">
+                  <span>☁️</span> Cloud Active
+                </span>
+                <button
+                  type="button"
+                  onClick={logout}
+                  className="px-3 py-1.5 rounded-xl text-xs font-bold bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 border border-rose-500/30 cursor-pointer"
+                >
+                  Sign Out
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <h4 className="font-outfit font-bold text-sm" style={{ color: 'var(--text-primary)' }}>Cloud Sync Disabled (Local Storage Mode)</h4>
+                <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                  Sign in with your Google account to automatically back up habits, coin vault, and redemptions to Firebase Firestore!
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={signInWithGoogle}
+                className="px-5 py-2.5 rounded-xl text-xs font-bold bg-white text-zinc-900 hover:bg-zinc-100 shadow-md cursor-pointer border border-zinc-200 whitespace-nowrap flex items-center gap-2 font-outfit"
+              >
+                <span>🔑 Sign In With Google</span>
+              </button>
+            </div>
+          )}
 
           <div className="space-y-4 text-sm">
             <div className="space-y-1">
@@ -245,7 +296,7 @@ export const SettingsPage: React.FC = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
               <div className="space-y-1">
-                <label className="text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>Firebase API Key (Optional)</label>
+                <label className="text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>Firebase API Key (Optional Override)</label>
                 <input
                   type="password"
                   placeholder="AIzaSy..."
@@ -257,7 +308,7 @@ export const SettingsPage: React.FC = () => {
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>Firebase Project ID (Optional)</label>
+                <label className="text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>Firebase Project ID (Optional Override)</label>
                 <input
                   type="text"
                   placeholder="your-project-id"

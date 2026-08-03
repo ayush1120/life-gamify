@@ -1,15 +1,17 @@
 import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, User } from 'firebase/auth';
 import { 
   getFirestore, 
   collection, 
   doc, 
   setDoc, 
+  deleteDoc,
   getDocs, 
+  getDoc,
   query, 
   Firestore 
 } from 'firebase/firestore';
-import { Settings, Habit, RewardLog, RewardRedemption } from '../types';
+import { Settings, Habit, RewardLog, RewardRedemption, UserProfile } from '../types';
 
 let firebaseApp: FirebaseApp | null = null;
 let firestoreDb: Firestore | null = null;
@@ -56,10 +58,35 @@ export const initFirebase = (settings?: Settings) => {
   }
 };
 
+export const onAuthChange = (
+  callback: (user: UserProfile | null) => void,
+  settings?: Settings
+) => {
+  const { app } = initFirebase(settings);
+  if (!app) {
+    callback(null);
+    return () => {};
+  }
+  const auth = getAuth(app);
+  return onAuthStateChanged(auth, (user: User | null) => {
+    if (user) {
+      callback({
+        uid: user.uid,
+        email: user.email,
+        displayName: user.displayName,
+        photoURL: user.photoURL,
+        isOwner: true
+      });
+    } else {
+      callback(null);
+    }
+  });
+};
+
 export const signInWithGoogle = async (settings?: Settings) => {
   const { app } = initFirebase(settings);
   if (!app) {
-    throw new Error('Firebase is not configured. Please add your credentials in Settings or use Local Mode.');
+    throw new Error('Firebase is not configured. Please add your credentials in Settings or configure .env.');
   }
   const auth = getAuth(app);
   const provider = new GoogleAuthProvider();
@@ -84,12 +111,21 @@ export const syncFirestoreHabits = async (userId: string, habits: Habit[]) => {
   }
 };
 
+export const deleteFirestoreHabit = async (userId: string, habitId: string) => {
+  if (!firestoreDb) return;
+  try {
+    await deleteDoc(doc(firestoreDb, `users/${userId}/activities`, habitId));
+  } catch (e) {
+    console.error('Error deleting habit from Firestore:', e);
+  }
+};
+
 export const fetchFirestoreHabits = async (userId: string): Promise<Habit[]> => {
   if (!firestoreDb) return [];
   try {
     const q = query(collection(firestoreDb, `users/${userId}/activities`));
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => doc.data() as Habit);
+    return snapshot.docs.map(docSnap => docSnap.data() as Habit);
   } catch (e) {
     console.error('Error fetching habits from Firestore:', e);
     return [];
@@ -105,6 +141,27 @@ export const syncFirestoreRewardLog = async (userId: string, log: RewardLog) => 
   }
 };
 
+export const deleteFirestoreLog = async (userId: string, logId: string) => {
+  if (!firestoreDb) return;
+  try {
+    await deleteDoc(doc(firestoreDb, `users/${userId}/rewardLogs`, logId));
+  } catch (e) {
+    console.error('Error deleting log from Firestore:', e);
+  }
+};
+
+export const fetchFirestoreRewardLogs = async (userId: string): Promise<RewardLog[]> => {
+  if (!firestoreDb) return [];
+  try {
+    const q = query(collection(firestoreDb, `users/${userId}/rewardLogs`));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(docSnap => docSnap.data() as RewardLog);
+  } catch (e) {
+    console.error('Error fetching reward logs from Firestore:', e);
+    return [];
+  }
+};
+
 export const syncFirestoreRedemption = async (userId: string, redemption: RewardRedemption) => {
   if (!firestoreDb) return;
   try {
@@ -114,10 +171,30 @@ export const syncFirestoreRedemption = async (userId: string, redemption: Reward
   }
 };
 
+export const deleteFirestoreRedemption = async (userId: string, redemptionId: string) => {
+  if (!firestoreDb) return;
+  try {
+    await deleteDoc(doc(firestoreDb, `users/${userId}/rewardRedemptions`, redemptionId));
+  } catch (e) {
+    console.error('Error deleting redemption from Firestore:', e);
+  }
+};
+
+export const fetchFirestoreRedemptions = async (userId: string): Promise<RewardRedemption[]> => {
+  if (!firestoreDb) return [];
+  try {
+    const q = query(collection(firestoreDb, `users/${userId}/rewardRedemptions`));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(docSnap => docSnap.data() as RewardRedemption);
+  } catch (e) {
+    console.error('Error fetching redemptions from Firestore:', e);
+    return [];
+  }
+};
+
 export const syncFirestoreSettings = async (userId: string, settings: Settings) => {
   if (!firestoreDb) return;
   try {
-    // Sync preferences (theme, celebration style, currency, audio) to Firestore
     const prefSettings = { ...settings };
     delete prefSettings.firebaseApiKey;
     delete prefSettings.firebaseAuthDomain;
@@ -131,3 +208,17 @@ export const syncFirestoreSettings = async (userId: string, settings: Settings) 
   }
 };
 
+export const fetchFirestoreSettings = async (userId: string): Promise<Partial<Settings> | null> => {
+  if (!firestoreDb) return null;
+  try {
+    const docRef = doc(firestoreDb, `users/${userId}/settings`, 'preferences');
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      return docSnap.data() as Partial<Settings>;
+    }
+    return null;
+  } catch (e) {
+    console.error('Error fetching settings from Firestore:', e);
+    return null;
+  }
+};

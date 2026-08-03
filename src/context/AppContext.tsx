@@ -9,7 +9,23 @@ import {
 } from '../services/storage';
 import { playSound } from '../services/sound';
 import { triggerCelebration } from '../services/celebration';
-import { syncFirestoreSettings, isFirebaseConfigured } from '../services/firebase';
+import { 
+  syncFirestoreSettings, 
+  isFirebaseConfigured, 
+  onAuthChange,
+  fetchFirestoreHabits,
+  fetchFirestoreRewardLogs,
+  fetchFirestoreRedemptions,
+  fetchFirestoreSettings,
+  syncFirestoreHabits,
+  deleteFirestoreHabit,
+  syncFirestoreRewardLog,
+  deleteFirestoreLog,
+  syncFirestoreRedemption,
+  deleteFirestoreRedemption,
+  signInWithGoogle as firebaseGoogleSignIn,
+  logoutFirebase
+} from '../services/firebase';
 import { computeLedgerStats, calculateKarmaSurcharge } from '../services/ledger';
 
 interface AppContextType {
@@ -25,6 +41,10 @@ interface AppContextType {
   toastMessage: string | null;
   showToast: (msg: string) => void;
   
+  // Auth Actions
+  signInWithGoogle: () => Promise<void>;
+  logout: () => Promise<void>;
+
   // Actions
   logHabit: (habitId: string, event?: React.MouseEvent) => void;
   purchaseReward: (rewardId: string, note?: string) => boolean;
@@ -48,7 +68,7 @@ interface AppContextType {
   
   // Modals & FX State
   flyingReward: { habitName: string; icon: string; amount: number; x: number; y: number } | null;
-  setFlyingReward: React.Dispatch<React.SetStateAction<{ habitName: string; icon: string; amount: number; x: number; y: number } | null>>;
+  setFlyingReward: (val: { habitName: string; icon: string; amount: number; x: number; y: number } | null) => void;
   showPurchaseSuccessModal: RewardRedemption | null;
   setShowPurchaseSuccessModal: (redemption: RewardRedemption | null) => void;
 }
@@ -68,14 +88,52 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [flyingReward, setFlyingReward] = useState<{ habitName: string; icon: string; amount: number; x: number; y: number } | null>(null);
   const [showPurchaseSuccessModal, setShowPurchaseSuccessModal] = useState<RewardRedemption | null>(null);
 
-  // Guest Owner User for immediate seamless local use
-  const [user] = useState<UserProfile | null>({
-    uid: 'local-owner-uid',
-    email: settings.allowedEmail || 'owner@lifegamify.local',
-    displayName: 'Habit Master',
-    photoURL: null,
-    isOwner: true
-  });
+  // User Profile state (null = Local Mode, UserProfile = Google Auth User)
+  const [user, setUser] = useState<UserProfile | null>(null);
+
+  // Subscribe to Firebase Google Authentication State
+  useEffect(() => {
+    const unsubscribe = onAuthChange(async (authUser) => {
+      setUser(authUser);
+      if (authUser) {
+        const cloudHabits = await fetchFirestoreHabits(authUser.uid);
+        const cloudLogs = await fetchFirestoreRewardLogs(authUser.uid);
+        const cloudRedemptions = await fetchFirestoreRedemptions(authUser.uid);
+        const cloudSettings = await fetchFirestoreSettings(authUser.uid);
+
+        if (cloudHabits.length > 0) setHabits(cloudHabits);
+        else syncFirestoreHabits(authUser.uid, habits);
+
+        if (cloudLogs.length > 0) setRewardLogs(cloudLogs);
+        if (cloudRedemptions.length > 0) setRedemptions(cloudRedemptions);
+        if (cloudSettings) setSettings(prev => ({ ...prev, ...cloudSettings }));
+
+        showToast(`Welcome, ${authUser.displayName || 'User'}! ☁️ Cloud Synced`);
+      }
+    }, settings);
+
+    return () => unsubscribe();
+  }, [settings.firebaseApiKey, settings.firebaseProjectId]);
+
+  const signInWithGoogle = async () => {
+    try {
+      await firebaseGoogleSignIn(settings);
+    } catch (e) {
+      console.error('Google Sign-In Error:', e);
+      const msg = e instanceof Error ? e.message : 'Google Sign-In failed. Check Firebase config.';
+      showToast(msg);
+    }
+  };
+
+  const logout = async () => {
+    try {
+      await logoutFirebase();
+      setUser(null);
+      showToast('Signed out of Google account');
+    } catch (e) {
+      console.error('Logout error:', e);
+    }
+  };
 
   // Apply Theme to root element & body
   useEffect(() => {
@@ -85,7 +143,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [settings.theme]);
 
   // Save changes to LocalStorage & Sync to Firebase
-  useEffect(() => { saveStoredHabits(habits); }, [habits]);
+  useEffect(() => { 
+    saveStoredHabits(habits);
+    if (user) syncFirestoreHabits(user.uid, habits);
+  }, [habits, user]);
   useEffect(() => { saveStoredRewards(rewards); }, [rewards]);
   useEffect(() => { saveStoredLogs(rewardLogs); }, [rewardLogs]);
   useEffect(() => { saveStoredRedemptions(redemptions); }, [redemptions]);
@@ -142,22 +203,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     setRewardLogs([newLog, ...rewardLogs]);
+    if (user) syncFirestoreRewardLog(user.uid, newLog);
     playSound.crunch(settings.soundEnabled);
-    showToast(`+${habit.rewardValue} ${settings.currencySymbol} earned for ${habit.name}! 🎉`);
+    showToast(`Completed "${habit.name}"! +${habit.rewardValue} ${settings.currencySymbol}`);
   };
 
-  // Purchase Store Reward Action
+  // Store Reward Purchase Action
   const purchaseReward = (rewardId: string, note?: string): boolean => {
     const targetReward = rewards.find(r => r.id === rewardId);
     if (!targetReward) return false;
 
     if (stats.coinBalance < targetReward.cost) {
-      showToast(`Not enough ${settings.currencyName}! You need ${targetReward.cost - stats.coinBalance} more ${settings.currencySymbol}.`);
+      showToast(`Not enough ${settings.currencyName}! You need ${targetReward.cost - stats.coinBalance} more coins.`);
+      playSound.pop(settings.soundEnabled);
       return false;
     }
 
     const newRedemption: RewardRedemption = {
-      id: `redemption-${Date.now()}`,
+      id: `redemption-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
       rewardId: targetReward.id,
       rewardName: targetReward.name,
       coinsSpent: targetReward.cost,
@@ -168,12 +231,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     setRedemptions([newRedemption, ...redemptions]);
+    if (user) syncFirestoreRedemption(user.uid, newRedemption);
+
     playSound.fanfare(settings.soundEnabled);
-
-    // Trigger celebration particle effect based on user setting
     triggerCelebration(settings.celebrationStyle);
-
     setShowPurchaseSuccessModal(newRedemption);
+    showToast(`Redeemed "${targetReward.name}" for ${targetReward.cost} ${settings.currencySymbol}! 🎉`);
     return true;
   };
 
@@ -182,29 +245,40 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const newHabit: Habit = {
       ...habitData,
       id: `habit-${Date.now()}`,
+      order: habits.length + 1,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
-    setHabits([...habits, newHabit]);
-    showToast(`Created habit: ${newHabit.name}`);
+    const updated = [...habits, newHabit];
+    setHabits(updated);
+    if (user) syncFirestoreHabits(user.uid, updated);
+    showToast(`Added habit: ${newHabit.name}`);
   };
 
   const updateHabit = (updated: Habit) => {
-    setHabits(habits.map(h => h.id === updated.id ? { ...updated, updatedAt: new Date().toISOString() } : h));
+    const newHabits = habits.map(h => h.id === updated.id ? { ...updated, updatedAt: new Date().toISOString() } : h);
+    setHabits(newHabits);
+    if (user) syncFirestoreHabits(user.uid, newHabits);
     showToast(`Updated habit: ${updated.name}`);
   };
 
   const deleteHabit = (id: string) => {
-    setHabits(habits.filter(h => h.id !== id));
-    showToast(`Deleted habit`);
+    const newHabits = habits.filter(h => h.id !== id);
+    setHabits(newHabits);
+    if (user) deleteFirestoreHabit(user.uid, id);
+    showToast('Habit deleted');
   };
 
   const toggleHabitActive = (id: string) => {
-    setHabits(habits.map(h => h.id === id ? { ...h, active: !h.active, updatedAt: new Date().toISOString() } : h));
+    const newHabits = habits.map(h => h.id === id ? { ...h, active: !h.active, updatedAt: new Date().toISOString() } : h);
+    setHabits(newHabits);
+    if (user) syncFirestoreHabits(user.uid, newHabits);
   };
 
   const reorderHabits = (newOrder: Habit[]) => {
-    setHabits(newOrder.map((h, i) => ({ ...h, order: i + 1 })));
+    const ordered = newOrder.map((h, i) => ({ ...h, order: i + 1 }));
+    setHabits(ordered);
+    if (user) syncFirestoreHabits(user.uid, ordered);
   };
 
   // Store Reward CRUD Actions
@@ -249,15 +323,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     if (isDeficit) {
       const karmaFee = calculateKarmaSurcharge(stats.coinBalance);
-      setRewardLogs(rewardLogs.map(l => l.id === logId ? {
-        ...l,
+      const retractedLog: RewardLog = {
+        ...targetLog,
         isRetracted: true,
         retractedAt: new Date().toISOString(),
         karmaFeeApplied: karmaFee
-      } : l));
+      };
+      setRewardLogs(rewardLogs.map(l => l.id === logId ? retractedLog : l));
+      if (user) syncFirestoreRewardLog(user.uid, retractedLog);
       showToast(`Log retracted. Phantom Debt created (-${karmaFee} ${settings.currencySymbol} surcharge)`);
     } else {
       setRewardLogs(rewardLogs.filter(l => l.id !== logId));
+      if (user) deleteFirestoreLog(user.uid, logId);
       showToast('Log removed cleanly');
     }
   };
@@ -267,6 +344,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (!target) return;
 
     setRedemptions(redemptions.filter(r => r.id !== redemptionId));
+    if (user) deleteFirestoreRedemption(user.uid, redemptionId);
     showToast(`Refunded purchase for "${target.rewardName}"!`);
   };
 
@@ -289,6 +367,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setActiveTab,
         toastMessage,
         showToast,
+        signInWithGoogle,
+        logout,
         logHabit,
         purchaseReward,
         addHabit,

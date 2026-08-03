@@ -1,11 +1,11 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
 import { CoinToken } from './CoinToken';
-import { LayoutDashboard, ShoppingBag, CheckSquare, History, BarChart3, Settings as SettingsIcon, Flame, Sun, Moon } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, CheckSquare, History, BarChart3, Settings as SettingsIcon, Flame, Sun, Moon, LogIn, LogOut, User } from 'lucide-react';
 import { playSound } from '../services/sound';
 
 export const Navbar: React.FC = () => {
-  const { activeTab, setActiveTab, stats, settings, updateSettings } = useApp();
+  const { activeTab, setActiveTab, stats, settings, updateSettings, user, signInWithGoogle, logout } = useApp();
 
   const handleTabClick = (tabId: string) => {
     playSound.click(settings.soundEnabled);
@@ -96,6 +96,38 @@ export const Navbar: React.FC = () => {
             >
               {settings.theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
+
+            {/* Google Auth User Profile / Login */}
+            {user ? (
+              <div className="flex items-center space-x-2 p-1 rounded-full bg-emerald-500/10 border border-emerald-500/30">
+                {user.photoURL ? (
+                  <img src={user.photoURL} alt={user.displayName || 'User'} className="w-7 h-7 rounded-full border border-emerald-400 object-cover" />
+                ) : (
+                  <div className="w-7 h-7 rounded-full bg-emerald-500 text-emerald-950 flex items-center justify-center font-bold text-xs">
+                    <User className="w-4 h-4" />
+                  </div>
+                )}
+                <span className="text-xs font-bold hidden md:inline px-1" style={{ color: 'var(--text-primary)' }}>
+                  {user.displayName || user.email?.split('@')[0]}
+                </span>
+                <button
+                  onClick={logout}
+                  className="p-1.5 rounded-full bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 cursor-pointer"
+                  title="Sign out of Google"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={signInWithGoogle}
+                className="flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-white text-zinc-900 hover:bg-zinc-100 shadow-md cursor-pointer border border-zinc-200"
+                title="Sign in with Google"
+              >
+                <LogIn className="w-3.5 h-3.5 text-blue-600" />
+                <span className="hidden sm:inline font-outfit">Google Sign In</span>
+              </button>
+            )}
           </div>
         </div>
 
