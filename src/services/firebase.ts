@@ -8,6 +8,7 @@ import {
   deleteDoc,
   getDocs, 
   getDoc,
+  onSnapshot,
   query, 
   Firestore 
 } from 'firebase/firestore';
@@ -89,7 +90,7 @@ export const onAuthChange = (
 export const signInWithGoogle = async (settings?: Settings) => {
   const { app } = initFirebase(settings);
   if (!app) {
-    throw new Error('Firebase is not configured. Please add your credentials in Settings or configure .env.');
+    throw new Error('Firebase is not configured.');
   }
   const auth = getAuth(app);
   const provider = new GoogleAuthProvider();
@@ -102,7 +103,60 @@ export const logoutFirebase = async () => {
   await signOut(auth);
 };
 
-// Firestore sync helpers
+// Real-Time Firestore Subscriptions (Live Push Sync Across All Devices)
+export const subscribeFirestoreHabits = (
+  userId: string, 
+  callback: (habits: Habit[]) => void
+) => {
+  if (!firestoreDb) return () => {};
+  const q = query(collection(firestoreDb, `users/${userId}/activities`));
+  return onSnapshot(q, (snapshot) => {
+    const habits = snapshot.docs.map(docSnap => docSnap.data() as Habit);
+    habits.sort((a, b) => a.order - b.order);
+    callback(habits);
+  }, (err) => console.error('Habits snapshot error:', err));
+};
+
+export const subscribeFirestoreLogs = (
+  userId: string, 
+  callback: (logs: RewardLog[]) => void
+) => {
+  if (!firestoreDb) return () => {};
+  const q = query(collection(firestoreDb, `users/${userId}/rewardLogs`));
+  return onSnapshot(q, (snapshot) => {
+    const logs = snapshot.docs.map(docSnap => docSnap.data() as RewardLog);
+    logs.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    callback(logs);
+  }, (err) => console.error('Logs snapshot error:', err));
+};
+
+export const subscribeFirestoreRedemptions = (
+  userId: string, 
+  callback: (redemptions: RewardRedemption[]) => void
+) => {
+  if (!firestoreDb) return () => {};
+  const q = query(collection(firestoreDb, `users/${userId}/rewardRedemptions`));
+  return onSnapshot(q, (snapshot) => {
+    const redemptions = snapshot.docs.map(docSnap => docSnap.data() as RewardRedemption);
+    redemptions.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    callback(redemptions);
+  }, (err) => console.error('Redemptions snapshot error:', err));
+};
+
+export const subscribeFirestoreSettings = (
+  userId: string, 
+  callback: (settings: Partial<Settings>) => void
+) => {
+  if (!firestoreDb) return () => {};
+  const docRef = doc(firestoreDb, `users/${userId}/settings`, 'preferences');
+  return onSnapshot(docRef, (docSnap) => {
+    if (docSnap.exists()) {
+      callback(docSnap.data() as Partial<Settings>);
+    }
+  }, (err) => console.error('Settings snapshot error:', err));
+};
+
+// Firestore Sync Write Helpers
 export const syncFirestoreHabits = async (userId: string, habits: Habit[]) => {
   if (!firestoreDb) return;
   try {

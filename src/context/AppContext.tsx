@@ -13,10 +13,10 @@ import {
   syncFirestoreSettings, 
   isFirebaseConfigured, 
   onAuthChange,
-  fetchFirestoreHabits,
-  fetchFirestoreRewardLogs,
-  fetchFirestoreRedemptions,
-  fetchFirestoreSettings,
+  subscribeFirestoreHabits,
+  subscribeFirestoreLogs,
+  subscribeFirestoreRedemptions,
+  subscribeFirestoreSettings,
   syncFirestoreHabits,
   deleteFirestoreHabit,
   syncFirestoreRewardLog,
@@ -91,28 +91,60 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // User Profile state (null = Local Mode, UserProfile = Google Auth User)
   const [user, setUser] = useState<UserProfile | null>(null);
 
-  // Subscribe to Firebase Google Authentication State
+  // Subscribe to Firebase Google Authentication State & Real-Time Cloud Listeners
   useEffect(() => {
-    const unsubscribe = onAuthChange(async (authUser) => {
+    let unsubs: (() => void)[] = [];
+
+    const unsubscribeAuth = onAuthChange((authUser) => {
+      // Clean up previous user subscriptions
+      unsubs.forEach(unsub => unsub());
+      unsubs = [];
+
       setUser(authUser);
+
       if (authUser) {
-        const cloudHabits = await fetchFirestoreHabits(authUser.uid);
-        const cloudLogs = await fetchFirestoreRewardLogs(authUser.uid);
-        const cloudRedemptions = await fetchFirestoreRedemptions(authUser.uid);
-        const cloudSettings = await fetchFirestoreSettings(authUser.uid);
+        // 1. Live Habits Subscription
+        const unsubHabits = subscribeFirestoreHabits(authUser.uid, (cloudHabits) => {
+          if (cloudHabits.length > 0) {
+            setHabits(cloudHabits);
+            saveStoredHabits(cloudHabits);
+          } else {
+            syncFirestoreHabits(authUser.uid, habits);
+          }
+        });
 
-        if (cloudHabits.length > 0) setHabits(cloudHabits);
-        else syncFirestoreHabits(authUser.uid, habits);
+        // 2. Live Logs Subscription (Completions & Retracts)
+        const unsubLogs = subscribeFirestoreLogs(authUser.uid, (cloudLogs) => {
+          setRewardLogs(cloudLogs);
+          saveStoredLogs(cloudLogs);
+        });
 
-        if (cloudLogs.length > 0) setRewardLogs(cloudLogs);
-        if (cloudRedemptions.length > 0) setRedemptions(cloudRedemptions);
-        if (cloudSettings) setSettings(prev => ({ ...prev, ...cloudSettings }));
+        // 3. Live Redemptions Subscription (Store Reward Purchases)
+        const unsubRedemptions = subscribeFirestoreRedemptions(authUser.uid, (cloudRedemptions) => {
+          setRedemptions(cloudRedemptions);
+          saveStoredRedemptions(cloudRedemptions);
+        });
 
-        showToast(`Welcome, ${authUser.displayName || 'User'}! ☁️ Cloud Synced`);
+        // 4. Live Settings Subscription
+        const unsubSettings = subscribeFirestoreSettings(authUser.uid, (cloudSettings) => {
+          if (cloudSettings) {
+            setSettings(prev => {
+              const updated = { ...prev, ...cloudSettings };
+              saveStoredSettings(updated);
+              return updated;
+            });
+          }
+        });
+
+        unsubs.push(unsubHabits, unsubLogs, unsubRedemptions, unsubSettings);
+        showToast(`Welcome, ${authUser.displayName || 'User'}! ☁️ Live Cloud Synced`);
       }
     }, settings);
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribeAuth();
+      unsubs.forEach(unsub => unsub());
+    };
   }, [settings.firebaseApiKey, settings.firebaseProjectId]);
 
   const signInWithGoogle = async () => {
@@ -142,20 +174,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     document.body.className = themeClass;
   }, [settings.theme]);
 
-  // Save changes to LocalStorage & Sync to Firebase
-  useEffect(() => { 
-    saveStoredHabits(habits);
-    if (user) syncFirestoreHabits(user.uid, habits);
-  }, [habits, user]);
+  // Save changes to LocalStorage for offline resilience
+  useEffect(() => { saveStoredHabits(habits); }, [habits]);
   useEffect(() => { saveStoredRewards(rewards); }, [rewards]);
   useEffect(() => { saveStoredLogs(rewardLogs); }, [rewardLogs]);
   useEffect(() => { saveStoredRedemptions(redemptions); }, [redemptions]);
-  useEffect(() => { 
-    saveStoredSettings(settings); 
-    if (user && isFirebaseConfigured(settings)) {
-      syncFirestoreSettings(user.uid, settings);
-    }
-  }, [settings, user]);
+  useEffect(() => { saveStoredSettings(settings); }, [settings]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -349,7 +373,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const updateSettings = (newSettings: Partial<Settings>) => {
-    setSettings(prev => ({ ...prev, ...newSettings }));
+    setSettings(prev => {
+      const updated = { ...prev, ...newSettings };
+      if (user && isFirebaseConfigured(updated)) {
+        syncFirestoreSettings(user.uid, updated);
+      }
+      return updated;
+    });
     showToast('Settings saved');
   };
 
