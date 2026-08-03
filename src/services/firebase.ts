@@ -13,14 +13,21 @@ import {
 } from 'firebase/firestore';
 import { Settings, Habit, RewardLog, RewardRedemption, UserProfile } from '../types';
 
+const DEFAULT_FIREBASE_CONFIG = {
+  apiKey: "AIzaSyDFG3dnqB_4iphC1wjTOpNW07W7VMs0zeA",
+  authDomain: "life-gamify.firebaseapp.com",
+  projectId: "life-gamify",
+  storageBucket: "life-gamify.firebasestorage.app",
+  messagingSenderId: "282331789830",
+  appId: "1:282331789830:web:6f1ba97bcfcb3b615e6187",
+  measurementId: "G-THJKB4W377"
+};
+
 let firebaseApp: FirebaseApp | null = null;
 let firestoreDb: Firestore | null = null;
 
 export const isFirebaseConfigured = (settings?: Settings): boolean => {
-  if (settings?.firebaseApiKey && settings?.firebaseProjectId) return true;
-  return Boolean(
-    import.meta.env.VITE_FIREBASE_API_KEY && import.meta.env.VITE_FIREBASE_PROJECT_ID
-  );
+  return Boolean(settings || true);
 };
 
 export const initFirebase = (settings?: Settings) => {
@@ -30,16 +37,12 @@ export const initFirebase = (settings?: Settings) => {
     return { app: firebaseApp, db: firestoreDb };
   }
 
-  const apiKey = settings?.firebaseApiKey || import.meta.env.VITE_FIREBASE_API_KEY;
-  const authDomain = settings?.firebaseAuthDomain || import.meta.env.VITE_FIREBASE_AUTH_DOMAIN;
-  const projectId = settings?.firebaseProjectId || import.meta.env.VITE_FIREBASE_PROJECT_ID;
-  const storageBucket = settings?.firebaseStorageBucket || import.meta.env.VITE_FIREBASE_STORAGE_BUCKET;
-  const messagingSenderId = settings?.firebaseMessagingSenderId || import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID;
-  const appId = settings?.firebaseAppId || import.meta.env.VITE_FIREBASE_APP_ID;
-
-  if (!apiKey || !projectId) {
-    return { app: null, db: null };
-  }
+  const apiKey = settings?.firebaseApiKey || import.meta.env.VITE_FIREBASE_API_KEY || DEFAULT_FIREBASE_CONFIG.apiKey;
+  const authDomain = settings?.firebaseAuthDomain || import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || DEFAULT_FIREBASE_CONFIG.authDomain;
+  const projectId = settings?.firebaseProjectId || import.meta.env.VITE_FIREBASE_PROJECT_ID || DEFAULT_FIREBASE_CONFIG.projectId;
+  const storageBucket = settings?.firebaseStorageBucket || import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || DEFAULT_FIREBASE_CONFIG.storageBucket;
+  const messagingSenderId = settings?.firebaseMessagingSenderId || import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || DEFAULT_FIREBASE_CONFIG.messagingSenderId;
+  const appId = settings?.firebaseAppId || import.meta.env.VITE_FIREBASE_APP_ID || DEFAULT_FIREBASE_CONFIG.appId;
 
   try {
     firebaseApp = initializeApp({
