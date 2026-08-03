@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Universal Multi-Line Sprite Slicer & Chroma Key Tool</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #090d16;
+      color: #f8fafc;
+      padding: 20px;
+    }
+    h1 { margin-bottom: 6px; font-size: 24px; color: #fbbf24; }
+    p { margin-bottom: 20px; font-size: 14px; color: #94a3b8; }
+    
+    .layout-top {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+
+    @media (min-width: 1024px) {
+      .layout-top {
+        display: grid;
+        grid-template-columns: 1fr 340px;
+      }
+    }
+    
+    .card {
+      background: #141c2e;
+      border: 1px solid #334155;
+      border-radius: 16px;
+      padding: 20px;
+    }
+
+    .canvas-wrapper {
+      position: relative;
+      width: 100%;
+      background: repeating-conic-gradient(#1e293b 0% 25%, #0f172a 0% 50%) 50% / 20px 20px;
+      border: 2px solid #475569;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+      cursor: crosshair;
+    }
+
+    /* Controls Panel */
+    .controls {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .btn {
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: #0f172a;
+      font-weight: 800;
+      border: none;
+      padding: 12px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.2s;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(245, 158, 11, 0.4);
+    }
+    .btn-secondary {
+      background: #334155;
+      color: #f8fafc;
+      box-shadow: none;
+    }
+    .btn-secondary:hover {
+      background: #475569;
+    }
+    .btn-upload {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #ffffff;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+    .btn-upload:hover {
+      box-shadow: 0 6px 18px rgba(16, 185, 129, 0.5);
+    }
+    .btn-action {
+      background: linear-gradient(135deg, #38bdf8, #0284c7);
+      color: #0f172a;
+    }
+    .btn-action:hover {
+      box-shadow: 0 6px 18px rgba(56, 189, 248, 0.4);
+    }
+    .btn-danger {
+      background: #ef4444;
+      color: #fff;
+      box-shadow: none;
+    }
+    .btn-danger:hover {
+      background: #dc2626;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    .coords-json {
+      background: #090d16;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 10px;
+      font-family: monospace;
+      font-size: 11px;
+      color: #38bdf8;
+      height: 85px;
+      overflow-y: auto;
+    }
+
+    .options-group {
+      background: #090d16;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 12px;
+    }
+    .options-group label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      color: #cbd5e1;
+      font-weight: 600;
+    }
+
+    /* FULL-WIDTH BOTTOM PREVIEW SECTION */
+    .preview-section {
+      width: 100%;
+    }
+
+    .preview-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .preview-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .preview-grid-wrapper {
+      width: 100%;
+      background: #090d16;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 16px;
+      overflow-x: auto;
+    }
+
+    .preview-grid {
+      display: grid;
+      gap: 12px;
+      width: 100%;
+    }
+
+    /* Spacious Tile Card */
+    .preview-card {
+      position: relative;
+      aspect-ratio: 1;
+      min-width: 130px;
+      background: repeating-conic-gradient(#1e293b 0% 25%, #0f172a 0% 50%) 50% / 12px 12px;
+      border: 2px solid #334155;
+      border-radius: 10px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px;
+      transition: all 0.2s;
+    }
+    .preview-card.selected {
+      border-color: #38bdf8;
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+    }
+    .preview-card.deleted {
+      display: none !important;
+    }
+    .preview-card img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+    
+    /* Prominent Top Left Checkbox */
+    .preview-card .checkbox {
+      position: absolute;
+      top: 6px;
+      left: 6px;
+      width: 20px;
+      height: 20px;
+      z-index: 10;
+      accent-color: #38bdf8;
+      cursor: pointer;
+    }
+
+    /* Prominent Top Right Delete Button */
+    .preview-card .btn-delete-tile {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 22px;
+      height: 22px;
+      background: #ef4444;
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      font-size: 13px;
+      font-weight: bold;
+      line-height: 22px;
+      text-align: center;
+      cursor: pointer;
+      z-index: 15;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0.85;
+      transition: opacity 0.2s;
+    }
+    .preview-card .btn-delete-tile:hover {
+      opacity: 1;
+      transform: scale(1.15);
+    }
+
+    /* Bottom Right Label */
+    .preview-card .label {
+      position: absolute;
+      bottom: 4px;
+      right: 6px;
+      font-size: 11px;
+      font-weight: bold;
+      color: #fbbf24;
+      background: rgba(0,0,0,0.8);
+      padding: 2px 6px;
+      border-radius: 4px;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🪙 Universal Multi-Line Sprite Slicer & Chroma Key Tool</h1>
+  <p>Upload <b>ANY image/sprite sheet</b>, position cut lines, remove backgrounds, and download individual transparent PNG tiles!</p>
+
+  <!-- TOP LAYOUT: Image Canvas + Controls Sidebar -->
+  <div class="layout-top">
+    <div class="card">
+      <div class="canvas-wrapper">
+        <canvas id="viewCanvas"></canvas>
+      </div>
+    </div>
+
+    <div class="card controls">
+      <!-- Upload Button -->
+      <label class="btn btn-upload">
+        <span>📁 Upload Custom Image</span>
+        <input type="file" id="fileInput" accept="image/*" />
+      </label>
+
+      <!-- Line Controls -->
+      <div class="toolbar">
+        <button class="btn btn-secondary" id="btnAddV">+ Add V Line</button>
+        <button class="btn btn-secondary" id="btnAddH">+ Add H Line</button>
+        <button class="btn btn-danger" id="btnRemoveV">- Remove V Line</button>
+        <button class="btn btn-danger" id="btnRemoveH">- Remove H Line</button>
+      </div>
+
+      <!-- Chroma Key Settings -->
+      <div class="options-group">
+        <label>
+          <input type="checkbox" id="chkChromaKey" checked />
+          <span>Remove Magenta / White Background</span>
+        </label>
+      </div>
+
+      <!-- Action & Generation Buttons -->
+      <button class="btn btn-action" id="btnGeneratePreviews">⚡ Generate Grid Previews</button>
+
+      <div>
+        <label style="font-size: 12px; color: #94a3b8; font-weight: bold; display: block; margin-bottom: 4px;">
+          Line Coordinates (JSON):
+        </label>
+        <div class="coords-json" id="coordsJson">Loading...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FULL-WIDTH BOTTOM PREVIEW SECTION -->
+  <div class="card preview-section">
+    <div class="preview-header">
+      <h3 style="font-size: 16px; color: #fbbf24;">
+        🖼️ Sliced Grid Previews (<span id="gridMatrixLabel">3x3</span>)
+      </h3>
+
+      <div class="preview-actions">
+        <button class="btn btn-secondary" id="btnToggleSelect">Select / Unselect All</button>
+        <button class="btn" id="btnDownloadSelected">Download Selected (<span id="dlCount">0</span>)</button>
+      </div>
+    </div>
+
+    <div class="preview-grid-wrapper">
+      <div class="preview-grid" id="previewGrid"></div>
+    </div>
+  </div>
+
+  <script>
+    const viewCanvas = document.getElementById('viewCanvas');
+    const ctx = viewCanvas.getContext('2d');
+    const coordsJson = document.getElementById('coordsJson');
+    const previewGrid = document.getElementById('previewGrid');
+    const gridMatrixLabel = document.getElementById('gridMatrixLabel');
+    const dlCount = document.getElementById('dlCount');
+    const fileInput = document.getElementById('fileInput');
+    const chkChromaKey = document.getElementById('chkChromaKey');
+
+    const fullCanvas = document.createElement('canvas');
+    const fullCtx = fullCanvas.getContext('2d');
+
+    // Default Image sources fallback
+    const imageSources = [
+      "/assets/coin.png",
+      "/assets/coins_stages2.png",
+      "/assets/coins_stages3.png",
+      "/assets/coins_stages4.png"
+    ];
+
+    let img = new Image();
+    img.crossOrigin = "anonymous";
+
+    let currentSrcIdx = 0;
+    function tryNextImage() {
+      if (currentSrcIdx < imageSources.length) {
+        img.src = imageSources[currentSrcIdx++];
+      }
+    }
+    img.onerror = tryNextImage;
+    tryNextImage();
+
+    // Default coordinates (User coordinates: v1=527, v2=987, h1=370, h2=746)
+    let vLines = [527 / 1536, 987 / 1536];
+    let hLines = [370 / 1024, 746 / 1024];
+
+    let selectedTiles = new Set();
+    let deletedTiles = new Set();
+    let isLoaded = false;
+    let dragging = null;
+
+    // Handle Custom File Upload
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files && e.target.files[0]) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          img = new Image();
+          img.onload = () => {
+            onImageLoaded();
+          };
+          img.src = event.target.result;
+        };
+        reader.readAsDataURL(e.target.files[0]);
+      }
+    });
+
+    chkChromaKey.addEventListener('change', () => {
+      if (isLoaded) {
+        processFullCanvas();
+        renderView();
+        generatePreviews();
+      }
+    });
+
+    img.onload = () => {
+      onImageLoaded();
+    };
+
+    function onImageLoaded() {
+      isLoaded = true;
+      fullCanvas.width = img.width;
+      fullCanvas.height = img.height;
+      viewCanvas.width = img.width;
+      viewCanvas.height = img.height;
+
+      processFullCanvas();
+      renderView();
+      updateJson();
+      generatePreviews();
+    }
+
+    function processFullCanvas() {
+      fullCtx.clearRect(0, 0, fullCanvas.width, fullCanvas.height);
+      fullCtx.drawImage(img, 0, 0);
+
+      if (chkChromaKey.checked) {
+        const imgData = fullCtx.getImageData(0, 0, fullCanvas.width, fullCanvas.height);
+        const d = imgData.data;
+
+        for (let i = 0; i < d.length; i += 4) {
+          const r = d[i], g = d[i+1], b = d[i+2];
+          const isMagenta = (r > 180 && b > 180 && g < 180 && (r+b - 2*g > 50));
+          const isWhite = (r > 230 && g > 230 && b > 230);
+
+          if (isMagenta || isWhite) {
+            d[i+3] = 0;
+          } else {
+            if (r > g + 30 && b > g + 20) {
+              d[i] = Math.min(r, g + 30);
+              d[i+2] = Math.min(b, g + 20);
+            }
+          }
+        }
+        fullCtx.putImageData(imgData, 0, 0);
+      }
+    }
+
+    function renderView() {
+      ctx.clearRect(0, 0, viewCanvas.width, viewCanvas.height);
+      ctx.drawImage(fullCanvas, 0, 0);
+
+      const w = viewCanvas.width;
+      const h = viewCanvas.height;
+
+      // Draw V lines (Amber)
+      vLines.forEach((v, idx) => {
+        const x = v * w;
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = '#f59e0b';
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, h);
+        ctx.stroke();
+        drawBadge(`V${idx+1}: ${Math.round(v * fullCanvas.width)}px`, x + 8, 30 + (idx % 4) * 24, '#f59e0b');
+      });
+
+      // Draw H lines (Blue)
+      hLines.forEach((hVal, idx) => {
+        const y = hVal * h;
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = '#38bdf8';
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(w, y);
+        ctx.stroke();
+        drawBadge(`H${idx+1}: ${Math.round(hVal * fullCanvas.height)}px`, 30 + (idx % 3) * 100, y + 20, '#38bdf8');
+      });
+    }
+
+    function drawBadge(text, x, y, color) {
+      ctx.font = 'bold 16px sans-serif';
+      const textWidth = ctx.measureText(text).width;
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(x - 4, y - 16, textWidth + 8, 20);
+      ctx.fillStyle = color;
+      ctx.fillText(text, x, y);
+    }
+
+    function updateJson() {
+      vLines.sort((a, b) => a - b);
+      hLines.sort((a, b) => a - b);
+
+      const data = {
+        v_lines_px: vLines.map(v => Math.round(v * fullCanvas.width)),
+        h_lines_px: hLines.map(hVal => Math.round(hVal * fullCanvas.height)),
+        num_cols: vLines.length + 1,
+        num_rows: hLines.length + 1,
+        total_tiles: (vLines.length + 1) * (hLines.length + 1),
+        width: fullCanvas.width,
+        height: fullCanvas.height
+      };
+      coordsJson.innerText = JSON.stringify(data, null, 2);
+    }
+
+    // Pointer Dragging
+    function getPointerPos(e) {
+      const rect = viewCanvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      const x = (clientX - rect.left) / rect.width;
+      const y = (clientY - rect.top) / rect.height;
+      return { x: Math.max(0.01, Math.min(0.99, x)), y: Math.max(0.01, Math.min(0.99, y)) };
+    }
+
+    function startDrag(e) {
+      if (!isLoaded) return;
+      const p = getPointerPos(e);
+
+      let closest = null;
+      let minDistance = 0.08;
+
+      vLines.forEach((v, idx) => {
+        const d = Math.abs(p.x - v);
+        if (d < minDistance) {
+          minDistance = d;
+          closest = { type: 'v', index: idx };
+        }
+      });
+
+      hLines.forEach((hVal, idx) => {
+        const d = Math.abs(p.y - hVal);
+        if (d < minDistance) {
+          minDistance = d;
+          closest = { type: 'h', index: idx };
+        }
+      });
+
+      if (closest) {
+        dragging = closest;
+        e.preventDefault();
+      }
+    }
+
+    function moveDrag(e) {
+      if (!dragging || !isLoaded) return;
+      const p = getPointerPos(e);
+
+      if (dragging.type === 'v') {
+        vLines[dragging.index] = p.x;
+      } else {
+        hLines[dragging.index] = p.y;
+      }
+
+      renderView();
+      updateJson();
+      e.preventDefault();
+    }
+
+    function stopDrag() {
+      dragging = null;
+    }
+
+    viewCanvas.addEventListener('mousedown', startDrag);
+    viewCanvas.addEventListener('mousemove', moveDrag);
+    window.addEventListener('mouseup', stopDrag);
+
+    viewCanvas.addEventListener('touchstart', startDrag, { passive: false });
+    viewCanvas.addEventListener('touchmove', moveDrag, { passive: false });
+    window.addEventListener('touchend', stopDrag);
+
+    // Line Addition / Removal Buttons
+    document.getElementById('btnAddV').addEventListener('click', () => {
+      vLines.push(0.5);
+      vLines.sort((a, b) => a - b);
+      renderView();
+      updateJson();
+      generatePreviews();
+    });
+
+    document.getElementById('btnAddH').addEventListener('click', () => {
+      hLines.push(0.5);
+      hLines.sort((a, b) => a - b);
+      renderView();
+      updateJson();
+      generatePreviews();
+    });
+
+    document.getElementById('btnRemoveV').addEventListener('click', () => {
+      if (vLines.length > 0) {
+        vLines.pop();
+        renderView();
+        updateJson();
+        generatePreviews();
+      }
+    });
+
+    document.getElementById('btnRemoveH').addEventListener('click', () => {
+      if (hLines.length > 0) {
+        hLines.pop();
+        renderView();
+        updateJson();
+        generatePreviews();
+      }
+    });
+
+    document.getElementById('btnGeneratePreviews').addEventListener('click', () => {
+      generatePreviews();
+    });
+
+    function getSlices() {
+      vLines.sort((a, b) => a - b);
+      hLines.sort((a, b) => a - b);
+
+      const xs = [0, ...vLines.map(v => Math.round(v * fullCanvas.width)), fullCanvas.width];
+      const ys = [0, ...hLines.map(hVal => Math.round(hVal * fullCanvas.height)), fullCanvas.height];
+
+      const numCols = xs.length - 1;
+      const numRows = ys.length - 1;
+
+      const slices = [];
+      for (let r = 0; r < numRows; r++) {
+        for (let c = 0; c < numCols; c++) {
+          slices.push({
+            id: `r${r+1}_c${c+1}`,
+            row: r,
+            col: c,
+            x: xs[c],
+            y: ys[r],
+            w: xs[c+1] - xs[c],
+            h: ys[r+1] - ys[r]
+          });
+        }
+      }
+      return { slices, numCols, numRows };
+    }
+
+    function generatePreviews() {
+      if (!isLoaded) return;
+      previewGrid.innerHTML = '';
+      
+      const { slices, numCols, numRows } = getSlices();
+      gridMatrixLabel.innerText = `${numRows}x${numCols} (${slices.length} tiles)`;
+
+      // Dynamically set CSS grid columns to match the actual grid structure!
+      previewGrid.style.gridTemplateColumns = `repeat(${numCols}, 1fr)`;
+
+      // Reset selection to include all valid tiles initially
+      deletedTiles.clear();
+      selectedTiles = new Set(slices.map(s => s.id));
+
+      slices.forEach((s, idx) => {
+        const c = document.createElement('canvas');
+        c.width = s.w;
+        c.height = s.h;
+        const cCtx = c.getContext('2d');
+        cCtx.drawImage(fullCanvas, s.x, s.y, s.w, s.h, 0, 0, s.w, s.h);
+
+        const card = document.createElement('div');
+        card.className = 'preview-card selected';
+        card.id = `card_${s.id}`;
+
+        // Top Left Selection Checkbox
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.className = 'checkbox';
+        checkbox.checked = true;
+        checkbox.addEventListener('change', (e) => {
+          if (e.target.checked) {
+            selectedTiles.add(s.id);
+            card.classList.add('selected');
+          } else {
+            selectedTiles.delete(s.id);
+            card.classList.remove('selected');
+          }
+          updateDlCount();
+        });
+
+        // Top Right Delete Tile Button
+        const delBtn = document.createElement('button');
+        delBtn.className = 'btn-delete-tile';
+        delBtn.innerText = '✕';
+        delBtn.title = 'Delete tile from preview';
+        delBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          deletedTiles.add(s.id);
+          selectedTiles.delete(s.id);
+          card.classList.add('deleted');
+          updateDlCount();
+        });
+
+        // Image Preview
+        const imgEl = document.createElement('img');
+        imgEl.src = c.toDataURL('image/png');
+
+        // Bottom Right Tile Label
+        const label = document.createElement('div');
+        label.className = 'label';
+        label.innerText = `R${s.row+1}C${s.col+1}`;
+
+        card.appendChild(checkbox);
+        card.appendChild(delBtn);
+        card.appendChild(imgEl);
+        card.appendChild(label);
+
+        previewGrid.appendChild(card);
+      });
+
+      updateDlCount();
+    }
+
+    function updateDlCount() {
+      dlCount.innerText = selectedTiles.size;
+    }
+
+    // Select / Deselect All Toggle Button
+    let allSelectedState = true;
+    document.getElementById('btnToggleSelect').addEventListener('click', () => {
+      const { slices } = getSlices();
+      allSelectedState = !allSelectedState;
+
+      slices.forEach(s => {
+        if (!deletedTiles.has(s.id)) {
+          const card = document.getElementById(`card_${s.id}`);
+          if (card) {
+            const cb = card.querySelector('.checkbox');
+            if (allSelectedState) {
+              selectedTiles.add(s.id);
+              if (cb) cb.checked = true;
+              card.classList.add('selected');
+            } else {
+              selectedTiles.delete(s.id);
+              if (cb) cb.checked = false;
+              card.classList.remove('selected');
+            }
+          }
+        }
+      });
+      updateDlCount();
+    });
+
+    // Download Selected Tiles
+    document.getElementById('btnDownloadSelected').addEventListener('click', () => {
+      const { slices } = getSlices();
+      slices.forEach((s, idx) => {
+        if (selectedTiles.has(s.id) && !deletedTiles.has(s.id)) {
+          const c = document.createElement('canvas');
+          c.width = s.w;
+          c.height = s.h;
+          const cCtx = c.getContext('2d');
+          cCtx.drawImage(fullCanvas, s.x, s.y, s.w, s.h, 0, 0, s.w, s.h);
+
+          const a = document.createElement('a');
+          a.download = `tile_r${s.row+1}_c${s.col+1}_${s.w}x${s.h}.png`;
+          a.href = c.toDataURL('image/png');
+          a.click();
+        }
+      });
+    });
+  </script>
+</body>
+</html>

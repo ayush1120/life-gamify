@@ -1,0 +1,358 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+}
+
+/* ═══════════════════════════════════════════════
+   🌙 DARK THEME
+   ═══════════════════════════════════════════════ */
+.theme-dark {
+  color-scheme: dark;
+
+  /* Page Background */
+  --bg-primary: #080c18;
+  --bg-radial-1: rgba(30, 58, 138, 0.12);
+  --bg-radial-2: rgba(88, 28, 135, 0.06);
+
+  /* Glass Panels / Cards */
+  --glass-bg: rgba(10, 16, 32, 0.92);
+  --glass-bg-hover: rgba(16, 24, 48, 0.95);
+  --glass-border: rgba(51, 65, 85, 0.45);
+  --glass-border-hover: rgba(245, 158, 11, 0.35);
+  --card-shadow: 0 8px 32px -4px rgba(0, 0, 0, 0.5);
+
+  /* Typography */
+  --text-primary: #f1f5f9;
+  --text-secondary: #cbd5e1;
+  --text-muted: #64748b;
+  --text-accent: #f59e0b;
+
+  /* Hero Banner */
+  --hero-bg: #0a0e1f;
+  --hero-border: rgba(99, 102, 241, 0.2);
+
+  /* Vault Card (matches dome_dark.png bg) */
+  --vault-bg: #080c18;
+
+  /* Stat Box Accent Bars & Backgrounds */
+  --stat-earned-bar: #10b981;
+  --stat-earned-bg: rgba(6, 78, 59, 0.3);
+  --stat-earned-border: rgba(16, 185, 129, 0.3);
+  --stat-earned-text: #6ee7b7;
+
+  --stat-spent-bar: #8b5cf6;
+  --stat-spent-bg: rgba(49, 46, 129, 0.3);
+  --stat-spent-border: rgba(139, 92, 246, 0.3);
+  --stat-spent-text: #a5b4fc;
+
+  --stat-streak-bar: #f59e0b;
+  --stat-streak-bg: rgba(120, 53, 15, 0.3);
+  --stat-streak-border: rgba(245, 158, 11, 0.3);
+  --stat-streak-text: #fcd34d;
+
+  /* Buttons */
+  --btn-hero-bg: linear-gradient(135deg, #f59e0b 0%, #ec4899 50%, #8b5cf6 100%);
+  --btn-store-bg: linear-gradient(90deg, #f59e0b 0%, #d97706 30%, #ec4899 65%, #8b5cf6 100%);
+
+  /* Pill badge */
+  --pill-badge-bg: rgba(245, 158, 11, 0.12);
+  --pill-badge-border: rgba(245, 158, 11, 0.3);
+  --pill-badge-text: #fbbf24;
+
+  /* Navbar */
+  --nav-bg: rgba(8, 12, 24, 0.95);
+  --nav-border: rgba(51, 65, 85, 0.4);
+  --nav-active-bg: rgba(245, 158, 11, 0.12);
+  --nav-active-text: #fbbf24;
+  --nav-inactive-text: #94a3b8;
+
+  /* Streak/Balance Pills */
+  --streak-bg: rgba(30, 41, 59, 0.8);
+  --streak-border: rgba(51, 65, 85, 0.6);
+  --streak-text: #e2e8f0;
+}
+
+/* ═══════════════════════════════════════════════
+   ☀️ LIGHT THEME & GOLDEN LIGHT
+   ═══════════════════════════════════════════════ */
+.theme-light,
+.theme-golden {
+  color-scheme: light;
+
+  /* Page Background */
+  --bg-primary: #F7F3EC;
+  --bg-radial-1: rgba(245, 158, 11, 0.08);
+  --bg-radial-2: rgba(217, 119, 6, 0.05);
+
+  /* Glass Panels / Cards */
+  --glass-bg: #FFFFFF;
+  --glass-bg-hover: #FFFDF9;
+  --glass-border: rgba(225, 210, 190, 0.7);
+  --glass-border-hover: rgba(217, 119, 6, 0.4);
+  --card-shadow: 0 8px 30px -4px rgba(180, 130, 60, 0.08);
+
+  /* Typography */
+  --text-primary: #241A0E;
+  --text-secondary: #6E5E4E;
+  --text-muted: #9E8E7E;
+  --text-accent: #C97A14;
+
+  /* Hero Banner */
+  --hero-bg: #FFFDF8;
+  --hero-border: rgba(225, 210, 190, 0.7);
+
+  /* Vault Card */
+  --vault-bg: #FFFDF8;
+
+  /* Stat Box Accent Bars & Backgrounds */
+  --stat-earned-bar: #10B981;
+  --stat-earned-bg: #ECFDF5;
+  --stat-earned-border: #DCFCE7;
+  --stat-earned-text: #15803D;
+
+  --stat-spent-bar: #8B5CF6;
+  --stat-spent-bg: #F5F3FF;
+  --stat-spent-border: #EDE9FE;
+  --stat-spent-text: #6D28D9;
+
+  --stat-streak-bar: #F59E0B;
+  --stat-streak-bg: #FFFBEB;
+  --stat-streak-border: #FEF08A;
+  --stat-streak-text: #B45309;
+
+  /* Buttons */
+  --btn-hero-bg: linear-gradient(135deg, #E08A1E 0%, #C4710E 100%);
+  --btn-store-bg: linear-gradient(90deg, #E08A1E 0%, #C4710E 50%, #A35B07 100%);
+
+  /* Pill badge */
+  --pill-badge-bg: #FEF3C7;
+  --pill-badge-border: #FDE68A;
+  --pill-badge-text: #92400E;
+
+  /* Navbar */
+  --nav-bg: rgba(255, 255, 255, 0.96);
+  --nav-border: rgba(225, 210, 190, 0.6);
+  --nav-active-bg: #FEF3C7;
+  --nav-active-text: #92400E;
+  --nav-inactive-text: #6B5A4B;
+
+  /* Streak/Balance Pills */
+  --streak-bg: #FEF3C7;
+  --streak-border: #FDE68A;
+  --streak-text: #78350F;
+}
+
+/* ═══════════════════════════════════════════════
+   BODY & PAGE
+   ═══════════════════════════════════════════════ */
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-primary);
+  background-image:
+    radial-gradient(ellipse at 0% 0%, var(--bg-radial-1) 0px, transparent 50%),
+    radial-gradient(ellipse at 100% 100%, var(--bg-radial-2) 0px, transparent 50%);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* ═══════════════════════════════════════════════
+   GLASS PANELS (Cards)
+   ═══════════════════════════════════════════════ */
+.glass-panel {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--card-shadow);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.glass-panel-hover {
+  transition: all 0.2s ease;
+}
+.glass-panel-hover:hover {
+  background: var(--glass-bg-hover);
+  border-color: var(--glass-border-hover);
+  box-shadow: var(--card-shadow), 0 0 0 1px var(--glass-border-hover);
+}
+
+/* ═══════════════════════════════════════════════
+   HERO BANNER
+   ═══════════════════════════════════════════════ */
+.hero-card {
+  background-color: var(--hero-bg);
+  border: 1px solid var(--hero-border);
+  box-shadow: var(--card-shadow);
+}
+
+/* ═══════════════════════════════════════════════
+   VAULT CARD (background matches dome image bg)
+   ═══════════════════════════════════════════════ */
+.vault-card {
+  background-color: var(--vault-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--card-shadow);
+}
+
+/* ═══════════════════════════════════════════════
+   STAT BOXES with coloured top accent bar
+   ═══════════════════════════════════════════════ */
+.stat-box {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid transparent;
+  text-align: center;
+  padding: 12px 16px;
+}
+.stat-box-earned {
+  background: var(--stat-earned-bg);
+  border-color: var(--stat-earned-border);
+  border-top: 3px solid var(--stat-earned-bar);
+  color: var(--stat-earned-text);
+}
+.stat-box-spent {
+  background: var(--stat-spent-bg);
+  border-color: var(--stat-spent-border);
+  border-top: 3px solid var(--stat-spent-bar);
+  color: var(--stat-spent-text);
+}
+.stat-box-streak {
+  background: var(--stat-streak-bg);
+  border-color: var(--stat-streak-border);
+  border-top: 3px solid var(--stat-streak-bar);
+  color: var(--stat-streak-text);
+}
+
+/* ═══════════════════════════════════════════════
+   BUTTONS
+   ═══════════════════════════════════════════════ */
+.btn-gradient-hero {
+  background: var(--btn-hero-bg);
+  color: #ffffff;
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.3);
+  transition: all 0.2s ease;
+  border: none;
+}
+.btn-gradient-hero:hover {
+  transform: scale(1.03);
+  box-shadow: 0 8px 28px rgba(245, 158, 11, 0.5);
+}
+
+.btn-gradient-store {
+  background: var(--btn-store-bg);
+  color: #ffffff;
+  box-shadow: 0 6px 24px rgba(245, 158, 11, 0.25);
+  transition: all 0.2s ease;
+  border: none;
+}
+.btn-gradient-store:hover {
+  transform: scale(1.02);
+  box-shadow: 0 8px 32px rgba(245, 158, 11, 0.45);
+}
+
+/* ═══════════════════════════════════════════════
+   PILL BADGES
+   ═══════════════════════════════════════════════ */
+.pill-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--pill-badge-bg);
+  border: 1px solid var(--pill-badge-border);
+  color: var(--pill-badge-text);
+}
+
+/* ═══════════════════════════════════════════════
+   IMAGE EDGE FADE (directional mask for seamless blending)
+   ═══════════════════════════════════════════════ */
+.img-fade-edges {
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    black 8%,
+    black 92%,
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    black 8%,
+    black 92%,
+    transparent 100%
+  );
+}
+
+.img-fade-all {
+  mask-image:
+    linear-gradient(to bottom, black 70%, transparent 100%),
+    linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%);
+  mask-composite: intersect;
+  -webkit-mask-image:
+    linear-gradient(to bottom, black 70%, transparent 100%),
+    linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%);
+  -webkit-mask-composite: source-in;
+}
+
+/* ═══════════════════════════════════════════════
+   CUSTOM SCROLLBAR
+   ═══════════════════════════════════════════════ */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(245, 158, 11, 0.25);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(245, 158, 11, 0.5);
+}
+
+/* ═══════════════════════════════════════════════
+   DECORATIVE SPARKLES (CSS pseudo-elements)
+   ═══════════════════════════════════════════════ */
+.sparkle-decoration::before,
+.sparkle-decoration::after {
+  content: '✦';
+  position: absolute;
+  color: #fbbf24;
+  font-size: 14px;
+  opacity: 0.6;
+  pointer-events: none;
+  animation: sparkle-float 3s ease-in-out infinite;
+}
+.sparkle-decoration::before {
+  top: 15%;
+  right: 35%;
+  font-size: 10px;
+  animation-delay: 0s;
+}
+.sparkle-decoration::after {
+  bottom: 25%;
+  right: 20%;
+  font-size: 16px;
+  animation-delay: 1.5s;
+}
+
+@keyframes sparkle-float {
+  0%, 100% { transform: translateY(0) scale(1); opacity: 0.5; }
+  50% { transform: translateY(-6px) scale(1.2); opacity: 1; }
+}
+
+/* Hide scrollbar for nav tabs */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }

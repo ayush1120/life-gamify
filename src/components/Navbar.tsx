@@ -1,0 +1,130 @@
+import React from 'react';
+import { useApp } from '../context/AppContext';
+import { CoinToken } from './CoinToken';
+import { LayoutDashboard, ShoppingBag, CheckSquare, History, BarChart3, Settings as SettingsIcon, Flame, Sun, Moon } from 'lucide-react';
+import { playSound } from '../services/sound';
+
+export const Navbar: React.FC = () => {
+  const { activeTab, setActiveTab, stats, settings, updateSettings } = useApp();
+
+  const handleTabClick = (tabId: string) => {
+    playSound.click(settings.soundEnabled);
+    setActiveTab(tabId);
+  };
+
+  const toggleTheme = () => {
+    const nextTheme = settings.theme === 'dark' ? 'light' : 'dark';
+    updateSettings({ theme: nextTheme });
+    const themeClass = `theme-${nextTheme}`;
+    document.documentElement.className = themeClass;
+    document.body.className = themeClass;
+    playSound.click(settings.soundEnabled);
+  };
+
+  const tabs = [
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'store', label: 'Reward Store', icon: ShoppingBag },
+    { id: 'habits', label: 'Habits', icon: CheckSquare },
+    { id: 'history', label: 'History', icon: History },
+    { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+    { id: 'settings', label: 'Settings', icon: SettingsIcon },
+  ];
+
+  return (
+    <header
+      className="sticky top-0 z-40 w-full backdrop-blur-xl"
+      style={{ background: 'var(--nav-bg)', borderBottom: '1px solid var(--nav-border)' }}
+    >
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Top Row: Branding + Controls */}
+        <div className="flex items-center justify-between h-16 sm:h-[72px]">
+
+          {/* Logo & App Branding */}
+          <div
+            onClick={() => handleTabClick('dashboard')}
+            className="flex items-center space-x-3 cursor-pointer group"
+          >
+            {/* Golden Coin Emblem */}
+            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/30 border-2 border-amber-300/60 group-hover:scale-105 transition-transform overflow-hidden p-1">
+              <CoinToken size={36} />
+            </div>
+            <div>
+              <h1 className="font-outfit text-lg sm:text-xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>
+                Life Gamify
+              </h1>
+              <p className="text-[11px] hidden sm:block font-medium" style={{ color: 'var(--text-muted)' }}>
+                Habit Coin Economy & Reward Store
+              </p>
+            </div>
+          </div>
+
+          {/* Right Controls */}
+          <div className="flex items-center space-x-2 sm:space-x-3">
+
+            {/* Streak Badge */}
+            <div
+              className="flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-xs sm:text-sm font-bold"
+              style={{
+                background: 'var(--streak-bg)',
+                border: '1px solid var(--streak-border)',
+                color: 'var(--streak-text)',
+              }}
+            >
+              <Flame className="w-4 h-4 text-amber-500 fill-amber-500" />
+              <span>{stats.currentStreak}d streak</span>
+            </div>
+
+            {/* Coin Balance Pill */}
+            <button
+              onClick={() => handleTabClick('store')}
+              className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full font-outfit text-xs sm:text-sm font-extrabold bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 text-white shadow-lg shadow-amber-500/25 hover:scale-105 border border-amber-400/50 transition-all cursor-pointer"
+            >
+              <CoinToken size={20} />
+              <span>{stats.coinBalance}</span>
+            </button>
+
+            {/* Theme Toggle */}
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-full transition-colors cursor-pointer"
+              style={{
+                background: 'var(--streak-bg)',
+                border: '1px solid var(--streak-border)',
+                color: 'var(--text-accent)',
+              }}
+              title={`Switch to ${settings.theme === 'dark' ? 'Light' : 'Dark'} Theme`}
+            >
+              {settings.theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </button>
+          </div>
+        </div>
+
+        {/* Nav Tabs Row */}
+        <nav
+          className="flex items-center space-x-1 overflow-x-auto py-2 no-scrollbar"
+          style={{ borderTop: '1px solid var(--nav-border)' }}
+        >
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => handleTabClick(tab.id)}
+                className="flex items-center space-x-2 px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer"
+                style={{
+                  background: isActive ? 'var(--nav-active-bg)' : 'transparent',
+                  color: isActive ? 'var(--nav-active-text)' : 'var(--nav-inactive-text)',
+                  border: isActive ? '1px solid var(--pill-badge-border)' : '1px solid transparent',
+                }}
+              >
+                <Icon className="w-4 h-4" style={{ color: isActive ? 'var(--nav-active-text)' : 'var(--nav-inactive-text)' }} />
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
+        </nav>
+      </div>
+    </header>
+  );
+};

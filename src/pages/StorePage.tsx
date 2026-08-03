@@ -1,0 +1,128 @@
+import React, { useState } from 'react';
+import { useApp } from '../context/AppContext';
+import { StoreReward } from '../types';
+import { StoreRewardCard } from '../components/StoreRewardCard';
+import { StoreRewardModal } from '../components/StoreRewardModal';
+import { ShoppingBag, Plus, Coins } from 'lucide-react';
+import { playSound } from '../services/sound';
+
+export const StorePage: React.FC = () => {
+  const { rewards, stats, settings } = useApp();
+  const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [editingReward, setEditingReward] = useState<StoreReward | null>(null);
+
+  const categories = ['All', 'Snacks', 'Break', 'Entertainment', 'Custom'];
+
+  const filteredRewards = rewards.filter(r => {
+    if (!r.active) return false;
+    if (selectedCategory === 'All') return true;
+    return r.category === selectedCategory;
+  });
+
+  const handleCreate = () => {
+    playSound.click(settings.soundEnabled);
+    setEditingReward(null);
+    setIsModalOpen(true);
+  };
+
+  const handleEdit = (reward: StoreReward) => {
+    playSound.click(settings.soundEnabled);
+    setEditingReward(reward);
+    setIsModalOpen(true);
+  };
+
+  return (
+    <div className="space-y-8 pb-12">
+      {/* Header & Balance Banner */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <div
+            className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-semibold"
+            style={{ background: 'var(--pill-badge-bg)', border: '1px solid var(--pill-badge-border)', color: 'var(--pill-badge-text)' }}
+          >
+            <Coins className="w-3.5 h-3.5" style={{ color: 'var(--text-accent)' }} />
+            <span>Treasury Store</span>
+          </div>
+          <h1 className="font-outfit text-3xl font-extrabold tracking-tight mt-1 flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+            <span>Reward Store</span>
+          </h1>
+          <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
+            Spend your earned coins on guilt-free rewards and treats!
+          </p>
+        </div>
+
+        <div className="flex items-center space-x-3">
+          {/* Realtime Balance Badge */}
+          <div
+            className="px-4 py-2.5 rounded-2xl glass-panel font-outfit text-sm font-extrabold flex items-center space-x-2"
+            style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)' }}
+          >
+            <span className="text-lg" style={{ color: 'var(--text-accent)' }}>{settings.currencySymbol}</span>
+            <span>{stats.coinBalance} {settings.currencyName} Available</span>
+          </div>
+
+          <button
+            onClick={handleCreate}
+            className="btn-gradient-hero px-4 py-2.5 rounded-2xl font-outfit text-sm font-extrabold flex items-center space-x-2 shadow-lg cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Add Reward</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Category Filter Bar */}
+      <div className="flex items-center space-x-2 overflow-x-auto pb-2 no-scrollbar">
+        {categories.map((cat) => (
+          <button
+            key={cat}
+            onClick={() => {
+              playSound.click(settings.soundEnabled);
+              setSelectedCategory(cat);
+            }}
+            className="px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer"
+            style={{
+              background: selectedCategory === cat ? 'var(--pill-badge-bg)' : 'var(--glass-bg)',
+              border: selectedCategory === cat ? '1px solid var(--pill-badge-border)' : '1px solid var(--glass-border)',
+              color: selectedCategory === cat ? 'var(--pill-badge-text)' : 'var(--text-muted)',
+            }}
+          >
+            {cat}
+          </button>
+        ))}
+      </div>
+
+      {/* Reward Store Grid */}
+      {filteredRewards.length === 0 ? (
+        <div className="glass-panel rounded-3xl p-12 text-center text-amber-300/70 space-y-3">
+          <ShoppingBag className="w-12 h-12 text-amber-500/40 mx-auto" />
+          <p className="font-bold text-base">No store rewards found in this category.</p>
+          <button
+            onClick={handleCreate}
+            className="px-4 py-2 rounded-xl bg-amber-500 text-amber-950 font-bold text-xs"
+          >
+            Create Store Reward
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredRewards.map((reward) => (
+            <StoreRewardCard
+              key={reward.id}
+              reward={reward}
+              onEdit={handleEdit}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Store CRUD Modal */}
+      <StoreRewardModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        rewardToEdit={editingReward}
+      />
+    </div>
+  );
+};
