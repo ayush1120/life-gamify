@@ -1,14 +1,51 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
-import { Habit } from '../types';
+import { Habit, HabitFrequency } from '../types';
 import { HabitModal } from '../components/HabitModal';
-import { Plus, Edit2, Trash2, Eye, EyeOff, ArrowUp, ArrowDown, Sparkles } from 'lucide-react';
+import { Plus, Edit2, Trash2, Eye, EyeOff, ArrowUp, ArrowDown, Sparkles, Search, Star, Filter } from 'lucide-react';
 import { playSound } from '../services/sound';
 
+const PRESET_TAGS = ['All', '⭐️ Quick Habits', 'Work', 'Health', 'Career', 'Music', 'Fitness', 'Learning', 'Personal'];
+
 export const HabitsPage: React.FC = () => {
-  const { habits, deleteHabit, toggleHabitActive, reorderHabits, settings } = useApp();
+  const { habits, deleteHabit, toggleHabitActive, reorderHabits, toggleQuickHabit, settings } = useApp();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedTag, setSelectedTag] = useState('All');
+  const [selectedFrequency, setSelectedFrequency] = useState<'all' | HabitFrequency>('all');
+
+  const allTags = useMemo(() => {
+    const tagsSet = new Set<string>();
+    habits.forEach(h => {
+      if (h.category) tagsSet.add(h.category);
+      if (h.tags) h.tags.forEach(t => tagsSet.add(t));
+    });
+    const custom = Array.from(tagsSet).filter(t => !PRESET_TAGS.includes(t));
+    return [...PRESET_TAGS, ...custom];
+  }, [habits]);
+
+  const filteredHabits = useMemo(() => {
+    return habits.filter(h => {
+      const matchesSearch = searchQuery === '' || 
+        h.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        (h.description && h.description.toLowerCase().includes(searchQuery.toLowerCase()));
+
+      const matchesFrequency = selectedFrequency === 'all' || h.frequency === selectedFrequency;
+
+      let matchesTag = true;
+      if (selectedTag === '⭐️ Quick Habits') {
+        matchesTag = Boolean(h.isQuickHabit);
+      } else if (selectedTag !== 'All') {
+        const inCategory = h.category?.toLowerCase() === selectedTag.toLowerCase();
+        const inTags = h.tags?.some(t => t.toLowerCase() === selectedTag.toLowerCase());
+        matchesTag = Boolean(inCategory || inTags);
+      }
+
+      return matchesSearch && matchesFrequency && matchesTag;
+    });
+  }, [habits, searchQuery, selectedTag, selectedFrequency]);
 
   const handleEdit = (habit: Habit) => {
     playSound.click(settings.soundEnabled);
@@ -42,7 +79,7 @@ export const HabitsPage: React.FC = () => {
             <span>Habit Manager</span>
           </h1>
           <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
-            Customize habit values, icons, active status, and display order
+            Customize habit schedules, tags, quick habit favorites, and reward values
           </p>
         </div>
 
@@ -55,14 +92,70 @@ export const HabitsPage: React.FC = () => {
         </button>
       </div>
 
+      {/* Search Bar & Frequency Selector */}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
+        <div className="md:col-span-6 relative">
+          <Search className="w-4 h-4 absolute left-3.5 top-3.5 text-zinc-400 pointer-events-none" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="Search habits by name or description..."
+            className="w-full pl-10 pr-4 py-2.5 rounded-2xl text-sm font-medium focus:outline-none"
+            style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)' }}
+          />
+        </div>
+
+        <div className="md:col-span-6 flex items-center space-x-1.5 overflow-x-auto no-scrollbar">
+          {(['all', 'daily', 'weekly', 'monthly'] as const).map(freq => (
+            <button
+              key={freq}
+              onClick={() => setSelectedFrequency(freq)}
+              className="px-3.5 py-2 rounded-xl text-xs font-bold capitalize transition-all cursor-pointer whitespace-nowrap"
+              style={{
+                background: selectedFrequency === freq ? 'var(--btn-hero-bg)' : 'var(--glass-bg)',
+                color: selectedFrequency === freq ? '#ffffff' : 'var(--text-secondary)',
+                border: selectedFrequency === freq ? '1px solid var(--pill-badge-border)' : '1px solid var(--glass-border)',
+              }}
+            >
+              {freq === 'all' ? 'All Schedules' : `${freq}`}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Tag Filter Chips */}
+      <div className="flex items-center space-x-2 overflow-x-auto py-1 no-scrollbar">
+        <Filter className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+        {allTags.map(tag => {
+          const isActive = selectedTag === tag;
+          return (
+            <button
+              key={tag}
+              onClick={() => setSelectedTag(tag)}
+              className="px-3 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer whitespace-nowrap"
+              style={{
+                background: isActive ? 'var(--pill-badge-bg)' : 'var(--glass-bg)',
+                color: isActive ? 'var(--pill-badge-text)' : 'var(--text-muted)',
+                border: isActive ? '1px solid var(--pill-badge-border)' : '1px solid var(--glass-border)',
+              }}
+            >
+              {tag}
+            </button>
+          );
+        })}
+      </div>
+
       {/* Habit List */}
       <div className="space-y-3">
-        {habits.length === 0 ? (
-          <div className="glass-panel rounded-3xl p-12 text-center" style={{ color: 'var(--text-muted)' }}>
-            No habits created yet. Click "Add New Habit" above!
+        {filteredHabits.length === 0 ? (
+          <div className="glass-panel rounded-3xl p-12 text-center space-y-2" style={{ color: 'var(--text-muted)' }}>
+            <div className="text-3xl">🔍</div>
+            <h3 className="font-outfit font-bold text-base" style={{ color: 'var(--text-primary)' }}>No habits found</h3>
+            <p className="text-xs">Try clearing your search query or selecting a different tag filter.</p>
           </div>
         ) : (
-          habits.map((habit, idx) => (
+          filteredHabits.map((habit, idx) => (
             <div
               key={habit.id}
               className={`glass-panel rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border transition-all ${
@@ -96,25 +189,47 @@ export const HabitsPage: React.FC = () => {
 
                 {/* Habit Icon */}
                 <div
-                  className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shadow-sm"
+                  className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shadow-sm shrink-0"
                   style={{ backgroundColor: `${habit.color}25`, border: `1px solid ${habit.color}40` }}
                 >
                   {habit.icon}
                 </div>
 
-                {/* Info */}
+                {/* Info & Badges */}
                 <div>
-                  <h3 className="font-outfit text-base font-bold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
-                    <span>{habit.name}</span>
-                    {!habit.active && (
-                      <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded" style={{ background: 'var(--pill-badge-bg)', color: 'var(--text-muted)', border: '1px solid var(--pill-badge-border)' }}>
-                        Inactive
-                      </span>
-                    )}
-                  </h3>
+                  <div className="flex items-center space-x-2">
+                    <h3 className="font-outfit text-base font-bold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+                      <span>{habit.name}</span>
+                      {!habit.active && (
+                        <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded" style={{ background: 'var(--pill-badge-bg)', color: 'var(--text-muted)', border: '1px solid var(--pill-badge-border)' }}>
+                          Inactive
+                        </span>
+                      )}
+                    </h3>
+                    <button
+                      onClick={() => toggleQuickHabit(habit.id)}
+                      className="p-1 rounded-full hover:bg-amber-500/20 cursor-pointer"
+                      title={habit.isQuickHabit ? "Unmark Quick Habit" : "Mark as Quick Habit"}
+                    >
+                      <Star className={`w-4 h-4 ${habit.isQuickHabit ? 'text-amber-400 fill-amber-400' : 'text-zinc-600'}`} />
+                    </button>
+                  </div>
+
                   {habit.description && (
                     <p className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>{habit.description}</p>
                   )}
+
+                  {/* Badges Row */}
+                  <div className="flex flex-wrap items-center gap-1.5 mt-1.5 text-[10px] font-bold">
+                    <span className="px-2 py-0.5 rounded-full capitalize bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                      📅 {habit.frequency || 'daily'}
+                    </span>
+                    {habit.category && (
+                      <span className="px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                        🏷️ {habit.category}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -131,7 +246,7 @@ export const HabitsPage: React.FC = () => {
                   className="px-2.5 py-1 rounded-full font-mono text-[11px] font-bold"
                   style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-secondary)' }}
                 >
-                  {habit.maxPerDay === 0 ? 'Unlimited' : `${habit.maxPerDay ?? 1}x / day`}
+                  {(habit.maxPerPeriod ?? habit.maxPerDay) === 0 ? 'Unlimited' : `${habit.maxPerPeriod ?? habit.maxPerDay ?? 1}x / ${habit.frequency || 'daily'}`}
                 </span>
 
                 <div className="flex items-center space-x-2">

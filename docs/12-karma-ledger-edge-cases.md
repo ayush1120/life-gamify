@@ -80,6 +80,11 @@ $$\text{Net Refund} = \begin{cases} \text{coinsSpent} & \text{if Elapsed Time} \
 28. **Theme Contrast Compliance:** Modals and badges use design tokens (`var(--glass-bg)`, `var(--pill-badge-bg)`) ensuring high contrast in Dark/Light themes.
 29. **Non-Negative Vault Clamping:** Vault Balance is clamped at `>= 0`.
 30. **Quest System Prompting:** Phantom Debt displays an active quest banner encouraging habit completion to restore honor.
+31. **Frequency Period Bound Clamping:** Frequency period resets (`daily`, `weekly`, `monthly`) compute from deterministic ISO time bounds (Monday 00:00:00 for ISO weeks, 1st of month 00:00:00 for monthly), preventing timezone clock-shift limit bypasses.
+32. **Frequency Mutation Safety:** Changing a habit's frequency (e.g. from Daily to Weekly) does not alter or re-evaluate past completion logs.
+33. **Tag Sanitization & Injection Defense:** Habit and Store tag inputs strip special characters, trim whitespace, and enforce a 25-character max limit per tag.
+34. **Quick Habit Favorite Persistence:** Quick habit flags (`isQuickHabit`) persist across local storage and cloud sync without altering habit completion counts.
+35. **Multi-Tag Filter Concurrency:** Search queries and tag filter selections execute concurrently without modifying underlying habit arrays.
 
 ---
 

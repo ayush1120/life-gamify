@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Habit } from '../types';
+import { Habit, HabitFrequency } from '../types';
 import { useApp } from '../context/AppContext';
-import { X, Sparkles, Plus, Save } from 'lucide-react';
+import { sanitizeTag } from '../utils/frequencyUtils';
+import { X, Sparkles, Plus, Save, Star } from 'lucide-react';
 import { playSound } from '../services/sound';
 
 interface HabitModalProps {
@@ -12,6 +13,7 @@ interface HabitModalProps {
 
 const PRESET_ICONS = ['🏃', '🏋️', '⏳', '🏡', '📚', '🧘', '💧', '🥗', '💻', '🎸', '🛌', '🎨'];
 const PRESET_COLORS = ['#e7bc98', '#ce7647', '#c05c3b', '#a04733', '#823b2e', '#f59e0b', '#10b981', '#6366f1', '#ec4899'];
+const PRESET_CATEGORIES = ['Health', 'Work', 'Career', 'Music', 'Fitness', 'Learning', 'Personal'];
 
 export const HabitModal: React.FC<HabitModalProps> = ({ isOpen, onClose, habitToEdit }) => {
   const { addHabit, updateHabit, settings } = useApp();
@@ -20,7 +22,12 @@ export const HabitModal: React.FC<HabitModalProps> = ({ isOpen, onClose, habitTo
   const [description, setDescription] = useState('');
   const [icon, setIcon] = useState('🏃');
   const [rewardValue, setRewardValue] = useState(2);
-  const [maxPerDay, setMaxPerDay] = useState(1);
+  const [maxPerPeriod, setMaxPerPeriod] = useState(1);
+  const [frequency, setFrequency] = useState<HabitFrequency>('daily');
+  const [isQuickHabit, setIsQuickHabit] = useState(false);
+  const [category, setCategory] = useState('Personal');
+  const [customTagInput, setCustomTagInput] = useState('');
+  const [tags, setTags] = useState<string[]>(['Personal']);
   const [color, setColor] = useState('#ce7647');
   const [active, setActive] = useState(true);
 
@@ -30,7 +37,11 @@ export const HabitModal: React.FC<HabitModalProps> = ({ isOpen, onClose, habitTo
       setDescription(habitToEdit.description || '');
       setIcon(habitToEdit.icon);
       setRewardValue(habitToEdit.rewardValue);
-      setMaxPerDay(habitToEdit.maxPerDay !== undefined ? habitToEdit.maxPerDay : 1);
+      setMaxPerPeriod(habitToEdit.maxPerPeriod ?? habitToEdit.maxPerDay ?? 1);
+      setFrequency(habitToEdit.frequency || 'daily');
+      setIsQuickHabit(Boolean(habitToEdit.isQuickHabit));
+      setCategory(habitToEdit.category || 'Personal');
+      setTags(habitToEdit.tags && habitToEdit.tags.length > 0 ? habitToEdit.tags : [habitToEdit.category || 'Personal']);
       setColor(habitToEdit.color);
       setActive(habitToEdit.active);
     } else {
@@ -38,7 +49,12 @@ export const HabitModal: React.FC<HabitModalProps> = ({ isOpen, onClose, habitTo
       setDescription('');
       setIcon('🏃');
       setRewardValue(2);
-      setMaxPerDay(1);
+      setMaxPerPeriod(1);
+      setFrequency('daily');
+      setIsQuickHabit(false);
+      setCategory('Personal');
+      setCustomTagInput('');
+      setTags(['Personal']);
       setColor('#ce7647');
       setActive(true);
     }
@@ -46,9 +62,23 @@ export const HabitModal: React.FC<HabitModalProps> = ({ isOpen, onClose, habitTo
 
   if (!isOpen) return null;
 
+  const handleAddTag = () => {
+    const sanitized = sanitizeTag(customTagInput);
+    if (sanitized && !tags.includes(sanitized) && tags.length < 10) {
+      setTags([...tags, sanitized]);
+      setCustomTagInput('');
+    }
+  };
+
+  const handleRemoveTag = (tagToRemove: string) => {
+    setTags(tags.filter(t => t !== tagToRemove));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
+
+    const finalTags = Array.from(new Set([category, ...tags].map(sanitizeTag))).filter(Boolean);
 
     if (habitToEdit) {
       updateHabit({
@@ -57,7 +87,12 @@ export const HabitModal: React.FC<HabitModalProps> = ({ isOpen, onClose, habitTo
         description: description.trim(),
         icon,
         rewardValue: Number(rewardValue) || 1,
-        maxPerDay: Number(maxPerDay) >= 0 ? Number(maxPerDay) : 1,
+        maxPerPeriod: Number(maxPerPeriod) >= 0 ? Number(maxPerPeriod) : 1,
+        maxPerDay: Number(maxPerPeriod) >= 0 ? Number(maxPerPeriod) : 1,
+        frequency,
+        isQuickHabit,
+        category,
+        tags: finalTags,
         color,
         active
       });
@@ -67,7 +102,12 @@ export const HabitModal: React.FC<HabitModalProps> = ({ isOpen, onClose, habitTo
         description: description.trim(),
         icon,
         rewardValue: Number(rewardValue) || 1,
-        maxPerDay: Number(maxPerDay) >= 0 ? Number(maxPerDay) : 1,
+        maxPerPeriod: Number(maxPerPeriod) >= 0 ? Number(maxPerPeriod) : 1,
+        maxPerDay: Number(maxPerPeriod) >= 0 ? Number(maxPerPeriod) : 1,
+        frequency,
+        isQuickHabit,
+        category,
+        tags: finalTags,
         color,
         active,
         order: 99
@@ -109,7 +149,7 @@ export const HabitModal: React.FC<HabitModalProps> = ({ isOpen, onClose, habitTo
             <input
               type="text"
               required
-              placeholder="e.g., Run 5km, Read 15 mins..."
+              placeholder="e.g., Run 5km, Practice Piano..."
               value={name}
               onChange={e => setName(e.target.value)}
               className="w-full px-4 py-2.5 rounded-xl text-sm focus:outline-none"
@@ -122,12 +162,107 @@ export const HabitModal: React.FC<HabitModalProps> = ({ isOpen, onClose, habitTo
             <label className="text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>Description (Optional)</label>
             <input
               type="text"
-              placeholder="Brief target notes..."
+              placeholder="Target details or notes..."
               value={description}
               onChange={e => setDescription(e.target.value)}
               className="w-full px-4 py-2.5 rounded-xl text-sm focus:outline-none"
               style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)' }}
             />
+          </div>
+
+          {/* Frequency & Quick Habit Star Row */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Frequency Selector */}
+            <div className="space-y-1">
+              <label className="text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>Schedule Frequency *</label>
+              <select
+                value={frequency}
+                onChange={e => setFrequency(e.target.value as HabitFrequency)}
+                className="w-full px-3 py-2.5 rounded-xl font-bold text-xs focus:outline-none capitalize cursor-pointer"
+                style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)' }}
+              >
+                <option value="daily" className="bg-zinc-900 text-white">Daily</option>
+                <option value="weekly" className="bg-zinc-900 text-white">Weekly</option>
+                <option value="monthly" className="bg-zinc-900 text-white">Monthly</option>
+              </select>
+            </div>
+
+            {/* Quick Habit Checkbox */}
+            <div className="space-y-1 flex flex-col justify-end">
+              <label
+                onClick={() => setIsQuickHabit(!isQuickHabit)}
+                className="px-3 py-2.5 rounded-xl border flex items-center justify-between cursor-pointer select-none"
+                style={{
+                  background: isQuickHabit ? 'var(--pill-badge-bg)' : 'var(--glass-bg)',
+                  borderColor: isQuickHabit ? 'var(--pill-badge-border)' : 'var(--glass-border)'
+                }}
+              >
+                <div className="flex items-center space-x-1.5 text-xs font-bold" style={{ color: 'var(--text-primary)' }}>
+                  <Star className={`w-4 h-4 ${isQuickHabit ? 'text-amber-400 fill-amber-400' : 'text-zinc-500'}`} />
+                  <span>Quick Habit ⭐️</span>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={isQuickHabit}
+                  onChange={e => setIsQuickHabit(e.target.checked)}
+                  className="rounded accent-amber-500"
+                />
+              </label>
+            </div>
+          </div>
+
+          {/* Category Dropdown */}
+          <div className="space-y-1">
+            <label className="text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>Category / Tag</label>
+            <select
+              value={category}
+              onChange={e => {
+                setCategory(e.target.value);
+                if (!tags.includes(e.target.value)) setTags([...tags, e.target.value]);
+              }}
+              className="w-full px-3 py-2.5 rounded-xl font-bold text-xs focus:outline-none cursor-pointer"
+              style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)' }}
+            >
+              {PRESET_CATEGORIES.map(cat => (
+                <option key={cat} value={cat} className="bg-zinc-900 text-white">{cat}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Custom Tags Input & Chips */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>Custom Tags</label>
+            <div className="flex space-x-2">
+              <input
+                type="text"
+                placeholder="Add custom tag (e.g. Piano)..."
+                value={customTagInput}
+                onChange={e => setCustomTagInput(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddTag(); } }}
+                className="flex-1 px-3 py-2 rounded-xl text-xs focus:outline-none"
+                style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)' }}
+              />
+              <button
+                type="button"
+                onClick={handleAddTag}
+                className="px-3 py-2 rounded-xl text-xs font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30 cursor-pointer"
+              >
+                Add
+              </button>
+            </div>
+
+            {/* Render Tags */}
+            <div className="flex flex-wrap gap-1.5 pt-1">
+              {tags.map(tag => (
+                <span
+                  key={tag}
+                  className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-zinc-800 border border-zinc-700 text-zinc-300 flex items-center space-x-1"
+                >
+                  <span>{tag}</span>
+                  <button type="button" onClick={() => handleRemoveTag(tag)} className="hover:text-rose-400 ml-1">×</button>
+                </span>
+              ))}
+            </div>
           </div>
 
           {/* Icon Selector */}
@@ -151,7 +286,7 @@ export const HabitModal: React.FC<HabitModalProps> = ({ isOpen, onClose, habitTo
             </div>
           </div>
 
-          {/* Reward Value & Max Per Day Grid */}
+          {/* Reward Value & Max Per Period Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
               <label className="text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>
@@ -160,7 +295,7 @@ export const HabitModal: React.FC<HabitModalProps> = ({ isOpen, onClose, habitTo
               <input
                 type="number"
                 min={1}
-                max={50}
+                max={100}
                 required
                 value={rewardValue}
                 onChange={e => setRewardValue(Number(e.target.value))}
@@ -171,46 +306,18 @@ export const HabitModal: React.FC<HabitModalProps> = ({ isOpen, onClose, habitTo
 
             <div className="space-y-1">
               <label className="text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>
-                Max Completions / Day *
+                Max Per {frequency === 'weekly' ? 'Week' : frequency === 'monthly' ? 'Month' : 'Day'} *
               </label>
               <input
                 type="number"
                 min={0}
-                max={50}
+                max={100}
                 required
-                value={maxPerDay}
-                onChange={e => setMaxPerDay(Number(e.target.value))}
+                value={maxPerPeriod}
+                onChange={e => setMaxPerPeriod(Number(e.target.value))}
                 className="w-full px-4 py-2.5 rounded-xl font-bold text-sm focus:outline-none"
                 style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)' }}
               />
-            </div>
-          </div>
-
-          {/* Max Per Day Presets */}
-          <div className="space-y-1">
-            <span className="text-[11px] font-medium block" style={{ color: 'var(--text-muted)' }}>Quick presets:</span>
-            <div className="flex flex-wrap gap-1.5">
-              {[
-                { label: '1x / day', val: 1 },
-                { label: '2x / day', val: 2 },
-                { label: '3x / day', val: 3 },
-                { label: '5x / day', val: 5 },
-                { label: 'Unlimited (0)', val: 0 }
-              ].map(p => (
-                <button
-                  key={p.val}
-                  type="button"
-                  onClick={() => setMaxPerDay(p.val)}
-                  className="px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer"
-                  style={{
-                    background: maxPerDay === p.val ? 'var(--pill-badge-bg)' : 'var(--glass-bg)',
-                    border: maxPerDay === p.val ? '1px solid var(--pill-badge-border)' : '1px solid var(--glass-border)',
-                    color: maxPerDay === p.val ? 'var(--pill-badge-text)' : 'var(--text-muted)',
-                  }}
-                >
-                  {p.label}
-                </button>
-              ))}
             </div>
           </div>
 

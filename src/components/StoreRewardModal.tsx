@@ -22,7 +22,7 @@ export const StoreRewardModal: React.FC<StoreRewardModalProps> = ({ isOpen, onCl
   const [cost, setCost] = useState(12);
   const [icon, setIcon] = useState('🍪');
   const [image, setImage] = useState<string | undefined>(undefined);
-  const [category, setCategory] = useState<'Snacks' | 'Break' | 'Entertainment' | 'Custom'>('Snacks');
+  const [category, setCategory] = useState<string>('Snacks');
 
   useEffect(() => {
     if (rewardToEdit) {

@@ -3,7 +3,7 @@ import { useApp } from '../context/AppContext';
 import { StoreReward } from '../types';
 import { StoreRewardCard } from '../components/StoreRewardCard';
 import { StoreRewardModal } from '../components/StoreRewardModal';
-import { ShoppingBag, Plus, Coins } from 'lucide-react';
+import { ShoppingBag, Plus, Coins, Search } from 'lucide-react';
 import { playSound } from '../services/sound';
 
 export const StorePage: React.FC = () => {
@@ -12,12 +12,17 @@ export const StorePage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [editingReward, setEditingReward] = useState<StoreReward | null>(null);
 
+  const [searchQuery, setSearchQuery] = useState<string>('');
+
   const categories = ['All', 'Snacks', 'Break', 'Entertainment', 'Custom'];
 
   const filteredRewards = rewards.filter(r => {
     if (!r.active) return false;
-    if (selectedCategory === 'All') return true;
-    return r.category === selectedCategory;
+    const matchesSearch = searchQuery === '' ||
+      r.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (r.description && r.description.toLowerCase().includes(searchQuery.toLowerCase()));
+    const matchesCategory = selectedCategory === 'All' || r.category === selectedCategory;
+    return matchesSearch && matchesCategory;
   });
 
   const handleCreate = () => {
@@ -72,25 +77,39 @@ export const StorePage: React.FC = () => {
         </div>
       </div>
 
-      {/* Category Filter Bar */}
-      <div className="flex items-center space-x-2 overflow-x-auto pb-2 no-scrollbar">
-        {categories.map((cat) => (
-          <button
-            key={cat}
-            onClick={() => {
-              playSound.click(settings.soundEnabled);
-              setSelectedCategory(cat);
-            }}
-            className="px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer"
-            style={{
-              background: selectedCategory === cat ? 'var(--pill-badge-bg)' : 'var(--glass-bg)',
-              border: selectedCategory === cat ? '1px solid var(--pill-badge-border)' : '1px solid var(--glass-border)',
-              color: selectedCategory === cat ? 'var(--pill-badge-text)' : 'var(--text-muted)',
-            }}
-          >
-            {cat}
-          </button>
-        ))}
+      {/* Search & Category Filter Bar */}
+      <div className="space-y-3">
+        <div className="relative">
+          <Search className="w-4 h-4 absolute left-3.5 top-3.5 text-zinc-400 pointer-events-none" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="Search rewards by title or description..."
+            className="w-full pl-10 pr-4 py-2.5 rounded-2xl text-sm font-medium focus:outline-none"
+            style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)' }}
+          />
+        </div>
+
+        <div className="flex items-center space-x-2 overflow-x-auto pb-2 no-scrollbar">
+          {categories.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => {
+                playSound.click(settings.soundEnabled);
+                setSelectedCategory(cat);
+              }}
+              className="px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer"
+              style={{
+                background: selectedCategory === cat ? 'var(--pill-badge-bg)' : 'var(--glass-bg)',
+                border: selectedCategory === cat ? '1px solid var(--pill-badge-border)' : '1px solid var(--glass-border)',
+                color: selectedCategory === cat ? 'var(--pill-badge-text)' : 'var(--text-muted)',
+              }}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Reward Store Grid */}

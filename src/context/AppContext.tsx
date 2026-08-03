@@ -27,6 +27,7 @@ import {
   logoutFirebase
 } from '../services/firebase';
 import { computeLedgerStats, calculateKarmaSurcharge } from '../services/ledger';
+import { isHabitDueInPeriod, getPeriodLabel } from '../utils/frequencyUtils';
 
 interface AppContextType {
   habits: Habit[];
@@ -54,6 +55,7 @@ interface AppContextType {
   updateHabit: (habit: Habit) => void;
   deleteHabit: (id: string) => void;
   toggleHabitActive: (id: string) => void;
+  toggleQuickHabit: (id: string) => void;
   reorderHabits: (habits: Habit[]) => void;
   
   // Store Reward CRUD
@@ -81,7 +83,31 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [rewardLogs, setRewardLogs] = useState<RewardLog[]>(loadStoredLogs);
   const [redemptions, setRedemptions] = useState<RewardRedemption[]>(loadStoredRedemptions);
   const [settings, setSettings] = useState<Settings>(loadStoredSettings);
-  const [activeTab, setActiveTab] = useState<string>('dashboard');
+  const getInitialTab = (): string => {
+    const hash = window.location.hash.replace('#', '').trim();
+    const validTabs = ['dashboard', 'log-activity', 'store', 'habits', 'history', 'analytics', 'settings'];
+    return validTabs.includes(hash) ? hash : 'dashboard';
+  };
+
+  const [activeTab, setActiveTabState] = useState<string>(getInitialTab);
+
+  const setActiveTab = (tab: string) => {
+    setActiveTabState(tab);
+    window.location.hash = tab;
+  };
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace('#', '').trim();
+      const validTabs = ['dashboard', 'log-activity', 'store', 'habits', 'history', 'analytics', 'settings'];
+      if (validTabs.includes(hash)) {
+        setActiveTabState(hash);
+      }
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // FX States
@@ -196,12 +222,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const habit = habits.find(h => h.id === habitId);
     if (!habit) return;
 
-    const maxPerDay = habit.maxPerDay !== undefined ? habit.maxPerDay : 1;
-    const todayStr = new Date().toISOString().split('T')[0];
-    const todayCount = rewardLogs.filter(l => l.activityId === habitId && l.timestamp.startsWith(todayStr)).length;
-
-    if (maxPerDay > 0 && todayCount >= maxPerDay) {
-      showToast(`Daily limit reached for "${habit.name}" (${maxPerDay} max per day)! 🎯`);
+    if (!isHabitDueInPeriod(habit, rewardLogs)) {
+      const label = getPeriodLabel(habit.frequency || 'daily');
+      const max = habit.maxPerPeriod ?? habit.maxPerDay ?? 1;
+      showToast(`Limit reached for "${habit.name}" (${max} max per ${label.toLowerCase()})! 🎯`);
       return;
     }
 
@@ -297,6 +321,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const newHabits = habits.map(h => h.id === id ? { ...h, active: !h.active, updatedAt: new Date().toISOString() } : h);
     setHabits(newHabits);
     if (user) syncFirestoreHabits(user.uid, newHabits);
+  };
+
+  const toggleQuickHabit = (id: string) => {
+    const target = habits.find(h => h.id === id);
+    if (!target) return;
+    const nextState = !target.isQuickHabit;
+    const newHabits = habits.map(h => h.id === id ? { ...h, isQuickHabit: nextState, updatedAt: new Date().toISOString() } : h);
+    setHabits(newHabits);
+    if (user) syncFirestoreHabits(user.uid, newHabits);
+    showToast(nextState ? `Starred "${target.name}" as Quick Habit ⭐️` : `Unmarked "${target.name}" from Quick Habits`);
   };
 
   const reorderHabits = (newOrder: Habit[]) => {
@@ -405,6 +439,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         updateHabit,
         deleteHabit,
         toggleHabitActive,
+        toggleQuickHabit,
         reorderHabits,
         addReward,
         updateReward,

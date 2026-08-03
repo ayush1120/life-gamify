@@ -1,7 +1,7 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
 import { CoinToken } from './CoinToken';
-import { LayoutDashboard, ShoppingBag, CheckSquare, History, BarChart3, Settings as SettingsIcon, Flame, Sun, Moon, LogIn, LogOut, User } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, CheckSquare, History, BarChart3, Settings as SettingsIcon, Flame, Sun, Moon, LogIn, LogOut, User, Zap } from 'lucide-react';
 import { playSound } from '../services/sound';
 
 export const Navbar: React.FC = () => {
@@ -23,6 +23,7 @@ export const Navbar: React.FC = () => {
 
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'log-activity', label: 'Log Activity', icon: Zap },
     { id: 'store', label: 'Reward Store', icon: ShoppingBag },
     { id: 'habits', label: 'Habits', icon: CheckSquare },
     { id: 'history', label: 'History', icon: History },

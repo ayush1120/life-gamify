@@ -1,10 +1,18 @@
+export type HabitFrequency = 'daily' | 'weekly' | 'monthly';
+export type HabitCategory = 'Work' | 'Health' | 'Career' | 'Music' | 'Personal' | 'Fitness' | 'Learning' | string;
+
 export interface Habit {
   id: string;
   name: string;
   description?: string;
   icon: string; // Emoji or Lucide icon key
   rewardValue: number; // e.g. 5 coins
-  maxPerDay?: number; // Maximum allowed completions per day (default 1, 0 for unlimited)
+  maxPerPeriod?: number; // Maximum allowed completions per frequency period (default 1, 0 for unlimited)
+  maxPerDay?: number; // Kept for backward compatibility
+  frequency: HabitFrequency; // 'daily' | 'weekly' | 'monthly' (default 'daily')
+  isQuickHabit?: boolean; // Favorite marker for quick 1-tap logging
+  category?: HabitCategory; // Primary category e.g. 'Health'
+  tags?: string[]; // Array of tags e.g. ['Health', 'Work']
   active: boolean;
   color: string;
   order: number;
@@ -20,7 +28,7 @@ export interface StoreReward {
   icon: string; // Emoji or preset icon
   image?: string; // Data URL or URL path for custom uploaded image
   active: boolean;
-  category: 'Snacks' | 'Break' | 'Entertainment' | 'Custom';
+  category: 'Snacks' | 'Break' | 'Entertainment' | 'Custom' | string;
   createdAt: string;
   updatedAt: string;
 }
