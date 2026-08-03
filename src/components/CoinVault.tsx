@@ -4,6 +4,7 @@ import { CoinToken } from './CoinToken';
 import { motion } from 'framer-motion';
 import { ShoppingBag, ArrowRight, Trophy } from 'lucide-react';
 import { playSound } from '../services/sound';
+import { getAssetUrl } from '../utils/assets';
 
 export const EMPTY_VAULT_IMAGE_PATH = '/assets/empty_vault.png';
 export const FILLED_VAULT_IMAGE_PATH = '/assets/vault_filled.png';
@@ -35,7 +36,7 @@ export const CoinVault: React.FC = () => {
         <div className="relative w-52 h-60 sm:w-60 sm:h-72 my-3">
           <img
             key={vaultImage}
-            src={vaultImage}
+            src={getAssetUrl(vaultImage)}
             alt={balance > 0 ? "Filled Coin Vault" : "Empty Coin Vault"}
             className="w-full h-full object-contain select-none pointer-events-none drop-shadow-2xl transition-opacity duration-300"
             draggable={false}

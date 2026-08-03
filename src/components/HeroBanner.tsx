@@ -3,6 +3,7 @@ import { useApp } from '../context/AppContext';
 import { CoinToken } from './CoinToken';
 import { Plus, Sparkles } from 'lucide-react';
 import { playSound } from '../services/sound';
+import { getAssetUrl } from '../utils/assets';
 
 interface HeroBannerProps {
   onOpenHabitModal: () => void;
@@ -49,7 +50,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ onOpenHabitModal }) => {
         {/* Centre: Treasure Chest Artwork (themed per mode) */}
         <div className="hidden md:flex items-center justify-center flex-shrink-0 w-[320px] h-[240px] relative">
           <img
-            src={settings.theme === 'dark' ? '/assets/chest_dark_transparent.png' : '/assets/chest_light_transparent.png'}
+            src={getAssetUrl(settings.theme === 'dark' ? '/assets/chest_dark_transparent.png' : '/assets/chest_light_transparent.png')}
             alt="Treasure Chest"
             className="w-full h-full object-contain select-none pointer-events-none drop-shadow-2xl"
             draggable={false}
