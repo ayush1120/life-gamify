@@ -26,7 +26,7 @@ import {
   signInWithGoogle as firebaseGoogleSignIn,
   logoutFirebase
 } from '../services/firebase';
-import { computeLedgerStats, calculateKarmaSurcharge, calculateMistakeFee, isGracePeriod } from '../services/ledger';
+import { computeLedgerStats, calculateKarmaSurcharge, calculateMistakeFee, isHabitLogGracePeriod } from '../services/ledger';
 import { isHabitDueInPeriod, getPeriodLabel } from '../utils/frequencyUtils';
 
 interface AppContextType {
@@ -395,7 +395,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const totalSpent = redemptions.reduce((sum, r) => sum + r.coinsSpent, 0);
     const isDeficit = (totalEarned - targetLog.rewardEarned) < totalSpent;
 
-    const isFreeGrace = isGracePeriod(targetLog.timestamp);
+    const isFreeGrace = isHabitLogGracePeriod(targetLog.timestamp);
 
     if (isDeficit) {
       const karmaFee = calculateKarmaSurcharge(stats.coinBalance);
@@ -409,12 +409,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (user) syncFirestoreRewardLog(user.uid, retractedLog);
       showToast(`Log retracted. Phantom Debt created (-${karmaFee} surcharge)`);
     } else if (isFreeGrace) {
-      // 1-Hour Grace Period (<= 60 mins): Clean 100% free delete with 0 fee!
+      // 5-Minute Grace Period (<= 5 mins): Clean 100% free delete with 0 fee!
       setRewardLogs(rewardLogs.filter(l => l.id !== logId));
       if (user) deleteFirestoreLog(user.uid, logId);
-      showToast('Log removed cleanly (1-Hour Grace Period — 0 fee)! 🛡️');
+      showToast('Log removed cleanly (5-Min Accidental Tap Grace Period)! 🛡️');
     } else {
-      // Late Delete (> 60 mins): Retract log with 1% Mistake Fee applied
+      // Late Delete (> 5 mins): Retract log with 1% Mistake Fee applied
       const mistakeFee = calculateMistakeFee(stats.coinBalance);
       const retractedLog: RewardLog = {
         ...targetLog,

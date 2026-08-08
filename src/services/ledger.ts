@@ -29,13 +29,25 @@ export const calculateRestockingFee = (coinsSpent: number): number => {
 };
 
 /**
+ * Checks if a habit log is within the 5-Minute Grace Period (300,000 ms) for a 100% free deletion (Accidental Tap Protection).
+ */
+export const isHabitLogGracePeriod = (logTimestamp: string, nowMs: number = Date.now()): boolean => {
+  const logTime = new Date(logTimestamp).getTime();
+  const elapsedMs = Math.max(0, nowMs - logTime);
+  return elapsedMs <= 300000; // 5 minutes = 300,000 ms
+};
+
+/**
  * Checks if a store redemption is within the 1-Hour (60 minute) Grace Period for a free refund.
  */
-export const isGracePeriod = (purchaseTimestamp: string, nowMs: number = Date.now()): boolean => {
+export const isRedemptionGracePeriod = (purchaseTimestamp: string, nowMs: number = Date.now()): boolean => {
   const purchaseTime = new Date(purchaseTimestamp).getTime();
   const elapsedMs = Math.max(0, nowMs - purchaseTime);
   return elapsedMs <= 3600000; // 60 minutes = 3,600,000 ms
 };
+
+/** Alias for store redemption grace period */
+export const isGracePeriod = isRedemptionGracePeriod;
 
 /**
  * Computes all Coin Economy Statistics dynamically from chronological transactions.

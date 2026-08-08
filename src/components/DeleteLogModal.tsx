@@ -1,6 +1,6 @@
 import React from 'react';
 import { RewardLog } from '../types';
-import { calculateMistakeFee, calculateKarmaSurcharge, isGracePeriod } from '../services/ledger';
+import { calculateMistakeFee, calculateKarmaSurcharge, isHabitLogGracePeriod } from '../services/ledger';
 import { AlertTriangle, Trash2, ShieldAlert, Sparkles, X, Clock } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { CoinToken } from './CoinToken';
@@ -29,7 +29,7 @@ export const DeleteLogModal: React.FC<DeleteLogModalProps> = ({
   // Determine if deleting this log creates/adds to a ledger deficit
   const isDeficit = (totalEarned - log.rewardEarned) < totalSpent;
 
-  const isFreeGrace = isGracePeriod(log.timestamp);
+  const isFreeGrace = isHabitLogGracePeriod(log.timestamp);
   const mistakeFee = isFreeGrace ? 0 : calculateMistakeFee(currentBalance);
   const karmaFee = calculateKarmaSurcharge(currentBalance);
 
@@ -101,14 +101,14 @@ export const DeleteLogModal: React.FC<DeleteLogModalProps> = ({
             </div>
           </div>
         ) : isFreeGrace ? (
-          /* 1-Hour Grace Period (Free Delete) View */
+          /* 5-Minute Grace Period (Free Delete) View */
           <div className="space-y-4 text-sm">
             <div className="p-3.5 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-xs space-y-1">
               <p className="font-bold text-emerald-400 flex items-center gap-1">
-                <Sparkles className="w-4 h-4" /> 1-Hour Grace Period (Free Delete)
+                <Sparkles className="w-4 h-4" /> 5-Minute Accidental Tap Grace Period (Free Delete)
               </p>
               <p style={{ color: 'var(--text-primary)' }}>
-                This habit was logged within the last 60 minutes. Deleting now is <strong>100% free with 0% fee</strong>!
+                This habit was logged within the last 5 minutes. Deleting now is <strong>100% free with 0% fee</strong>!
               </p>
             </div>
 
@@ -141,7 +141,7 @@ export const DeleteLogModal: React.FC<DeleteLogModalProps> = ({
                 <Clock className="w-4 h-4" /> Late Delete Notice (1% Mistake Fee)
               </p>
               <p style={{ color: 'var(--text-primary)' }}>
-                This log is over 1 hour old. Proceeding will remove the entry and deduct a <strong>1% Mistake Fee</strong>.
+                This log is over 5 minutes old. Proceeding will remove the entry and deduct a <strong>1% Mistake Fee</strong>.
               </p>
             </div>
 

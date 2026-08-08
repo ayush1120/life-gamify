@@ -4,6 +4,8 @@ import {
   calculateKarmaSurcharge, 
   calculateRestockingFee, 
   isGracePeriod, 
+  isHabitLogGracePeriod,
+  isRedemptionGracePeriod,
   computeLedgerStats 
 } from '../ledger';
 import { RewardLog, RewardRedemption } from '../../types';
@@ -54,14 +56,45 @@ describe('Karma Ledger Calculations & Security Defenses', () => {
     });
   });
 
+  describe('5-Minute Habit Log Accidental Tap Grace Window', () => {
+    it('qualifies for 100% free deletion (0% fee) if <= 5 minutes elapsed', () => {
+      const now = Date.now();
+      const log10SecAgo = new Date(now - 10 * 1000).toISOString();
+      const log2MinAgo = new Date(now - 2 * 60 * 1000).toISOString();
+      const log5MinAgo = new Date(now - 5 * 60 * 1000).toISOString();
+
+      expect(isHabitLogGracePeriod(log10SecAgo, now)).toBe(true);
+      expect(isHabitLogGracePeriod(log2MinAgo, now)).toBe(true);
+      expect(isHabitLogGracePeriod(log5MinAgo, now)).toBe(true);
+    });
+
+    it('requires 1% mistake fee if > 5 minutes elapsed', () => {
+      const now = Date.now();
+      const log5Min1SecAgo = new Date(now - (5 * 60 + 1) * 1000).toISOString();
+      const log10MinAgo = new Date(now - 10 * 60 * 1000).toISOString();
+      const log1HourAgo = new Date(now - 60 * 60 * 1000).toISOString();
+
+      expect(isHabitLogGracePeriod(log5Min1SecAgo, now)).toBe(false);
+      expect(isHabitLogGracePeriod(log10MinAgo, now)).toBe(false);
+      expect(isHabitLogGracePeriod(log1HourAgo, now)).toBe(false);
+    });
+
+    it('handles clock shifts safely without crashing', () => {
+      const now = Date.now();
+      const futureTime = new Date(now + 10000).toISOString();
+      expect(isHabitLogGracePeriod(futureTime, now)).toBe(true);
+    });
+  });
+
   describe('1-Hour Refund Grace Window', () => {
     it('qualifies for 100% free refund if <= 60 minutes elapsed', () => {
       const now = Date.now();
       const purchase30mAgo = new Date(now - 30 * 60 * 1000).toISOString();
       const purchase60mAgo = new Date(now - 60 * 60 * 1000).toISOString();
 
+      expect(isRedemptionGracePeriod(purchase30mAgo, now)).toBe(true);
+      expect(isRedemptionGracePeriod(purchase60mAgo, now)).toBe(true);
       expect(isGracePeriod(purchase30mAgo, now)).toBe(true);
-      expect(isGracePeriod(purchase60mAgo, now)).toBe(true);
     });
 
     it('triggers late restocking fee if > 60 minutes elapsed', () => {
@@ -69,14 +102,15 @@ describe('Karma Ledger Calculations & Security Defenses', () => {
       const purchase61mAgo = new Date(now - 61 * 60 * 1000).toISOString();
       const purchase2HoursAgo = new Date(now - 120 * 60 * 1000).toISOString();
 
+      expect(isRedemptionGracePeriod(purchase61mAgo, now)).toBe(false);
+      expect(isRedemptionGracePeriod(purchase2HoursAgo, now)).toBe(false);
       expect(isGracePeriod(purchase61mAgo, now)).toBe(false);
-      expect(isGracePeriod(purchase2HoursAgo, now)).toBe(false);
     });
 
     it('handles clock shifts safely without crashing', () => {
       const now = Date.now();
       const futureTime = new Date(now + 10000).toISOString();
-      expect(isGracePeriod(futureTime, now)).toBe(true);
+      expect(isRedemptionGracePeriod(futureTime, now)).toBe(true);
     });
   });
 

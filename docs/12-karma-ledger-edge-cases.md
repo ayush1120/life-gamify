@@ -26,16 +26,20 @@ The **Karma Ledger System** governs habit log deletions, store reward redemption
 
 ## 2. Mathematical Formulas & Rules
 
-### A. Mistake Fee (Normal Log Delete)
+### A. Habit Log Deletion & Grace Period (Accidental Tap Protection)
 Applied when deleting a habit log whose coins are unspent:
-$$\text{Mistake Fee} = \begin{cases} \max\left(1, \lceil \text{Vault Balance} \times 0.01 \rceil\right) & \text{if Vault Balance} > 0 \\ 0 & \text{if Vault Balance} = 0 \end{cases}$$
+
+$$\text{Mistake Fee} = \begin{cases} 0 & \text{if Elapsed Time} \le 5\text{ mins (Accidental Tap Grace Period)} \\ \max\left(1, \lceil \text{Vault Balance} \times 0.01 \rceil\right) & \text{if Elapsed Time} > 5\text{ mins and Vault Balance} > 0 \\ 0 & \text{if Vault Balance} = 0 \end{cases}$$
+
+- **$\le 5$ Minutes (Grace Window)**: Log is removed cleanly with $0\%$ fee (Accidental Tap Protection).
+- **$> 5$ Minutes (Late Delete)**: Entry is marked as `isRetracted: true` with a $1\%$ Mistake Fee deducted from Vault Balance.
 
 ### B. Karma Surcharge (Spent Log Retraction)
-Applied when retracting a spent habit log to create Phantom Debt:
+Applied when retracting a spent habit log to create Phantom Debt (overrides grace period if coins were spent):
 $$\text{Karma Surcharge} = \begin{cases} \max\left(1, \lceil \text{Vault Balance} \times 0.02 \rceil\right) & \text{if Vault Balance} > 0 \\ 0 & \text{if Vault Balance} = 0 \end{cases}$$
 $$\text{Phantom Debt} = \text{Actual Deficit} + \text{Karma Surcharge}$$
 
-### C. Store Redemption Refunds
+### C. Store Redemption Refunds (60-Minute Window)
 Applied when canceling a Store Reward Redemption:
 $$\text{Net Refund} = \begin{cases} \text{coinsSpent} & \text{if Elapsed Time} \le 60\text{ mins (Grace Period)} \\ \text{coinsSpent} - \max\left(1, \lceil \text{coinsSpent} \times 0.15 \rceil\right) & \text{if Elapsed Time} > 60\text{ mins (Late Refund)} \end{cases}$$
 
