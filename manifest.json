@@ -3,17 +3,17 @@
   "name": "Life Gamify - Habit Gamification Platform",
   "icons": [
     {
-      "src": "/life-gamify/apple-touch-icon.png",
+      "src": "/life-gamify/assets/gold_coin_transparent.png",
       "type": "image/png",
       "sizes": "512x512",
-      "purpose": "any maskable"
+      "purpose": "any"
     }
   ],
   "start_url": "/life-gamify/",
   "scope": "/life-gamify/",
   "id": "/life-gamify/",
-  "background_color": "#160d0a",
-  "theme_color": "#160d0a",
+  "background_color": "#080c18",
+  "theme_color": "#080c18",
   "display": "standalone",
   "orientation": "portrait"
 }
