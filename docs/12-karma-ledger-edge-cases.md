@@ -32,7 +32,8 @@ Applied when deleting a habit log whose coins are unspent:
 $$\text{Mistake Fee} = \begin{cases} 0 & \text{if Elapsed Time} \le 5\text{ mins (Accidental Tap Grace Period)} \\ \max\left(1, \lceil \text{Vault Balance} \times 0.01 \rceil\right) & \text{if Elapsed Time} > 5\text{ mins and Vault Balance} > 0 \\ 0 & \text{if Vault Balance} = 0 \end{cases}$$
 
 - **$\le 5$ Minutes (Grace Window)**: Log is removed cleanly with $0\%$ fee (Accidental Tap Protection).
-- **$> 5$ Minutes (Late Delete)**: Entry is marked as `isRetracted: true` with a $1\%$ Mistake Fee deducted from Vault Balance.
+- **$> 5$ Minutes (Late Delete)**: Log is removed cleanly from history; $1\%$ Mistake Fee is deducted from Vault Balance (if Vault Balance $> 0$).
+- **Deficit Retraction (Spent Coins)**: If Vault Balance $< \text{Log Coins}$, the log is marked as `isRetracted: true` and a $2\%$ Karma Surcharge is applied to create `Phantom Debt`.
 
 ### B. Karma Surcharge (Spent Log Retraction)
 Applied when retracting a spent habit log to create Phantom Debt (overrides grace period if coins were spent):
