@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
+import { LogoutModal } from '../components/LogoutModal';
 import { exportAllData, importAllData } from '../services/storage';
 import { ThemeOption, CelebrationStyle } from '../types';
 import { Settings as SettingsIcon, Volume2, VolumeX, Shield, Download, Upload, Palette, Save, Sparkles, Sun, Moon } from 'lucide-react';
@@ -20,6 +21,7 @@ const CELEBRATION_STYLES: { id: CelebrationStyle; name: string; desc: string }[]
 
 export const SettingsPage: React.FC = () => {
   const { settings, updateSettings, showToast, user, signInWithGoogle, logout } = useApp();
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
   const [theme, setTheme] = useState<ThemeOption>(settings.theme || 'dark');
   const [celebrationStyle, setCelebrationStyle] = useState<CelebrationStyle>(settings.celebrationStyle || 'confetti');
@@ -255,12 +257,18 @@ export const SettingsPage: React.FC = () => {
                 </span>
                 <button
                   type="button"
-                  onClick={logout}
+                  onClick={() => setIsLogoutModalOpen(true)}
                   className="px-3 py-1.5 rounded-xl text-xs font-bold bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 border border-rose-500/30 cursor-pointer"
                 >
                   Sign Out
                 </button>
               </div>
+
+              <LogoutModal
+                isOpen={isLogoutModalOpen}
+                onClose={() => setIsLogoutModalOpen(false)}
+                onConfirm={logout}
+              />
             </div>
           ) : (
             <div className="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">

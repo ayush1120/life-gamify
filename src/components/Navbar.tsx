@@ -1,11 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { CoinToken } from './CoinToken';
+import { LogoutModal } from './LogoutModal';
 import { LayoutDashboard, ShoppingBag, CheckSquare, History, BarChart3, Settings as SettingsIcon, Flame, Sun, Moon, LogIn, LogOut, User, Zap } from 'lucide-react';
 import { playSound } from '../services/sound';
 
 export const Navbar: React.FC = () => {
   const { activeTab, setActiveTab, stats, settings, updateSettings, user, signInWithGoogle, logout, showToast } = useApp();
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
   const handleTabClick = (tabId: string) => {
     playSound.click(settings.soundEnabled);
@@ -106,7 +108,7 @@ export const Navbar: React.FC = () => {
               <>
                 {/* Mobile Profile Avatar Button */}
                 <button
-                  onClick={logout}
+                  onClick={() => setIsLogoutModalOpen(true)}
                   className="sm:hidden p-0.5 rounded-full border-2 border-emerald-400/80 hover:scale-105 transition-transform cursor-pointer shrink-0"
                   title={`Signed in as ${user.displayName || 'User'}. Tap to sign out.`}
                 >
@@ -132,13 +134,19 @@ export const Navbar: React.FC = () => {
                     {user.displayName || user.email?.split('@')[0]}
                   </span>
                   <button
-                    onClick={logout}
+                    onClick={() => setIsLogoutModalOpen(true)}
                     className="p-1.5 rounded-full bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 cursor-pointer"
                     title="Sign out of Google"
                   >
                     <LogOut className="w-3.5 h-3.5" />
                   </button>
                 </div>
+
+                <LogoutModal
+                  isOpen={isLogoutModalOpen}
+                  onClose={() => setIsLogoutModalOpen(false)}
+                  onConfirm={logout}
+                />
               </>
             ) : (
               <button
