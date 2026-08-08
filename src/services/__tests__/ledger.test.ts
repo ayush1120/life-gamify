@@ -166,6 +166,26 @@ describe('Karma Ledger Calculations & Security Defenses', () => {
       expect(stats.coinBalance).toBe(10);
     });
 
+    it('does NOT create Phantom Debt when habit log is deleted after refunding all store purchases', () => {
+      // 1. Log habit (+20)
+      const log1: RewardLog = { id: '1', activityId: 'h1', habitName: 'Run', icon: '🏃', rewardEarned: 20, timestamp: '2026-08-01T10:00:00Z', unit: 'Coins' };
+      // 2. Buy reward (-15)
+      const red1: RewardRedemption = { id: 'r1', rewardId: 'rw1', rewardName: 'Snack', coinsSpent: 15, timestamp: '2026-08-01T11:00:00Z' };
+
+      expect(computeLedgerStats([log1], [red1]).coinBalance).toBe(5);
+
+      // 3. Refund purchase (redemptions array becomes empty [])
+      const redemptionsAfterRefund: RewardRedemption[] = [];
+      expect(computeLedgerStats([log1], redemptionsAfterRefund).coinBalance).toBe(20);
+
+      // 4. Delete habit log (logs array becomes empty [])
+      const logsAfterDelete: RewardLog[] = [];
+      const statsAfterDelete = computeLedgerStats(logsAfterDelete, redemptionsAfterRefund);
+
+      expect(statsAfterDelete.coinBalance).toBe(0);
+      expect(statsAfterDelete.phantomDebt).toBe(0);
+    });
+
   });
 
 });

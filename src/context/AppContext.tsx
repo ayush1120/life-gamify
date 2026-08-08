@@ -408,23 +408,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setRewardLogs(rewardLogs.map(l => l.id === logId ? retractedLog : l));
       if (user) syncFirestoreRewardLog(user.uid, retractedLog);
       showToast(`Log retracted. Phantom Debt created (-${karmaFee} surcharge)`);
-    } else if (isFreeGrace) {
-      // 5-Minute Grace Period (<= 5 mins): Clean 100% free delete with 0 fee!
+    } else {
+      // Non-Deficit Delete: Cleanly remove log from history (No Phantom Debt, No Retracted status!)
       setRewardLogs(rewardLogs.filter(l => l.id !== logId));
       if (user) deleteFirestoreLog(user.uid, logId);
-      showToast('Log removed cleanly (5-Min Accidental Tap Grace Period)! 🛡️');
-    } else {
-      // Late Delete (> 5 mins): Retract log with 1% Mistake Fee applied
-      const mistakeFee = calculateMistakeFee(stats.coinBalance);
-      const retractedLog: RewardLog = {
-        ...targetLog,
-        isRetracted: true,
-        retractedAt: new Date().toISOString(),
-        karmaFeeApplied: mistakeFee
-      };
-      setRewardLogs(rewardLogs.map(l => l.id === logId ? retractedLog : l));
-      if (user) syncFirestoreRewardLog(user.uid, retractedLog);
-      showToast(`Log deleted. 1% Mistake Fee applied (-${mistakeFee} coins)`);
+
+      if (isFreeGrace) {
+        showToast('Log removed cleanly (5-Min Accidental Tap Grace Period)! 🛡️');
+      } else {
+        const mistakeFee = calculateMistakeFee(stats.coinBalance);
+        showToast(`Log removed cleanly (-${targetLog.rewardEarned} coins + ${mistakeFee} fee)`);
+      }
     }
   };
 
