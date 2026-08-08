@@ -26,7 +26,7 @@ import {
   signInWithGoogle as firebaseGoogleSignIn,
   logoutFirebase
 } from '../services/firebase';
-import { computeLedgerStats, calculateKarmaSurcharge } from '../services/ledger';
+import { computeLedgerStats, calculateKarmaSurcharge, calculateMistakeFee, isGracePeriod } from '../services/ledger';
 import { isHabitDueInPeriod, getPeriodLabel } from '../utils/frequencyUtils';
 
 interface AppContextType {
@@ -395,6 +395,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const totalSpent = redemptions.reduce((sum, r) => sum + r.coinsSpent, 0);
     const isDeficit = (totalEarned - targetLog.rewardEarned) < totalSpent;
 
+    const isFreeGrace = isGracePeriod(targetLog.timestamp);
+
     if (isDeficit) {
       const karmaFee = calculateKarmaSurcharge(stats.coinBalance);
       const retractedLog: RewardLog = {
@@ -405,11 +407,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       };
       setRewardLogs(rewardLogs.map(l => l.id === logId ? retractedLog : l));
       if (user) syncFirestoreRewardLog(user.uid, retractedLog);
-      showToast(`Log retracted. Phantom Debt created (-${karmaFee} ${settings.currencySymbol} surcharge)`);
-    } else {
+      showToast(`Log retracted. Phantom Debt created (-${karmaFee} surcharge)`);
+    } else if (isFreeGrace) {
+      // 1-Hour Grace Period (<= 60 mins): Clean 100% free delete with 0 fee!
       setRewardLogs(rewardLogs.filter(l => l.id !== logId));
       if (user) deleteFirestoreLog(user.uid, logId);
-      showToast('Log removed cleanly');
+      showToast('Log removed cleanly (1-Hour Grace Period — 0 fee)! 🛡️');
+    } else {
+      // Late Delete (> 60 mins): Retract log with 1% Mistake Fee applied
+      const mistakeFee = calculateMistakeFee(stats.coinBalance);
+      const retractedLog: RewardLog = {
+        ...targetLog,
+        isRetracted: true,
+        retractedAt: new Date().toISOString(),
+        karmaFeeApplied: mistakeFee
+      };
+      setRewardLogs(rewardLogs.map(l => l.id === logId ? retractedLog : l));
+      if (user) syncFirestoreRewardLog(user.uid, retractedLog);
+      showToast(`Log deleted. 1% Mistake Fee applied (-${mistakeFee} coins)`);
     }
   };
 
