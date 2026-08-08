@@ -46,7 +46,7 @@ export const BottomNav: React.FC = () => {
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
               className="md:hidden fixed right-4 z-40 w-48 rounded-2xl p-2 shadow-2xl origin-bottom-right"
               style={{ 
-                bottom: 'calc(max(env(safe-area-inset-bottom), 0px) + 76px)',
+                bottom: 'calc(max(env(safe-area-inset-bottom), 16px) + 78px)',
                 background: 'var(--glass-bg)', 
                 border: '1px solid var(--glass-border)'
               }}
@@ -63,7 +63,7 @@ export const BottomNav: React.FC = () => {
                     <button
                       key={item.id}
                       onClick={() => handleTabClick(item.id)}
-                      className="flex items-center space-x-3 w-full p-3 rounded-xl transition-colors cursor-pointer"
+                      className="flex items-center space-x-3 w-full p-3 rounded-xl transition-colors cursor-pointer select-none"
                       style={{
                         background: isActive ? 'var(--pill-badge-bg)' : 'transparent',
                         color: isActive ? 'var(--pill-badge-text)' : 'var(--text-primary)'
@@ -81,11 +81,11 @@ export const BottomNav: React.FC = () => {
       </AnimatePresence>
 
       <nav 
-        className="md:hidden fixed bottom-0 left-0 right-0 z-40 backdrop-blur-xl"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-40 backdrop-blur-xl select-none"
         style={{ 
           background: 'var(--nav-bg)', 
           borderTop: '1px solid var(--nav-border)',
-          paddingBottom: 'env(safe-area-inset-bottom)'
+          paddingBottom: 'max(env(safe-area-inset-bottom), 16px)'
         }}
       >
         <div className="flex justify-around items-center h-[68px] px-2">

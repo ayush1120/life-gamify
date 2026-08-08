@@ -24,7 +24,7 @@ export const FAB: React.FC = () => {
   return (
     <div 
       className="fixed right-4 md:bottom-8 md:right-8 z-20 flex flex-col items-end md:hidden"
-      style={{ bottom: 'calc(max(env(safe-area-inset-bottom), 16px) + 72px)' }}
+      style={{ bottom: 'calc(max(env(safe-area-inset-bottom), 16px) + 84px)' }}
     >
       {/* Backdrop for mobile to focus on the menu */}
       {isOpen && (

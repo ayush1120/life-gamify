@@ -1,0 +1,17 @@
+{
+  "short_name": "Life Gamify",
+  "name": "Life Gamify - Habit Gamification Platform",
+  "icons": [
+    {
+      "src": "/apple-touch-icon.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#160d0a",
+  "theme_color": "#160d0a",
+  "display": "standalone",
+  "orientation": "portrait"
+}
