@@ -141,14 +141,30 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
         // 2. Live Logs Subscription (Completions & Retracts)
         const unsubLogs = subscribeFirestoreLogs(authUser.uid, (cloudLogs) => {
-          setRewardLogs(cloudLogs);
-          saveStoredLogs(cloudLogs);
+          if (cloudLogs.length > 0) {
+            setRewardLogs(cloudLogs);
+            saveStoredLogs(cloudLogs);
+          } else {
+            // If cloud logs are empty, sync existing local logs to cloud
+            const localLogs = loadStoredLogs();
+            if (localLogs.length > 0) {
+              localLogs.forEach(log => syncFirestoreRewardLog(authUser.uid, log));
+            }
+          }
         });
 
         // 3. Live Redemptions Subscription (Store Reward Purchases)
         const unsubRedemptions = subscribeFirestoreRedemptions(authUser.uid, (cloudRedemptions) => {
-          setRedemptions(cloudRedemptions);
-          saveStoredRedemptions(cloudRedemptions);
+          if (cloudRedemptions.length > 0) {
+            setRedemptions(cloudRedemptions);
+            saveStoredRedemptions(cloudRedemptions);
+          } else {
+            // If cloud redemptions are empty, sync existing local redemptions to cloud
+            const localRedemptions = loadStoredRedemptions();
+            if (localRedemptions.length > 0) {
+              localRedemptions.forEach(r => syncFirestoreRedemption(authUser.uid, r));
+            }
+          }
         });
 
         // 4. Live Settings Subscription
