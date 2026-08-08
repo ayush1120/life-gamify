@@ -96,6 +96,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     window.location.hash = tab;
   };
 
+  // Apply theme CSS class and dynamic meta theme-color for system bars (Android/iOS)
+  useEffect(() => {
+    const isDark = settings.theme !== 'light';
+    const themeColor = isDark ? '#080c18' : '#fffbeb';
+    
+    document.documentElement.classList.remove('theme-dark', 'theme-light', 'dark');
+    document.documentElement.classList.add(isDark ? 'theme-dark' : 'theme-light', isDark ? 'dark' : 'light');
+
+    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+    if (metaThemeColor) {
+      metaThemeColor.setAttribute('content', themeColor);
+    }
+  }, [settings.theme]);
+
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash.replace('#', '').trim();
