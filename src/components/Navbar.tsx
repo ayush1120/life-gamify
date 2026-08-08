@@ -60,7 +60,7 @@ export const Navbar: React.FC = () => {
           </div>
 
           {/* Right Controls */}
-          <div className="flex items-center space-x-2 sm:space-x-3">
+          <div className="flex items-center space-x-1.5 sm:space-x-3 shrink-0">
 
             {/* Streak Badge */}
             <div
@@ -103,29 +103,47 @@ export const Navbar: React.FC = () => {
 
             {/* Google Auth User Profile / Login */}
             {user ? (
-              <div className="flex items-center space-x-2 p-1 rounded-full bg-emerald-500/10 border border-emerald-500/30">
-                {user.photoURL ? (
-                  <img src={user.photoURL} alt={user.displayName || 'User'} className="w-7 h-7 rounded-full border border-emerald-400 object-cover" />
-                ) : (
-                  <div className="w-7 h-7 rounded-full bg-emerald-500 text-emerald-950 flex items-center justify-center font-bold text-xs">
-                    <User className="w-4 h-4" />
-                  </div>
-                )}
-                <span className="text-xs font-bold hidden md:inline px-1" style={{ color: 'var(--text-primary)' }}>
-                  {user.displayName || user.email?.split('@')[0]}
-                </span>
+              <>
+                {/* Mobile Profile Avatar Button */}
                 <button
                   onClick={logout}
-                  className="p-1.5 rounded-full bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 cursor-pointer"
-                  title="Sign out of Google"
+                  className="sm:hidden p-0.5 rounded-full border-2 border-emerald-400/80 hover:scale-105 transition-transform cursor-pointer shrink-0"
+                  title={`Signed in as ${user.displayName || 'User'}. Tap to sign out.`}
                 >
-                  <LogOut className="w-3.5 h-3.5" />
+                  {user.photoURL ? (
+                    <img src={user.photoURL} alt={user.displayName || 'User'} className="w-7 h-7 rounded-full object-cover" />
+                  ) : (
+                    <div className="w-7 h-7 rounded-full bg-emerald-500 text-emerald-950 flex items-center justify-center font-bold text-xs">
+                      <User className="w-4 h-4" />
+                    </div>
+                  )}
                 </button>
-              </div>
+
+                {/* Desktop Full Profile Pill */}
+                <div className="hidden sm:flex items-center space-x-2 p-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 shrink-0">
+                  {user.photoURL ? (
+                    <img src={user.photoURL} alt={user.displayName || 'User'} className="w-7 h-7 rounded-full border border-emerald-400 object-cover" />
+                  ) : (
+                    <div className="w-7 h-7 rounded-full bg-emerald-500 text-emerald-950 flex items-center justify-center font-bold text-xs">
+                      <User className="w-4 h-4" />
+                    </div>
+                  )}
+                  <span className="text-xs font-bold hidden md:inline px-1" style={{ color: 'var(--text-primary)' }}>
+                    {user.displayName || user.email?.split('@')[0]}
+                  </span>
+                  <button
+                    onClick={logout}
+                    className="p-1.5 rounded-full bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 cursor-pointer"
+                    title="Sign out of Google"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </>
             ) : (
               <button
                 onClick={signInWithGoogle}
-                className="flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-white text-zinc-900 hover:bg-zinc-100 shadow-md cursor-pointer border border-zinc-200"
+                className="flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-white text-zinc-900 hover:bg-zinc-100 shadow-md cursor-pointer border border-zinc-200 shrink-0"
                 title="Sign in with Google"
               >
                 <LogIn className="w-3.5 h-3.5 text-blue-600" />
