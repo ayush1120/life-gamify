@@ -5,7 +5,7 @@ import { LayoutDashboard, ShoppingBag, CheckSquare, History, BarChart3, Settings
 import { playSound } from '../services/sound';
 
 export const Navbar: React.FC = () => {
-  const { activeTab, setActiveTab, stats, settings, updateSettings, user, signInWithGoogle, logout } = useApp();
+  const { activeTab, setActiveTab, stats, settings, updateSettings, user, signInWithGoogle, logout, showToast } = useApp();
 
   const handleTabClick = (tabId: string) => {
     playSound.click(settings.soundEnabled);
@@ -64,15 +64,18 @@ export const Navbar: React.FC = () => {
 
             {/* Streak Badge */}
             <div
-              className="flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-xs sm:text-sm font-bold"
+              onClick={() => showToast(`🔥 Current Streak: ${stats.currentStreak} Days (Longest: ${stats.longestStreak} Days)`)}
+              className="flex items-center space-x-1 px-2.5 sm:px-3 py-1.5 rounded-full text-xs sm:text-sm font-bold cursor-pointer hover:opacity-90 transition-opacity"
               style={{
                 background: 'var(--streak-bg)',
                 border: '1px solid var(--streak-border)',
                 color: 'var(--streak-text)',
               }}
+              title={`Current Streak: ${stats.currentStreak} days (Click for details)`}
             >
-              <Flame className="w-4 h-4 text-amber-500 fill-amber-500" />
-              <span>{stats.currentStreak}d streak</span>
+              <Flame className="w-4 h-4 text-amber-500 fill-amber-500 shrink-0" />
+              <span className="sm:hidden font-outfit">{stats.currentStreak}d</span>
+              <span className="hidden sm:inline font-outfit">{stats.currentStreak}d streak</span>
             </div>
 
             {/* Coin Balance Pill */}
