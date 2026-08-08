@@ -6,6 +6,17 @@
 
 :root {
   font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  --bottom-nav-height: 68px;
+  --safe-area-bottom: max(env(safe-area-inset-bottom), 16px);
+  --bottom-nav-total: calc(var(--bottom-nav-height) + var(--safe-area-bottom));
+  /* Central floating bottom offset for toasts, FAB, and popovers above bottom navbar on mobile */
+  --floating-bottom-offset: calc(var(--bottom-nav-total) + 16px);
+}
+
+@media (min-width: 768px) {
+  :root {
+    --floating-bottom-offset: 24px;
+  }
 }
 
 /* ═══════════════════════════════════════════════

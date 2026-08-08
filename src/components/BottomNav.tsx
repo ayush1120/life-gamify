@@ -46,7 +46,7 @@ export const BottomNav: React.FC = () => {
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
               className="md:hidden fixed right-4 z-40 w-48 rounded-2xl p-2 shadow-2xl origin-bottom-right"
               style={{ 
-                bottom: 'calc(max(env(safe-area-inset-bottom), 16px) + 78px)',
+                bottom: 'calc(var(--bottom-nav-total) + 10px)',
                 background: 'var(--glass-bg)', 
                 border: '1px solid var(--glass-border)'
               }}
