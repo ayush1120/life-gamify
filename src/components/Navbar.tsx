@@ -132,9 +132,9 @@ export const Navbar: React.FC = () => {
           </div>
         </div>
 
-        {/* Nav Tabs Row */}
+        {/* Nav Tabs Row (Hidden on mobile since we have BottomNav) */}
         <nav
-          className="flex items-center space-x-1 overflow-x-auto py-2 no-scrollbar"
+          className="hidden md:flex items-center space-x-1 overflow-x-auto py-2 no-scrollbar"
           style={{ borderTop: '1px solid var(--nav-border)' }}
         >
           {tabs.map((tab) => {

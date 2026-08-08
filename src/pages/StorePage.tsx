@@ -3,7 +3,8 @@ import { useApp } from '../context/AppContext';
 import { StoreReward } from '../types';
 import { StoreRewardCard } from '../components/StoreRewardCard';
 import { StoreRewardModal } from '../components/StoreRewardModal';
-import { ShoppingBag, Plus, Coins, Search } from 'lucide-react';
+import { ShoppingBag, Plus, Search } from 'lucide-react';
+import { CoinToken } from '../components/CoinToken';
 import { playSound } from '../services/sound';
 
 export const StorePage: React.FC = () => {
@@ -46,7 +47,7 @@ export const StorePage: React.FC = () => {
             className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-semibold"
             style={{ background: 'var(--pill-badge-bg)', border: '1px solid var(--pill-badge-border)', color: 'var(--pill-badge-text)' }}
           >
-            <Coins className="w-3.5 h-3.5" style={{ color: 'var(--text-accent)' }} />
+            <CoinToken size={16} />
             <span>Treasury Store</span>
           </div>
           <h1 className="font-outfit text-3xl font-extrabold tracking-tight mt-1 flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
@@ -63,11 +64,12 @@ export const StorePage: React.FC = () => {
             className="px-4 py-2.5 rounded-2xl glass-panel font-outfit text-sm font-extrabold flex items-center space-x-2"
             style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)' }}
           >
-            <span className="text-lg" style={{ color: 'var(--text-accent)' }}>{settings.currencySymbol}</span>
+            <CoinToken size={22} />
             <span>{stats.coinBalance} {settings.currencyName} Available</span>
           </div>
 
           <button
+            id="btn-add-reward"
             onClick={handleCreate}
             className="btn-gradient-hero px-4 py-2.5 rounded-2xl font-outfit text-sm font-extrabold flex items-center space-x-2 shadow-lg cursor-pointer"
           >

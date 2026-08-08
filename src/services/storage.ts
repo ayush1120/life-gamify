@@ -113,8 +113,8 @@ export const DEFAULT_HABITS: Habit[] = [
 export const DEFAULT_STORE_REWARDS: StoreReward[] = [
   {
     id: 'reward-1',
-    name: 'Bourbon Biscuit Packet',
-    description: 'Treat yourself to 1 delicious packet of Sunfeast Bourbon biscuits',
+    name: 'Sweet Treat',
+    description: 'Treat yourself to your favorite snack or dessert',
     cost: 12,
     icon: '🍪',
     active: true,

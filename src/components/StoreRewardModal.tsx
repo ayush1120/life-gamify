@@ -87,9 +87,9 @@ export const StoreRewardModal: React.FC<StoreRewardModalProps> = ({ isOpen, onCl
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/80 backdrop-blur-md overflow-y-auto">
       <div
-        className="relative w-full max-w-lg glass-panel rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 my-8"
+        className="relative w-full max-w-lg glass-panel rounded-t-3xl sm:rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 sm:my-8 pb-safe"
         style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)' }}
       >
         
@@ -117,7 +117,7 @@ export const StoreRewardModal: React.FC<StoreRewardModalProps> = ({ isOpen, onCl
             <input
               type="text"
               required
-              placeholder="e.g. Bourbon Packet, 15m Social Media, Gaming..."
+              placeholder="e.g. Sweet Treat, 15m Social Media, Gaming..."
               value={name}
               onChange={e => setName(e.target.value)}
               className="w-full px-4 py-2.5 rounded-xl text-sm focus:outline-none"

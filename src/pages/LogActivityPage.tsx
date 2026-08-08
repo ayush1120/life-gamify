@@ -74,8 +74,10 @@ export const LogActivityPage: React.FC = () => {
               <Zap className="w-7 h-7 text-amber-500 fill-amber-500 animate-pulse" />
               <span>Log Activity</span>
             </h1>
-            <p className="text-sm font-medium mt-1" style={{ color: 'var(--text-secondary)' }}>
-              1-Tap instant habit completion • Earn {settings.currencySymbol} {settings.currencyName}
+            <p className="text-sm font-medium flex items-center space-x-1" style={{ color: 'var(--text-secondary)' }}>
+              <span>1-Tap instant habit completion • Earn</span>
+              <CoinToken size={16} />
+              <span>{settings.currencyName}</span>
             </p>
           </div>
 
@@ -167,12 +169,12 @@ export const LogActivityPage: React.FC = () => {
                   key={habit.id}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.97 }}
-                  className={`relative p-4 rounded-2xl glass-panel border transition-all flex flex-col justify-between ${
+                  className={`relative p-3 sm:p-4 rounded-2xl glass-panel border transition-all flex flex-col justify-between ${
                     progress.isComplete ? 'opacity-70 bg-emerald-500/5 border-emerald-500/30' : 'border-amber-400/40 shadow-lg shadow-amber-500/10'
                   }`}
                 >
                   {/* Top Bar */}
-                  <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center justify-between mb-2 sm:mb-3">
                     <div className="flex items-center space-x-2.5">
                       <span className="text-2xl">{habit.icon}</span>
                       <div>
@@ -275,7 +277,7 @@ export const LogActivityPage: React.FC = () => {
                 <motion.div
                   key={habit.id}
                   whileHover={{ y: -2 }}
-                  className="p-4 rounded-2xl glass-panel border transition-all flex flex-col justify-between space-y-3"
+                  className="p-3 sm:p-4 rounded-2xl glass-panel border transition-all flex flex-col justify-between space-y-2 sm:space-y-3"
                   style={{ border: '1px solid var(--glass-border)' }}
                 >
                   {/* Top Bar */}

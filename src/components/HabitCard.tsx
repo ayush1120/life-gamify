@@ -21,7 +21,7 @@ export const HabitCard: React.FC<HabitCardProps> = ({ habit }) => {
       whileHover={{ y: isMaxReached ? 0 : -3, scale: isMaxReached ? 1 : 1.01 }}
       whileTap={{ scale: 0.97 }}
       onClick={(e) => logHabit(habit.id, e)}
-      className={`group relative glass-panel glass-panel-hover rounded-2xl p-5 cursor-pointer flex flex-col justify-between select-none overflow-hidden transition-all ${
+      className={`group relative glass-panel glass-panel-hover rounded-2xl p-3 sm:p-4 cursor-pointer flex flex-col justify-between select-none overflow-hidden transition-all ${
         isMaxReached ? 'opacity-85 ring-1 ring-emerald-500/50' : ''
       }`}
       style={{
@@ -116,9 +116,9 @@ export const HabitCard: React.FC<HabitCardProps> = ({ habit }) => {
         </div>
       </div>
 
-      {/* Footer Progress */}
+      {/* Footer Progress (Hidden on mobile for compactness) */}
       <div
-        className="mt-4 pt-3 flex items-center justify-between pl-2 text-xs font-bold transition-colors"
+        className="mt-3 pt-3 hidden sm:flex items-center justify-between pl-2 text-xs font-bold transition-colors"
         style={{ borderTop: '1px solid var(--glass-border)', color: 'var(--text-muted)' }}
       >
         <span className={`flex items-center space-x-1 ${isMaxReached ? 'text-emerald-400' : 'group-hover:text-amber-500'} transition-colors`}>

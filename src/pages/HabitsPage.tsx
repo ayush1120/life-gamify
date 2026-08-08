@@ -84,6 +84,7 @@ export const HabitsPage: React.FC = () => {
         </div>
 
         <button
+          id="btn-add-habit"
           onClick={handleCreate}
           className="btn-gradient-hero px-5 py-3 rounded-2xl font-outfit text-sm font-extrabold flex items-center space-x-2 shadow-lg cursor-pointer"
         >

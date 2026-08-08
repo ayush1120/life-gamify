@@ -11,6 +11,8 @@ import { SettingsPage } from './pages/SettingsPage';
 import { FlyingReward } from './components/FlyingReward';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle2 } from 'lucide-react';
+import { BottomNav } from './components/BottomNav';
+import { FAB } from './components/FAB';
 
 const MainContent: React.FC = () => {
   const { 
@@ -24,7 +26,7 @@ const MainContent: React.FC = () => {
   } = useApp();
 
   return (
-    <div className="min-h-screen flex flex-col font-sans">
+    <div className="min-h-screen flex flex-col font-sans pb-24 md:pb-0">
       <Navbar />
 
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8">
@@ -100,9 +102,12 @@ const MainContent: React.FC = () => {
       </AnimatePresence>
 
       {/* Footer */}
-      <footer className="py-6 text-center text-xs" style={{ borderTop: '1px solid var(--glass-border)', color: 'var(--text-muted)' }}>
+      <footer className="py-6 text-center text-xs pb-[100px] md:pb-6" style={{ borderTop: '1px solid var(--glass-border)', color: 'var(--text-muted)' }}>
         <p>Life Gamify • Personal Habit Coin Economy & Reward Store</p>
       </footer>
+
+      <BottomNav />
+      <FAB />
     </div>
   );
 };

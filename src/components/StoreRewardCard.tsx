@@ -4,6 +4,7 @@ import { useApp } from '../context/AppContext';
 import { motion } from 'framer-motion';
 import { ShoppingBag, Lock } from 'lucide-react';
 import { playSound } from '../services/sound';
+import { CoinToken } from './CoinToken';
 
 interface StoreRewardCardProps {
   reward: StoreReward;
@@ -22,12 +23,12 @@ export const StoreRewardCard: React.FC<StoreRewardCardProps> = ({ reward, onEdit
   return (
     <motion.div
       whileHover={{ y: -4 }}
-      className="glass-panel glass-panel-hover rounded-2xl p-5 flex flex-col justify-between overflow-hidden"
+      className="glass-panel glass-panel-hover rounded-2xl p-3 sm:p-5 flex flex-col justify-between overflow-hidden"
     >
       <div className="space-y-3">
         {/* Cover Image or Emoji Icon */}
         <div
-          className="relative w-full h-36 rounded-xl overflow-hidden flex items-center justify-center"
+          className="relative w-full h-24 sm:h-36 rounded-xl overflow-hidden flex items-center justify-center"
           style={{ background: 'var(--pill-badge-bg)', border: '1px solid var(--pill-badge-border)' }}
         >
           {reward.image ? (
@@ -45,12 +46,12 @@ export const StoreRewardCard: React.FC<StoreRewardCardProps> = ({ reward, onEdit
             className="absolute top-3 right-3 px-3 py-1 rounded-full backdrop-blur-md font-outfit font-extrabold text-sm shadow-lg flex items-center space-x-1"
             style={{
               background: 'rgba(0,0,0,0.65)',
-              border: '1px solid var(--pill-badge-border)',
-              color: 'var(--pill-badge-text)',
+              border: '1px solid rgba(255,255,255,0.2)',
+              color: '#ffffff',
             }}
           >
             <span>{reward.cost}</span>
-            <span>{settings.currencySymbol}</span>
+            <CoinToken size={14} />
           </div>
 
           {/* Category Tag */}
@@ -80,7 +81,7 @@ export const StoreRewardCard: React.FC<StoreRewardCardProps> = ({ reward, onEdit
       </div>
 
       {/* Footer */}
-      <div className="mt-4 pt-3 flex items-center space-x-2" style={{ borderTop: '1px solid var(--glass-border)' }}>
+      <div className="mt-3 pt-3 flex items-center space-x-2" style={{ borderTop: '1px solid var(--glass-border)' }}>
         <button
           onClick={handlePurchase}
           disabled={!isAffordable}

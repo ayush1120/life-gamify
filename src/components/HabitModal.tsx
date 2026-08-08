@@ -119,9 +119,9 @@ export const HabitModal: React.FC<HabitModalProps> = ({ isOpen, onClose, habitTo
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/80 backdrop-blur-md">
       <div
-        className="relative w-full max-w-md glass-panel rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto"
+        className="relative w-full max-w-md glass-panel rounded-t-3xl sm:rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto pb-safe"
         style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)' }}
       >
         

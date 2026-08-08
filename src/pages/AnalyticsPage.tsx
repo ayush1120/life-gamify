@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { ActivityHeatmap } from '../components/ActivityHeatmap';
 import { BarChart3, Flame, Award, TrendingUp, Sparkles, ShoppingBag } from 'lucide-react';
+import { CoinToken } from '../components/CoinToken';
 
 export const AnalyticsPage: React.FC = () => {
   const { stats, rewardLogs, settings } = useApp();
@@ -48,7 +49,7 @@ export const AnalyticsPage: React.FC = () => {
             <Sparkles className="w-4 h-4" style={{ color: 'var(--text-accent)' }} />
           </div>
           <p className="font-outfit text-2xl sm:text-3xl font-extrabold" style={{ color: 'var(--text-primary)' }}>
-            {stats.totalCoinsEarned} <span className="text-lg">{settings.currencySymbol}</span>
+            {stats.totalCoinsEarned} <CoinToken size={20} />
           </p>
         </div>
 
@@ -59,7 +60,7 @@ export const AnalyticsPage: React.FC = () => {
             <ShoppingBag className="w-4 h-4" style={{ color: 'var(--text-accent)' }} />
           </div>
           <p className="font-outfit text-2xl sm:text-3xl font-extrabold" style={{ color: 'var(--text-accent)' }}>
-            {stats.totalCoinsSpent} {settings.currencySymbol}
+            {stats.totalCoinsSpent} <CoinToken size={16} />
           </p>
         </div>
 
@@ -116,7 +117,11 @@ export const AnalyticsPage: React.FC = () => {
                     </div>
                     <div className="text-right">
                       <span style={{ color: 'var(--text-accent)' }}>{item.count} completions</span>
-                      <span className="ml-2 font-normal" style={{ color: 'var(--text-muted)' }}>({item.totalEarned} {settings.currencySymbol})</span>
+                      <span className="ml-2 font-normal flex items-center space-x-1" style={{ color: 'var(--text-muted)' }}>
+                        <span>({item.totalEarned}</span>
+                        <CoinToken size={14} />
+                        <span>)</span>
+                      </span>
                     </div>
                   </div>
 

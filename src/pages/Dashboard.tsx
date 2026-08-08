@@ -5,10 +5,11 @@ import { CoinVault } from '../components/CoinVault';
 import { HabitCard } from '../components/HabitCard';
 import { HabitModal } from '../components/HabitModal';
 import { StoreRewardCard } from '../components/StoreRewardCard';
+import { CoinToken } from '../components/CoinToken';
 import { Zap, ArrowRight, ShoppingBag, History } from 'lucide-react';
 
 export const Dashboard: React.FC = () => {
-  const { habits, rewards, rewardLogs, settings, setActiveTab } = useApp();
+  const { habits, rewards, rewardLogs, setActiveTab } = useApp();
   const [isHabitModalOpen, setIsHabitModalOpen] = useState(false);
 
   const activeHabits = habits.filter(h => h.active).sort((a, b) => a.order - b.order);
@@ -149,7 +150,10 @@ export const Dashboard: React.FC = () => {
                       border: '1px solid var(--pill-badge-border)',
                     }}
                   >
-                    +{log.rewardEarned} {settings.currencySymbol}
+                    <div className="flex items-center space-x-1">
+                      <span>+{log.rewardEarned}</span>
+                      <CoinToken size={14} />
+                    </div>
                   </span>
                 </div>
               );
