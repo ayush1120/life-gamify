@@ -26,7 +26,7 @@ const MainContent: React.FC = () => {
   } = useApp();
 
   return (
-    <div className="min-h-screen flex flex-col font-sans pb-32 md:pb-0">
+    <div className="min-h-screen flex flex-col font-sans pb-24 md:pb-0">
       <Navbar />
 
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8">
@@ -105,7 +105,7 @@ const MainContent: React.FC = () => {
       </AnimatePresence>
 
       {/* Footer */}
-      <footer className="py-6 text-center text-xs pb-[120px] md:pb-6" style={{ borderTop: '1px solid var(--glass-border)', color: 'var(--text-muted)' }}>
+      <footer className="py-6 text-center text-xs pb-[90px] md:pb-6" style={{ borderTop: '1px solid var(--glass-border)', color: 'var(--text-muted)' }}>
         <p>Life Gamify • Personal Habit Coin Economy & Reward Store</p>
       </footer>
 

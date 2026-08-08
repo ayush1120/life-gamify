@@ -7,11 +7,11 @@
 :root {
   font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
   --safe-area-top: max(env(safe-area-inset-top), 0px);
-  --bottom-nav-height: 68px;
-  --safe-area-bottom: max(env(safe-area-inset-bottom), 16px);
+  --bottom-nav-height: 58px;
+  --safe-area-bottom: max(env(safe-area-inset-bottom), 12px);
   --bottom-nav-total: calc(var(--bottom-nav-height) + var(--safe-area-bottom));
-  /* Central floating bottom offset for toasts, FAB, and popovers above bottom navbar on mobile */
-  --floating-bottom-offset: calc(var(--bottom-nav-total) + 16px);
+  /* Central floating bottom offset for toasts, FAB, and popovers above floating bottom dock */
+  --floating-bottom-offset: calc(var(--bottom-nav-total) + 12px);
 }
 
 @media (min-width: 768px) {

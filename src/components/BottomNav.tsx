@@ -81,14 +81,15 @@ export const BottomNav: React.FC = () => {
       </AnimatePresence>
 
       <nav 
-        className="md:hidden fixed bottom-0 left-0 right-0 z-40 backdrop-blur-xl select-none"
+        className="md:hidden fixed z-40 left-3 right-3 max-w-md mx-auto rounded-full backdrop-blur-2xl shadow-2xl select-none"
         style={{ 
-          background: 'var(--nav-bg)', 
-          borderTop: '1px solid var(--nav-border)',
-          paddingBottom: 'max(env(safe-area-inset-bottom), 16px)'
+          bottom: 'calc(var(--safe-area-bottom) + 2px)',
+          background: 'var(--glass-bg)', 
+          border: '1px solid var(--glass-border)',
+          boxShadow: '0 16px 36px -6px rgba(0, 0, 0, 0.75), 0 0 20px rgba(245, 158, 11, 0.12)'
         }}
       >
-        <div className="flex justify-around items-center h-[68px] px-2">
+        <div className="flex justify-around items-center h-[58px] px-1.5">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id || (item.id === 'more' && ['history', 'analytics', 'settings'].includes(activeTab)) || (item.id === 'more' && isMoreOpen);
@@ -97,30 +98,24 @@ export const BottomNav: React.FC = () => {
               <button
                 key={item.id}
                 onClick={() => handleTabClick(item.id)}
-                className="flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors relative cursor-pointer"
+                className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-full transition-all duration-300 relative cursor-pointer ${
+                  isActive ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30 shadow-inner' : 'hover:opacity-80'
+                }`}
               >
                 <div 
-                  className={`p-1 rounded-full transition-all duration-300 ${isActive ? 'scale-110' : ''}`}
+                  className={`transition-transform duration-300 ${isActive ? 'scale-110' : ''}`}
                   style={{ 
-                    color: isActive ? 'var(--nav-active-text)' : 'var(--nav-inactive-text)' 
+                    color: isActive ? 'var(--text-accent)' : 'var(--text-muted)' 
                   }}
                 >
-                  <Icon className={`w-[22px] h-[22px] ${isActive && item.id === 'log-activity' ? 'fill-amber-400 text-amber-500' : ''}`} />
+                  <Icon className={`w-5 h-5 ${isActive && item.id === 'log-activity' ? 'fill-amber-400 text-amber-500 animate-pulse' : ''}`} />
                 </div>
                 <span 
-                  className="text-[10px] font-bold"
-                  style={{ color: isActive ? 'var(--nav-active-text)' : 'var(--nav-inactive-text)' }}
+                  className="text-[10px] font-bold mt-0.5 tracking-tight"
+                  style={{ color: isActive ? 'var(--text-accent)' : 'var(--text-muted)' }}
                 >
                   {item.label}
                 </span>
-                
-                {/* Active Indicator Line */}
-                {isActive && (
-                  <div 
-                    className="absolute top-0 w-8 h-[3px] rounded-b-full shadow-[0_2px_8px_rgba(251,191,36,0.5)]"
-                    style={{ background: 'var(--text-accent)' }}
-                  />
-                )}
               </button>
             );
           })}
