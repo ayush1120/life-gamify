@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { Calendar as CalendarIcon } from 'lucide-react';
+import { toLocalDateString } from '../utils/dateUtils';
 
 export const ActivityHeatmap: React.FC = () => {
   const { rewardLogs } = useApp();
@@ -12,8 +13,8 @@ export const ActivityHeatmap: React.FC = () => {
     for (let i = 89; i >= 0; i--) {
       const d = new Date();
       d.setDate(today.getDate() - i);
-      const dateStr = d.toISOString().split('T')[0];
-      const dayLogs = rewardLogs.filter(l => l.timestamp.startsWith(dateStr));
+      const dateStr = toLocalDateString(d);
+      const dayLogs = rewardLogs.filter(l => toLocalDateString(l.timestamp) === dateStr);
       const rewards = dayLogs.reduce((sum, l) => sum + l.rewardEarned, 0);
 
       days.push({

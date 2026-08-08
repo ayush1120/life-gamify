@@ -6,6 +6,7 @@ import { HabitCard } from '../components/HabitCard';
 import { HabitModal } from '../components/HabitModal';
 import { StoreRewardCard } from '../components/StoreRewardCard';
 import { CoinToken } from '../components/CoinToken';
+import { toLocalDateString } from '../utils/dateUtils';
 import { Zap, ArrowRight, ShoppingBag, History } from 'lucide-react';
 
 export const Dashboard: React.FC = () => {
@@ -15,8 +16,8 @@ export const Dashboard: React.FC = () => {
   const activeHabits = habits.filter(h => h.active).sort((a, b) => a.order - b.order);
   const featuredRewards = rewards.filter(r => r.active).slice(0, 3);
 
-  const todayStr = new Date().toISOString().split('T')[0];
-  const todayLogs = rewardLogs.filter(l => l.timestamp.startsWith(todayStr));
+  const todayStr = toLocalDateString(new Date());
+  const todayLogs = rewardLogs.filter(l => toLocalDateString(l.timestamp) === todayStr);
   const habitTodayCounts = todayLogs.reduce((acc, log) => {
     acc[log.activityId] = (acc[log.activityId] || 0) + 1;
     return acc;

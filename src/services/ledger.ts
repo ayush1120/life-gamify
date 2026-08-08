@@ -1,4 +1,5 @@
 import { RewardLog, RewardRedemption, HabitStats } from '../types';
+import { toLocalDateString } from '../utils/dateUtils';
 
 /**
  * Calculates the 1% Mistake Fee for normal habit log deletions.
@@ -111,26 +112,27 @@ export const computeLedgerStats = (
     }
   }
 
-  // Calculate today stats using valid logs only
-  const todayStr = new Date().toISOString().split('T')[0];
-  const todayLogs = validLogs.filter(log => log.timestamp.startsWith(todayStr));
+  // Calculate today stats using valid logs only (in local timezone)
+  const todayStr = toLocalDateString(new Date());
+  const todayLogs = validLogs.filter(log => toLocalDateString(log.timestamp) === todayStr);
   const todayCount = todayLogs.length;
   const todayCoinsEarned = todayLogs.reduce((s, l) => s + l.rewardEarned, 0);
 
-  // Calculate streaks using valid logs only
+  // Calculate streaks using valid logs only (in local timezone)
   const uniqueLogDates = Array.from(
-    new Set(validLogs.map(l => l.timestamp.split('T')[0]))
-  ).sort().reverse();
+    new Set(validLogs.map(l => toLocalDateString(l.timestamp)))
+  ).filter(Boolean).sort().reverse();
 
   let currentStreak = 0;
   const checkDate = new Date();
 
   for (let i = 0; i < 365; i++) {
-    const dateStr = checkDate.toISOString().split('T')[0];
+    const dateStr = toLocalDateString(checkDate);
     if (uniqueLogDates.includes(dateStr)) {
       currentStreak++;
       checkDate.setDate(checkDate.getDate() - 1);
     } else if (i === 0) {
+      // If user hasn't logged today yet, check yesterday before breaking streak
       checkDate.setDate(checkDate.getDate() - 1);
     } else {
       break;
@@ -143,7 +145,7 @@ export const computeLedgerStats = (
   let prevDateObj: Date | null = null;
 
   for (const dStr of sortedDates) {
-    const dObj = new Date(dStr);
+    const dObj = new Date(`${dStr}T00:00:00`);
     if (!prevDateObj) {
       tempStreak = 1;
     } else {
