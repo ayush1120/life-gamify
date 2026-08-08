@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LogOut, X, ShieldCheck, User } from 'lucide-react';
 import { useApp } from '../context/AppContext';
@@ -25,15 +26,15 @@ export const LogoutModal: React.FC<LogoutModalProps> = ({
     onClose();
   };
 
-  return (
+  return createPortal(
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
         <motion.div
           initial={{ scale: 0.9, opacity: 0, y: 20 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.9, opacity: 0, y: 20 }}
           transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-          className="relative w-full max-w-sm glass-panel rounded-3xl p-6 sm:p-8 shadow-2xl space-y-5 text-center"
+          className="relative w-full max-w-sm glass-panel rounded-3xl p-6 sm:p-8 shadow-2xl space-y-5 text-center my-auto"
           style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)' }}
         >
           {/* Close Icon Button */}
@@ -103,6 +104,7 @@ export const LogoutModal: React.FC<LogoutModalProps> = ({
           </div>
         </motion.div>
       </div>
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 };
