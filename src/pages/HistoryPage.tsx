@@ -1,14 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { RewardLog, RewardRedemption } from '../types';
 import { DeleteLogModal } from '../components/DeleteLogModal';
 import { DeleteRedemptionModal } from '../components/DeleteRedemptionModal';
 import { History, Trash2, Search, RefreshCw, AlertCircle } from 'lucide-react';
+import { CoinToken } from '../components/CoinToken';
 
 export const HistoryPage: React.FC = () => {
-  const { rewardLogs, redemptions, deleteLog, deleteRedemption, settings } = useApp();
+  const { rewardLogs, redemptions, deleteLog, deleteRedemption } = useApp();
   const [searchTerm, setSearchTerm] = useState('');
-  const [viewTab, setViewTab] = useState<'logs' | 'redemptions'>('logs');
+  
+  const getInitialViewTab = (): 'logs' | 'redemptions' => {
+    return window.location.hash.includes('redemptions') ? 'redemptions' : 'logs';
+  };
+
+  const [viewTab, setViewTab] = useState<'logs' | 'redemptions'>(getInitialViewTab);
+
+  useEffect(() => {
+    const handleHash = () => {
+      if (window.location.hash.includes('redemptions')) {
+        setViewTab('redemptions');
+      }
+    };
+    window.addEventListener('hashchange', handleHash);
+    return () => window.removeEventListener('hashchange', handleHash);
+  }, []);
 
   // Modal States
   const [logToDelete, setLogToDelete] = useState<RewardLog | null>(null);
@@ -132,7 +148,14 @@ export const HistoryPage: React.FC = () => {
                             </div>
                           </td>
                           <td className="p-4 font-outfit font-extrabold" style={{ color: isRetracted ? 'var(--text-muted)' : 'var(--text-accent)' }}>
-                            {isRetracted ? `0 ${settings.currencySymbol || '🪙'} (Retracted)` : `+${log.rewardEarned} ${settings.currencySymbol || '🪙'}`}
+                            {isRetracted ? (
+                              <span>0 (Retracted)</span>
+                            ) : (
+                              <div className="flex items-center space-x-1">
+                                <span>+{log.rewardEarned}</span>
+                                <CoinToken size={14} />
+                              </div>
+                            )}
                           </td>
                           <td className="p-4 text-right">
                             {isRetracted ? (
@@ -164,48 +187,51 @@ export const HistoryPage: React.FC = () => {
               No store redemptions logged yet. Complete habits to earn coins and purchase treats in your Reward Store!
             </div>
           ) : (
-            redemptions.map(r => {
-              const d = new Date(r.timestamp);
-              const dateStr = d.toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+            [...redemptions]
+              .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+              .map(r => {
+                const d = new Date(r.timestamp);
+                const dateStr = d.toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 
-              return (
-                <div key={r.id} className="glass-panel rounded-2xl p-5 flex items-center justify-between" style={{ border: '1px solid var(--glass-border)' }}>
-                  <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl overflow-hidden" style={{ background: 'var(--pill-badge-bg)', border: '1px solid var(--pill-badge-border)' }}>
-                      {r.image ? (
-                        <img src={r.image} alt={r.rewardName} className="w-full h-full object-cover rounded-2xl" />
-                      ) : (
-                        <span>{r.icon || '🎁'}</span>
-                      )}
+                return (
+                  <div key={r.id} className="glass-panel rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3" style={{ border: '1px solid var(--glass-border)' }}>
+                    <div className="flex items-center space-x-4 min-w-0 flex-1">
+                      <div className="w-12 h-12 shrink-0 rounded-2xl flex items-center justify-center text-2xl overflow-hidden" style={{ background: 'var(--pill-badge-bg)', border: '1px solid var(--pill-badge-border)' }}>
+                        {r.image ? (
+                          <img src={r.image} alt={r.rewardName} className="w-full h-full object-cover rounded-2xl" />
+                        ) : (
+                          <span>{r.icon || '🎁'}</span>
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h3 className="font-outfit text-base font-bold truncate" style={{ color: 'var(--text-primary)' }}>
+                          {r.rewardName}
+                        </h3>
+                        <p className="text-xs font-mono" style={{ color: 'var(--text-muted)' }}>{dateStr}</p>
+                        {r.note && <p className="text-xs italic mt-0.5" style={{ color: 'var(--text-secondary)' }}>"{r.note}"</p>}
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="font-outfit text-base font-bold" style={{ color: 'var(--text-primary)' }}>
-                        {r.rewardName}
-                      </h3>
-                      <p className="text-xs font-mono" style={{ color: 'var(--text-muted)' }}>{dateStr}</p>
-                      {r.note && <p className="text-xs italic mt-0.5" style={{ color: 'var(--text-secondary)' }}>"{r.note}"</p>}
+
+                    <div className="flex items-center space-x-3 self-end sm:self-auto">
+                      <span
+                        className="font-outfit font-extrabold text-sm px-3 py-1.5 rounded-xl flex items-center space-x-1"
+                        style={{ background: 'var(--pill-badge-bg)', border: '1px solid var(--pill-badge-border)', color: 'var(--pill-badge-text)' }}
+                      >
+                        <span>-{r.coinsSpent}</span>
+                        <CoinToken size={14} />
+                      </span>
+
+                      <button
+                        onClick={() => setRedemptionToDelete(r)}
+                        className="p-2 rounded-xl bg-amber-500/15 text-amber-400 hover:bg-amber-500/25 border border-amber-500/30 cursor-pointer"
+                        title="Refund / Delete Store Redemption"
+                      >
+                        <RefreshCw className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
-
-                  <div className="flex items-center space-x-3">
-                    <span
-                      className="font-outfit font-extrabold text-sm px-3 py-1.5 rounded-xl"
-                      style={{ background: 'var(--pill-badge-bg)', border: '1px solid var(--pill-badge-border)', color: 'var(--pill-badge-text)' }}
-                    >
-                      -{r.coinsSpent} {settings.currencySymbol || '🪙'}
-                    </span>
-
-                    <button
-                      onClick={() => setRedemptionToDelete(r)}
-                      className="p-2 rounded-xl bg-amber-500/15 text-amber-400 hover:bg-amber-500/25 border border-amber-500/30 cursor-pointer"
-                      title="Refund / Delete Store Redemption"
-                    >
-                      <RefreshCw className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              );
-            })
+                );
+              })
           )}
         </div>
       )}

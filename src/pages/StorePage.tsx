@@ -3,12 +3,12 @@ import { useApp } from '../context/AppContext';
 import { StoreReward } from '../types';
 import { StoreRewardCard } from '../components/StoreRewardCard';
 import { StoreRewardModal } from '../components/StoreRewardModal';
-import { ShoppingBag, Plus, Search } from 'lucide-react';
+import { ShoppingBag, Plus, Search, History } from 'lucide-react';
 import { CoinToken } from '../components/CoinToken';
 import { playSound } from '../services/sound';
 
 export const StorePage: React.FC = () => {
-  const { rewards, stats, settings } = useApp();
+  const { rewards, stats, settings, setActiveTab } = useApp();
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [editingReward, setEditingReward] = useState<StoreReward | null>(null);
@@ -58,7 +58,7 @@ export const StorePage: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center space-x-3">
+        <div className="flex flex-wrap items-center gap-3">
           {/* Realtime Balance Badge */}
           <div
             className="px-4 py-2.5 rounded-2xl glass-panel font-outfit text-sm font-extrabold flex items-center space-x-2"
@@ -67,6 +67,20 @@ export const StorePage: React.FC = () => {
             <CoinToken size={22} />
             <span>{stats.coinBalance} {settings.currencyName} Available</span>
           </div>
+
+          <button
+            onClick={() => {
+              playSound.click(settings.soundEnabled);
+              setActiveTab('history');
+              window.location.hash = 'history-redemptions';
+            }}
+            className="px-3.5 py-2.5 rounded-2xl glass-panel font-outfit text-xs font-bold flex items-center space-x-2 cursor-pointer hover:opacity-90"
+            style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)' }}
+            title="View Store Redemptions & Purchases"
+          >
+            <History className="w-4 h-4" style={{ color: 'var(--text-accent)' }} />
+            <span>Purchase History</span>
+          </button>
 
           <button
             id="btn-add-reward"

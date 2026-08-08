@@ -3,6 +3,7 @@ import { RewardRedemption } from '../types';
 import { calculateRestockingFee, isGracePeriod } from '../services/ledger';
 import { ShoppingBag, Sparkles, RefreshCw, X } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { CoinToken } from './CoinToken';
 
 interface DeleteRedemptionModalProps {
   isOpen: boolean;
@@ -17,7 +18,7 @@ export const DeleteRedemptionModal: React.FC<DeleteRedemptionModalProps> = ({
   onConfirm,
   redemption
 }) => {
-  const { stats, settings } = useApp();
+  const { stats } = useApp();
 
   if (!isOpen || !redemption) return null;
 
@@ -53,7 +54,10 @@ export const DeleteRedemptionModal: React.FC<DeleteRedemptionModalProps> = ({
             <span className="text-3xl">{redemption.icon || '🛍️'}</span>
             <div>
               <h4 className="font-outfit font-bold text-sm" style={{ color: 'var(--text-primary)' }}>{redemption.rewardName}</h4>
-              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Originally spent {redemption.coinsSpent} {settings.currencySymbol}</p>
+              <p className="text-xs flex items-center space-x-1" style={{ color: 'var(--text-muted)' }}>
+                <span>Originally spent {redemption.coinsSpent}</span>
+                <CoinToken size={14} />
+              </p>
             </div>
           </div>
 
@@ -79,25 +83,34 @@ export const DeleteRedemptionModal: React.FC<DeleteRedemptionModalProps> = ({
 
           {/* Refund Breakdown */}
           <div className="p-3.5 rounded-xl space-y-2 text-xs font-mono" style={{ background: 'var(--pill-badge-bg)', border: '1px solid var(--pill-badge-border)' }}>
-            <div className="flex justify-between" style={{ color: 'var(--text-secondary)' }}>
+            <div className="flex justify-between items-center" style={{ color: 'var(--text-secondary)' }}>
               <span>Original Spent:</span>
-              <span className="font-bold text-emerald-400">+{redemption.coinsSpent} {settings.currencySymbol}</span>
+              <span className="font-bold text-emerald-400 flex items-center space-x-1">
+                <span>+{redemption.coinsSpent}</span>
+                <CoinToken size={12} />
+              </span>
             </div>
             {!isFreeGrace && (
-              <div className="flex justify-between" style={{ color: 'var(--text-secondary)' }}>
+              <div className="flex justify-between items-center" style={{ color: 'var(--text-secondary)' }}>
                 <span>Restocking Fee (15%):</span>
-                <span className="font-bold text-rose-400">-{restockingFee} {settings.currencySymbol}</span>
+                <span className="font-bold text-rose-400 flex items-center space-x-1">
+                  <span>-{restockingFee}</span>
+                  <CoinToken size={12} />
+                </span>
               </div>
             )}
-            <div className="pt-2 border-t flex justify-between font-bold" style={{ borderColor: 'var(--glass-border)', color: 'var(--text-primary)' }}>
+            <div className="pt-2 border-t flex justify-between items-center font-bold" style={{ borderColor: 'var(--glass-border)', color: 'var(--text-primary)' }}>
               <span>Net Refund:</span>
-              <span className="text-emerald-400">+{netRefund} {settings.currencySymbol}</span>
+              <span className="text-emerald-400 flex items-center space-x-1">
+                <span>+{netRefund}</span>
+                <CoinToken size={12} />
+              </span>
             </div>
           </div>
 
           {activeDebt > 0 && (
-            <p className="text-xs font-bold text-amber-400 p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20">
-              💡 Note: Your +{netRefund} {settings.currencySymbol} refund will automatically pay off your active Phantom Debt (-{activeDebt} {settings.currencySymbol}) first!
+            <p className="text-xs font-bold text-amber-400 p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center flex-wrap gap-1">
+              <span>💡 Note: Your +{netRefund} refund will automatically pay off your active Phantom Debt (-{activeDebt} coins) first!</span>
             </p>
           )}
         </div>
@@ -119,7 +132,11 @@ export const DeleteRedemptionModal: React.FC<DeleteRedemptionModalProps> = ({
             className="btn-gradient-hero flex-1 py-2.5 rounded-xl font-outfit text-xs font-bold flex items-center justify-center space-x-2 shadow-lg cursor-pointer"
           >
             <RefreshCw className="w-4 h-4" />
-            <span>Refund & Delete (+{netRefund} {settings.currencySymbol})</span>
+            <span className="flex items-center space-x-1">
+              <span>Refund & Delete (+{netRefund}</span>
+              <CoinToken size={14} />
+              <span>)</span>
+            </span>
           </button>
         </div>
       </div>
