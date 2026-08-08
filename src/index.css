@@ -6,6 +6,7 @@
 
 :root {
   font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  --safe-area-top: max(env(safe-area-inset-top), 0px);
   --bottom-nav-height: 68px;
   --safe-area-bottom: max(env(safe-area-inset-bottom), 16px);
   --bottom-nav-total: calc(var(--bottom-nav-height) + var(--safe-area-bottom));

@@ -35,8 +35,12 @@ export const Navbar: React.FC = () => {
 
   return (
     <header
-      className="sticky top-0 z-40 w-full backdrop-blur-xl"
-      style={{ background: 'var(--nav-bg)', borderBottom: '1px solid var(--nav-border)' }}
+      className="sticky top-0 z-40 w-full backdrop-blur-xl select-none"
+      style={{ 
+        background: 'var(--nav-bg)', 
+        borderBottom: '1px solid var(--nav-border)',
+        paddingTop: 'var(--safe-area-top)'
+      }}
     >
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Top Row: Branding + Controls */}
