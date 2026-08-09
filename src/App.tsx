@@ -8,6 +8,7 @@ import { HabitsPage } from './pages/HabitsPage';
 import { HistoryPage } from './pages/HistoryPage';
 import { AnalyticsPage } from './pages/AnalyticsPage';
 import { SettingsPage } from './pages/SettingsPage';
+import OverlayDemoPage from './pages/OverlayDemoPage';
 import { FlyingReward } from './components/FlyingReward';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle2 } from 'lucide-react';
@@ -39,6 +40,7 @@ const MainContent: React.FC = () => {
         {activeTab === 'history' && <HistoryPage />}
         {activeTab === 'analytics' && <AnalyticsPage />}
         {activeTab === 'settings' && <SettingsPage />}
+        {activeTab === 'overlay-demo' && <OverlayDemoPage />}
       </main>
 
       {/* Purchase Success Celebration Modal */}

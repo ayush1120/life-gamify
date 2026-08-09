@@ -1,0 +1,38 @@
+/* Shape masks using CSS clip-path */
+.mask-none {
+  clip-path: none;
+}
+
+.mask-circle {
+  clip-path: circle(50% at 50% 50%);
+}
+
+.mask-ellipse {
+  clip-path: ellipse(50% 35% at 50% 50%);
+}
+
+.mask-hexagon {
+  clip-path: polygon(
+    25% 5%,
+    75% 5%,
+    98% 50%,
+    75% 95%,
+    25% 95%,
+    2% 50%
+  );
+}
+
+.mask-star {
+  clip-path: polygon(
+    50% 0%,
+    61% 35%,
+    98% 35%,
+    68% 57%,
+    79% 91%,
+    50% 70%,
+    21% 91%,
+    32% 57%,
+    2% 35%,
+    39% 35%
+  );
+}

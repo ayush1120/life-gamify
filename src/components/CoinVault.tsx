@@ -7,7 +7,7 @@ import { playSound } from '../services/sound';
 import { getAssetUrl } from '../utils/assets';
 
 export const EMPTY_VAULT_IMAGE_PATH = '/assets/empty_vault.png';
-export const FILLED_VAULT_IMAGE_PATH = '/assets/vault_filled.png';
+export const FILLED_VAULT_IMAGE_PATH = '/assets/vault_filled2.png';
 
 export const CoinVault: React.FC = () => {
   const { stats, settings, rewards, setActiveTab } = useApp();
@@ -42,12 +42,12 @@ export const CoinVault: React.FC = () => {
             draggable={false}
           />
 
-          {/* Balance Overlay — positioned inside the dome, ~40% from top */}
-          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none" style={{ paddingBottom: '15%' }}>
-            <span className="font-outfit text-5xl sm:text-6xl font-extrabold drop-shadow-lg" style={{ color: 'var(--text-primary)' }}>
+          {/* Balance Overlay — positioned cleanly in upper glass dome above coins */}
+          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none" style={{ paddingBottom: '28%' }}>
+            <span className="font-outfit text-3xl sm:text-4xl font-extrabold leading-none drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]" style={{ color: 'var(--text-primary)' }}>
               {balance}
             </span>
-            <span className="text-xs font-extrabold uppercase tracking-widest drop-shadow-sm flex items-center gap-1" style={{ color: 'var(--text-accent)' }}>
+            <span className="text-[10px] sm:text-xs font-extrabold uppercase tracking-widest drop-shadow-[0_1px_4px_rgba(0,0,0,0.8)] mt-1 flex items-center gap-1" style={{ color: 'var(--text-accent)' }}>
               <span>Coins</span>
             </span>
           </div>

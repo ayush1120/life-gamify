@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { CoinToken } from './CoinToken';
 import { LogoutModal } from './LogoutModal';
-import { LayoutDashboard, ShoppingBag, CheckSquare, History, BarChart3, Settings as SettingsIcon, Flame, Sun, Moon, LogIn, LogOut, User, Zap } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, CheckSquare, History, BarChart3, Settings as SettingsIcon, Flame, Sun, Moon, LogIn, LogOut, User, Zap, Layers } from 'lucide-react';
 import { playSound } from '../services/sound';
 
 export const Navbar: React.FC = () => {
@@ -30,6 +30,7 @@ export const Navbar: React.FC = () => {
     { id: 'habits', label: 'Habits', icon: CheckSquare },
     { id: 'history', label: 'History', icon: History },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+    { id: 'overlay-demo', label: 'Overlay Demo', icon: Layers },
     { id: 'settings', label: 'Settings', icon: SettingsIcon },
   ];
 

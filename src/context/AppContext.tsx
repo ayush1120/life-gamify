@@ -85,8 +85,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [settings, setSettings] = useState<Settings>(loadStoredSettings);
   const getInitialTab = (): string => {
     const hash = window.location.hash.replace('#', '').trim();
-    const validTabs = ['dashboard', 'log-activity', 'store', 'habits', 'history', 'analytics', 'settings'];
-    return validTabs.includes(hash) ? hash : 'dashboard';
+    const pathname = window.location.pathname.replace(/^\//, '').trim();
+    const validTabs = ['dashboard', 'log-activity', 'store', 'habits', 'history', 'analytics', 'settings', 'overlay-demo'];
+    if (validTabs.includes(hash)) return hash;
+    if (validTabs.includes(pathname)) return pathname;
+    return 'dashboard';
   };
 
   const [activeTab, setActiveTabState] = useState<string>(getInitialTab);
@@ -111,15 +114,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [settings.theme]);
 
   useEffect(() => {
-    const handleHashChange = () => {
+    const handleHashOrPathChange = () => {
       const hash = window.location.hash.replace('#', '').trim();
-      const validTabs = ['dashboard', 'log-activity', 'store', 'habits', 'history', 'analytics', 'settings'];
+      const pathname = window.location.pathname.replace(/^\//, '').trim();
+      const validTabs = ['dashboard', 'log-activity', 'store', 'habits', 'history', 'analytics', 'settings', 'overlay-demo'];
       if (validTabs.includes(hash)) {
         setActiveTabState(hash);
+      } else if (validTabs.includes(pathname)) {
+        setActiveTabState(pathname);
       }
     };
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
+    window.addEventListener('hashchange', handleHashOrPathChange);
+    window.addEventListener('popstate', handleHashOrPathChange);
+    return () => {
+      window.removeEventListener('hashchange', handleHashOrPathChange);
+      window.removeEventListener('popstate', handleHashOrPathChange);
+    };
   }, []);
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
