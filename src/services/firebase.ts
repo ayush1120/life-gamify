@@ -174,11 +174,21 @@ export const subscribeFirestoreSettings = (
 export const syncFirestoreHabits = async (userId: string, habits: Habit[]) => {
   if (!firestoreDb) return;
   try {
-    for (const habit of habits) {
-      await setDoc(doc(firestoreDb, `users/${userId}/activities`, habit.id), habit);
-    }
+    const batchList = habits.map(habit => 
+      setDoc(doc(firestoreDb, `users/${userId}/activities`, habit.id), habit)
+    );
+    await Promise.all(batchList);
   } catch (e) {
     console.error('Error syncing habits to Firestore:', e);
+  }
+};
+
+export const syncFirestoreHabit = async (userId: string, habit: Habit) => {
+  if (!firestoreDb) return;
+  try {
+    await setDoc(doc(firestoreDb, `users/${userId}/activities`, habit.id), habit);
+  } catch (e) {
+    console.error('Error syncing single habit to Firestore:', e);
   }
 };
 
@@ -206,11 +216,21 @@ export const fetchFirestoreHabits = async (userId: string): Promise<Habit[]> => 
 export const syncFirestoreRewards = async (userId: string, rewards: StoreReward[]) => {
   if (!firestoreDb) return;
   try {
-    for (const reward of rewards) {
-      await setDoc(doc(firestoreDb, `users/${userId}/rewards`, reward.id), reward);
-    }
+    const batchList = rewards.map(reward => 
+      setDoc(doc(firestoreDb, `users/${userId}/rewards`, reward.id), reward)
+    );
+    await Promise.all(batchList);
   } catch (e) {
     console.error('Error syncing rewards to Firestore:', e);
+  }
+};
+
+export const syncFirestoreReward = async (userId: string, reward: StoreReward) => {
+  if (!firestoreDb) return;
+  try {
+    await setDoc(doc(firestoreDb, `users/${userId}/rewards`, reward.id), reward);
+  } catch (e) {
+    console.error('Error syncing single reward to Firestore:', e);
   }
 };
 
