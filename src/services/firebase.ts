@@ -170,13 +170,20 @@ export const subscribeFirestoreSettings = (
   }, (err) => console.error('Settings snapshot error:', err));
 };
 
+// Helper to strip undefined values which crash Firestore setDoc
+const cleanUndefined = <T extends Record<string, any>>(obj: T): T => {
+  return Object.fromEntries(
+    Object.entries(obj).filter(([_, v]) => v !== undefined)
+  ) as T;
+};
+
 // Firestore Sync Write Helpers
 export const syncFirestoreHabits = async (userId: string, habits: Habit[]) => {
   if (!firestoreDb) return;
   try {
     const db = firestoreDb;
     const batchList = habits.map(habit => 
-      setDoc(doc(db, `users/${userId}/activities`, habit.id), habit)
+      setDoc(doc(db, `users/${userId}/activities`, habit.id), cleanUndefined(habit))
     );
     await Promise.all(batchList);
   } catch (e) {
@@ -187,7 +194,7 @@ export const syncFirestoreHabits = async (userId: string, habits: Habit[]) => {
 export const syncFirestoreHabit = async (userId: string, habit: Habit) => {
   if (!firestoreDb) return;
   try {
-    await setDoc(doc(firestoreDb, `users/${userId}/activities`, habit.id), habit);
+    await setDoc(doc(firestoreDb, `users/${userId}/activities`, habit.id), cleanUndefined(habit));
   } catch (e) {
     console.error('Error syncing single habit to Firestore:', e);
   }
@@ -219,7 +226,7 @@ export const syncFirestoreRewards = async (userId: string, rewards: StoreReward[
   try {
     const db = firestoreDb;
     const batchList = rewards.map(reward => 
-      setDoc(doc(db, `users/${userId}/rewards`, reward.id), reward)
+      setDoc(doc(db, `users/${userId}/rewards`, reward.id), cleanUndefined(reward))
     );
     await Promise.all(batchList);
   } catch (e) {
@@ -230,7 +237,7 @@ export const syncFirestoreRewards = async (userId: string, rewards: StoreReward[
 export const syncFirestoreReward = async (userId: string, reward: StoreReward) => {
   if (!firestoreDb) return;
   try {
-    await setDoc(doc(firestoreDb, `users/${userId}/rewards`, reward.id), reward);
+    await setDoc(doc(firestoreDb, `users/${userId}/rewards`, reward.id), cleanUndefined(reward));
   } catch (e) {
     console.error('Error syncing single reward to Firestore:', e);
   }
@@ -260,7 +267,7 @@ export const fetchFirestoreRewards = async (userId: string): Promise<StoreReward
 export const syncFirestoreRewardLog = async (userId: string, log: RewardLog) => {
   if (!firestoreDb) return;
   try {
-    await setDoc(doc(firestoreDb, `users/${userId}/rewardLogs`, log.id), log);
+    await setDoc(doc(firestoreDb, `users/${userId}/rewardLogs`, log.id), cleanUndefined(log));
   } catch (e) {
     console.error('Error syncing log to Firestore:', e);
   }
@@ -290,7 +297,7 @@ export const fetchFirestoreRewardLogs = async (userId: string): Promise<RewardLo
 export const syncFirestoreRedemption = async (userId: string, redemption: RewardRedemption) => {
   if (!firestoreDb) return;
   try {
-    await setDoc(doc(firestoreDb, `users/${userId}/rewardRedemptions`, redemption.id), redemption);
+    await setDoc(doc(firestoreDb, `users/${userId}/rewardRedemptions`, redemption.id), cleanUndefined(redemption));
   } catch (e) {
     console.error('Error syncing redemption to Firestore:', e);
   }
@@ -327,7 +334,7 @@ export const syncFirestoreSettings = async (userId: string, settings: Settings) 
     delete prefSettings.firebaseStorageBucket;
     delete prefSettings.firebaseMessagingSenderId;
     delete prefSettings.firebaseAppId;
-    await setDoc(doc(firestoreDb, `users/${userId}/settings`, 'preferences'), prefSettings);
+    await setDoc(doc(firestoreDb, `users/${userId}/settings`, 'preferences'), cleanUndefined(prefSettings));
   } catch (e) {
     console.error('Error syncing settings to Firestore:', e);
   }
