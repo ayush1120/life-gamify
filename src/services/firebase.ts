@@ -174,8 +174,9 @@ export const subscribeFirestoreSettings = (
 export const syncFirestoreHabits = async (userId: string, habits: Habit[]) => {
   if (!firestoreDb) return;
   try {
+    const db = firestoreDb;
     const batchList = habits.map(habit => 
-      setDoc(doc(firestoreDb, `users/${userId}/activities`, habit.id), habit)
+      setDoc(doc(db, `users/${userId}/activities`, habit.id), habit)
     );
     await Promise.all(batchList);
   } catch (e) {
@@ -216,8 +217,9 @@ export const fetchFirestoreHabits = async (userId: string): Promise<Habit[]> => 
 export const syncFirestoreRewards = async (userId: string, rewards: StoreReward[]) => {
   if (!firestoreDb) return;
   try {
+    const db = firestoreDb;
     const batchList = rewards.map(reward => 
-      setDoc(doc(firestoreDb, `users/${userId}/rewards`, reward.id), reward)
+      setDoc(doc(db, `users/${userId}/rewards`, reward.id), reward)
     );
     await Promise.all(batchList);
   } catch (e) {
