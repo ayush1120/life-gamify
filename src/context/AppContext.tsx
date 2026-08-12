@@ -17,8 +17,11 @@ import {
   subscribeFirestoreLogs,
   subscribeFirestoreRedemptions,
   subscribeFirestoreSettings,
+  subscribeFirestoreRewards,
   syncFirestoreHabits,
   deleteFirestoreHabit,
+  syncFirestoreRewards,
+  deleteFirestoreReward,
   syncFirestoreRewardLog,
   deleteFirestoreLog,
   syncFirestoreRedemption,
@@ -202,7 +205,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           }
         });
 
-        unsubs.push(unsubHabits, unsubLogs, unsubRedemptions, unsubSettings);
+        // 5. Live Rewards Subscription
+        const unsubRewards = subscribeFirestoreRewards(authUser.uid, (cloudRewards) => {
+          if (cloudRewards.length > 0) {
+            setRewards(cloudRewards);
+            saveStoredRewards(cloudRewards);
+          } else {
+            syncFirestoreRewards(authUser.uid, rewards);
+          }
+        });
+
+        unsubs.push(unsubHabits, unsubLogs, unsubRedemptions, unsubSettings, unsubRewards);
         showToast(`Welcome, ${authUser.displayName || 'User'}! ☁️ Live Cloud Synced`);
       }
     }, settings);
@@ -387,22 +400,30 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
-    setRewards([...rewards, newReward]);
+    const updated = [...rewards, newReward];
+    setRewards(updated);
+    if (user) syncFirestoreRewards(user.uid, updated);
     showToast(`Added Store Reward: ${newReward.name}`);
   };
 
   const updateReward = (updated: StoreReward) => {
-    setRewards(rewards.map(r => r.id === updated.id ? { ...updated, updatedAt: new Date().toISOString() } : r));
+    const newRewards = rewards.map(r => r.id === updated.id ? { ...updated, updatedAt: new Date().toISOString() } : r);
+    setRewards(newRewards);
+    if (user) syncFirestoreRewards(user.uid, newRewards);
     showToast(`Updated reward: ${updated.name}`);
   };
 
   const deleteReward = (id: string) => {
-    setRewards(rewards.filter(r => r.id !== id));
+    const newRewards = rewards.filter(r => r.id !== id);
+    setRewards(newRewards);
+    if (user) deleteFirestoreReward(user.uid, id);
     showToast('Reward deleted');
   };
 
   const toggleRewardActive = (id: string) => {
-    setRewards(rewards.map(r => r.id === id ? { ...r, active: !r.active, updatedAt: new Date().toISOString() } : r));
+    const newRewards = rewards.map(r => r.id === id ? { ...r, active: !r.active, updatedAt: new Date().toISOString() } : r);
+    setRewards(newRewards);
+    if (user) syncFirestoreRewards(user.uid, newRewards);
   };
 
   const deleteLog = (logId: string) => {

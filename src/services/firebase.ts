@@ -12,7 +12,7 @@ import {
   query, 
   Firestore 
 } from 'firebase/firestore';
-import { Settings, Habit, RewardLog, RewardRedemption, UserProfile } from '../types';
+import { Settings, Habit, RewardLog, RewardRedemption, UserProfile, StoreReward } from '../types';
 
 const DEFAULT_FIREBASE_CONFIG = {
   apiKey: "AIzaSyDFG3dnqB_4iphC1wjTOpNW07W7VMs0zeA",
@@ -117,6 +117,20 @@ export const subscribeFirestoreHabits = (
   }, (err) => console.error('Habits snapshot error:', err));
 };
 
+export const subscribeFirestoreRewards = (
+  userId: string, 
+  callback: (rewards: StoreReward[]) => void
+) => {
+  if (!firestoreDb) return () => {};
+  const q = query(collection(firestoreDb, `users/${userId}/rewards`));
+  return onSnapshot(q, (snapshot) => {
+    const rewards = snapshot.docs.map(docSnap => docSnap.data() as StoreReward);
+    // Sort logic optional, fallback to arbitrary or timestamp
+    rewards.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    callback(rewards);
+  }, (err) => console.error('Rewards snapshot error:', err));
+};
+
 export const subscribeFirestoreLogs = (
   userId: string, 
   callback: (logs: RewardLog[]) => void
@@ -185,6 +199,38 @@ export const fetchFirestoreHabits = async (userId: string): Promise<Habit[]> => 
     return snapshot.docs.map(docSnap => docSnap.data() as Habit);
   } catch (e) {
     console.error('Error fetching habits from Firestore:', e);
+    return [];
+  }
+};
+
+export const syncFirestoreRewards = async (userId: string, rewards: StoreReward[]) => {
+  if (!firestoreDb) return;
+  try {
+    for (const reward of rewards) {
+      await setDoc(doc(firestoreDb, `users/${userId}/rewards`, reward.id), reward);
+    }
+  } catch (e) {
+    console.error('Error syncing rewards to Firestore:', e);
+  }
+};
+
+export const deleteFirestoreReward = async (userId: string, rewardId: string) => {
+  if (!firestoreDb) return;
+  try {
+    await deleteDoc(doc(firestoreDb, `users/${userId}/rewards`, rewardId));
+  } catch (e) {
+    console.error('Error deleting reward from Firestore:', e);
+  }
+};
+
+export const fetchFirestoreRewards = async (userId: string): Promise<StoreReward[]> => {
+  if (!firestoreDb) return [];
+  try {
+    const q = query(collection(firestoreDb, `users/${userId}/rewards`));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(docSnap => docSnap.data() as StoreReward);
+  } catch (e) {
+    console.error('Error fetching rewards from Firestore:', e);
     return [];
   }
 };
