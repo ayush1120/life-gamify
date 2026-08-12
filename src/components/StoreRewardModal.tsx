@@ -4,6 +4,7 @@ import { useApp } from '../context/AppContext';
 import { processImageFile } from '../services/storage';
 import { X, Upload, Sparkles, Image as ImageIcon, Trash2, Plus, Save } from 'lucide-react';
 import { playSound } from '../services/sound';
+import { ImageCropperModal } from './ImageCropperModal';
 
 interface StoreRewardModalProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ export const StoreRewardModal: React.FC<StoreRewardModalProps> = ({ isOpen, onCl
   const [cost, setCost] = useState(12);
   const [icon, setIcon] = useState('🍪');
   const [image, setImage] = useState<string | undefined>(undefined);
+  const [tempImage, setTempImage] = useState<string | null>(null);
   const [category, setCategory] = useState<string>('Snacks');
 
   useEffect(() => {
@@ -49,8 +51,7 @@ export const StoreRewardModal: React.FC<StoreRewardModalProps> = ({ isOpen, onCl
     if (!file) return;
     try {
       const dataUrl = await processImageFile(file);
-      setImage(dataUrl);
-      showToast('Image uploaded successfully!');
+      setTempImage(dataUrl);
     } catch {
       showToast('Failed to process image file.');
     }
@@ -269,6 +270,18 @@ export const StoreRewardModal: React.FC<StoreRewardModalProps> = ({ isOpen, onCl
 
         </form>
       </div>
+
+      <ImageCropperModal
+        isOpen={!!tempImage}
+        imageSrc={tempImage || ''}
+        onClose={() => setTempImage(null)}
+        onCropComplete={(croppedDataUrl) => {
+          setImage(croppedDataUrl);
+          setTempImage(null);
+          showToast('Image cropped and saved!');
+        }}
+        aspectRatio={16 / 9}
+      />
     </div>
   );
 };
