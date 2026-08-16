@@ -169,12 +169,15 @@ export const LogActivityPage: React.FC = () => {
                   key={habit.id}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.97 }}
-                  onClick={() => setActiveTab(`habits/${habit.id}`)}
-                  className={`cursor-pointer relative p-3 sm:p-4 rounded-2xl glass-panel border transition-all flex flex-col justify-between ${
+                  className={`relative rounded-2xl glass-panel border transition-all flex flex-col justify-between overflow-hidden ${
                     progress.isComplete ? 'opacity-70 bg-emerald-500/5 border-emerald-500/30' : 'border-amber-400/40 shadow-lg shadow-amber-500/10'
                   }`}
                 >
-                  {/* Top Bar */}
+                  <div 
+                    onClick={() => setActiveTab(`habits/${habit.id}`)}
+                    className="cursor-pointer p-3 sm:p-4 flex-1 flex flex-col justify-between"
+                  >
+                    {/* Top Bar */}
                   <div className="flex items-center justify-between mb-2 sm:mb-3">
                     <div className="flex items-center space-x-2.5">
                       <span className="text-2xl">{habit.icon}</span>
@@ -196,9 +199,10 @@ export const LogActivityPage: React.FC = () => {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
+                        e.preventDefault();
                         toggleQuickHabit(habit.id);
                       }}
-                      className="p-1.5 rounded-full hover:bg-amber-500/20 cursor-pointer"
+                      className="p-1.5 rounded-full hover:bg-amber-500/20 cursor-pointer relative z-10"
                       title="Unmark Quick Habit"
                     >
                       <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
@@ -213,12 +217,16 @@ export const LogActivityPage: React.FC = () => {
                     />
                   </div>
 
+                  </div>
+
                   {/* 1-Tap Log Action Button */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      logHabit(habit.id, e);
-                    }}
+                  <div className="px-3 sm:px-4 pb-3 sm:pb-4">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        logHabit(habit.id, e);
+                      }}
                     disabled={progress.isComplete && progress.max > 0}
                     className={`w-full py-2.5 px-4 rounded-xl font-outfit text-xs font-extrabold flex items-center justify-center space-x-2 transition-all cursor-pointer ${
                       progress.isComplete && progress.max > 0
@@ -281,11 +289,14 @@ export const LogActivityPage: React.FC = () => {
                 <motion.div
                   key={habit.id}
                   whileHover={{ y: -2 }}
-                  onClick={() => setActiveTab(`habits/${habit.id}`)}
-                  className="cursor-pointer p-3 sm:p-4 rounded-2xl glass-panel border transition-all flex flex-col justify-between space-y-2 sm:space-y-3"
+                  className="rounded-2xl glass-panel border transition-all flex flex-col justify-between overflow-hidden"
                   style={{ border: '1px solid var(--glass-border)' }}
                 >
-                  {/* Top Bar */}
+                  <div
+                    onClick={() => setActiveTab(`habits/${habit.id}`)}
+                    className="cursor-pointer p-3 sm:p-4 flex-1 flex flex-col justify-between space-y-2 sm:space-y-3"
+                  >
+                    {/* Top Bar */}
                   <div className="flex items-start justify-between">
                     <div className="flex items-center space-x-2.5">
                       <span className="text-2xl">{habit.icon}</span>
@@ -305,9 +316,10 @@ export const LogActivityPage: React.FC = () => {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
+                        e.preventDefault();
                         toggleQuickHabit(habit.id);
                       }}
-                      className="p-1 rounded-full hover:bg-amber-500/20 cursor-pointer"
+                      className="p-1 rounded-full hover:bg-amber-500/20 cursor-pointer relative z-10"
                       title={habit.isQuickHabit ? "Unmark Quick Habit" : "Mark as Quick Habit"}
                     >
                       <Star className={`w-4 h-4 ${habit.isQuickHabit ? 'text-amber-400 fill-amber-400' : 'text-zinc-500'}`} />
@@ -340,12 +352,16 @@ export const LogActivityPage: React.FC = () => {
                     </div>
                   </div>
 
+                  </div>
+
                   {/* Log Action Button */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      logHabit(habit.id, e);
-                    }}
+                  <div className="px-3 sm:px-4 pb-3 sm:pb-4 mt-auto">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        logHabit(habit.id, e);
+                      }}
                     disabled={progress.isComplete && progress.max > 0}
                     className={`w-full py-2.5 px-4 rounded-xl font-outfit text-xs font-extrabold flex items-center justify-center space-x-1.5 cursor-pointer ${
                       progress.isComplete && progress.max > 0
