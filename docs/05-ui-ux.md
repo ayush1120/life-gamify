@@ -26,3 +26,11 @@
   - **Golden Coin Shower**
   - **Fireworks Sparkle**
   - **Starburst**
+
+---
+
+## Settings: Image Tools
+- Image utilities are grouped in a collapsed **Image Tools** section on the Settings page, keeping the main navigation focused on the habit-tracking experience.
+- **Reward Cover Editor** opens the existing Reward Store image flow, including client-side upload, 16:9 crop, replacement, and removal.
+- **Image Overlay Studio** provides browser-based overlays, opacity gradients, masks/shapes, and PNG export.
+- **Coin Sprite Slicer** opens the standalone multi-line slicer and chroma-key tool for generating individual transparent coin/sprite tiles.

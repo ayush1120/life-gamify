@@ -2,6 +2,8 @@
 
 This catalog documents all **37 transparent 3D gold coin assets** extracted, background-cleared, and organized into three main functional categories in `public/assets/coins/`.
 
+Source sheets can be processed with the browser-based **Coin Sprite Slicer**, available from **Settings → Image Tools**. The slicer is deployed as `public/slice_cutter.html` and can split arbitrary sprite sheets, remove chroma-key backgrounds, and download selected tiles as transparent PNGs.
+
 ---
 
 ## 🌳 Category 1: 2D Tree Evolution & Growth Sequence (`coin_stage_1/`)

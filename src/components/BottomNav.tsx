@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { LayoutDashboard, ShoppingBag, CheckSquare, Zap, Menu, History, BarChart2, Settings, Layers } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, CheckSquare, Zap, Menu, History, BarChart2, Settings } from 'lucide-react';
 import { playSound } from '../services/sound';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -23,8 +23,6 @@ export const BottomNav: React.FC = () => {
     { id: 'log-activity', label: 'Log', icon: Zap },
     { id: 'store', label: 'Store', icon: ShoppingBag },
     { id: 'habits', label: 'Habits', icon: CheckSquare },
-    // New entry for overlay demo page
-    { id: 'overlay-demo', label: 'Overlay', icon: Layers },
     { id: 'more', label: 'More', icon: Menu },
   ];
 

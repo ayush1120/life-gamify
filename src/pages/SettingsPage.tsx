@@ -3,9 +3,10 @@ import { useApp } from '../context/AppContext';
 import { LogoutModal } from '../components/LogoutModal';
 import { exportAllData, importAllData } from '../services/storage';
 import { ThemeOption, CelebrationStyle } from '../types';
-import { Settings as SettingsIcon, Volume2, VolumeX, Shield, Download, Upload, Palette, Save, Sparkles, Sun, Moon } from 'lucide-react';
+import { Settings as SettingsIcon, Volume2, VolumeX, Shield, Download, Upload, Palette, Save, Sparkles, Sun, Moon, ChevronDown, ChevronUp, Image as ImageIcon, Layers, Crop, Scissors } from 'lucide-react';
 import { playSound } from '../services/sound';
 import { triggerCelebration } from '../services/celebration';
+import { getAssetUrl } from '../utils/assets';
 
 const THEMES: { id: ThemeOption; name: string; desc: string; icon: React.ComponentType<{ className?: string }> }[] = [
   { id: 'dark', name: 'Dark Theme', desc: 'Midnight Navy background with neon gradients & glowing glass cards', icon: Moon },
@@ -20,8 +21,9 @@ const CELEBRATION_STYLES: { id: CelebrationStyle; name: string; desc: string }[]
 ];
 
 export const SettingsPage: React.FC = () => {
-  const { settings, updateSettings, showToast, user, signInWithGoogle, logout } = useApp();
+  const { settings, updateSettings, showToast, user, signInWithGoogle, logout, setActiveTab } = useApp();
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+  const [isImageToolsOpen, setIsImageToolsOpen] = useState(false);
 
   const [theme, setTheme] = useState<ThemeOption>(settings.theme || 'dark');
   const [celebrationStyle, setCelebrationStyle] = useState<CelebrationStyle>(settings.celebrationStyle || 'confetti');
@@ -78,6 +80,11 @@ export const SettingsPage: React.FC = () => {
       }
     };
     reader.readAsText(file);
+  };
+
+  const openRewardImageEditor = () => {
+    setActiveTab('store');
+    setTimeout(() => document.getElementById('btn-add-reward')?.click(), 0);
   };
 
   return (
@@ -329,6 +336,66 @@ export const SettingsPage: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* Image Tools */}
+        <section className="glass-panel rounded-3xl overflow-hidden" style={{ border: '1px solid var(--glass-border)' }}>
+          <button
+            type="button"
+            onClick={() => setIsImageToolsOpen(open => !open)}
+            className="w-full p-6 sm:p-8 flex items-center justify-between text-left cursor-pointer"
+            aria-expanded={isImageToolsOpen}
+            aria-controls="image-tools-panel"
+          >
+            <span className="flex items-center gap-3">
+              <span className="p-2.5 rounded-2xl" style={{ background: 'var(--pill-badge-bg)', color: 'var(--text-accent)' }}>
+                <ImageIcon className="w-5 h-5" />
+              </span>
+              <span>
+                <span className="font-outfit text-xl font-bold block" style={{ color: 'var(--text-primary)' }}>Image Tools</span>
+                <span className="text-xs font-medium block mt-0.5" style={{ color: 'var(--text-muted)' }}>Crop reward covers, slice coin sheets, or create image overlays</span>
+              </span>
+            </span>
+            {isImageToolsOpen ? <ChevronUp className="w-5 h-5" style={{ color: 'var(--text-accent)' }} /> : <ChevronDown className="w-5 h-5" style={{ color: 'var(--text-accent)' }} />}
+          </button>
+
+          {isImageToolsOpen && (
+            <div id="image-tools-panel" className="px-6 pb-6 sm:px-8 sm:pb-8 space-y-3" style={{ borderTop: '1px solid var(--glass-border)' }}>
+              <p className="pt-5 text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+                These tools work entirely in your browser. Reward cover images are cropped and stored with the reward; overlay exports download as PNG files.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={openRewardImageEditor}
+                  className="p-4 rounded-2xl text-left cursor-pointer transition-opacity hover:opacity-85"
+                  style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)' }}
+                >
+                  <span className="flex items-center gap-2 font-bold text-sm" style={{ color: 'var(--text-primary)' }}><Crop className="w-4 h-4" style={{ color: 'var(--text-accent)' }} /> Reward Cover Editor</span>
+                  <span className="block text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Upload, crop, replace, or remove a Reward Store cover image.</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('overlay-demo')}
+                  className="p-4 rounded-2xl text-left cursor-pointer transition-opacity hover:opacity-85"
+                  style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)' }}
+                >
+                  <span className="flex items-center gap-2 font-bold text-sm" style={{ color: 'var(--text-primary)' }}><Layers className="w-4 h-4" style={{ color: 'var(--text-accent)' }} /> Image Overlay Studio</span>
+                  <span className="block text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Apply opacity gradients, color overlays, shapes, and export a PNG.</span>
+                </button>
+                <a
+                  href={getAssetUrl('/slice_cutter.html')}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="p-4 rounded-2xl text-left cursor-pointer transition-opacity hover:opacity-85"
+                  style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)' }}
+                >
+                  <span className="flex items-center gap-2 font-bold text-sm" style={{ color: 'var(--text-primary)' }}><Scissors className="w-4 h-4" style={{ color: 'var(--text-accent)' }} /> Coin Sprite Slicer</span>
+                  <span className="block text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Split a coin or sprite sheet into transparent PNG tiles and remove a chroma-key background.</span>
+                </a>
+              </div>
+            </div>
+          )}
+        </section>
 
         {/* Save Settings Button */}
         <button
