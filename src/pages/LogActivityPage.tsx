@@ -247,6 +247,7 @@ export const LogActivityPage: React.FC = () => {
                       </>
                     )}
                   </button>
+                  </div>
                 </motion.div>
               );
             })}
@@ -382,6 +383,7 @@ export const LogActivityPage: React.FC = () => {
                       </>
                     )}
                   </button>
+                  </div>
                 </motion.div>
               );
             })}
