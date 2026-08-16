@@ -172,7 +172,7 @@ export const Navbar: React.FC = () => {
         >
           {tabs.map((tab) => {
             const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
+            const isActive = activeTab === tab.id || (tab.id === 'habits' && activeTab.startsWith('habits/'));
             return (
               <button
                 key={tab.id}

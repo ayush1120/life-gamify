@@ -37,21 +37,29 @@ export const getStartOfMonth = (date: Date = new Date()): Date => {
 export const getLogsInCurrentPeriod = (habit: Habit, logs: RewardLog[], targetDate: Date = new Date()): RewardLog[] => {
   const frequency: HabitFrequency = habit.frequency || 'daily';
   let startDate: Date;
+  let endDate: Date;
 
   if (frequency === 'weekly') {
     startDate = getStartOfISOWeek(targetDate);
+    endDate = new Date(startDate);
+    endDate.setDate(startDate.getDate() + 7);
   } else if (frequency === 'monthly') {
     startDate = getStartOfMonth(targetDate);
+    endDate = new Date(startDate);
+    endDate.setMonth(startDate.getMonth() + 1);
   } else {
     startDate = getStartOfDay(targetDate);
+    endDate = new Date(startDate);
+    endDate.setDate(startDate.getDate() + 1);
   }
 
   const startTime = startDate.getTime();
+  const endTime = endDate.getTime();
 
   return logs.filter(log => {
     if (log.activityId !== habit.id || log.isRetracted) return false;
     const logTime = new Date(log.timestamp).getTime();
-    return logTime >= startTime;
+    return logTime >= startTime && logTime < endTime;
   });
 };
 

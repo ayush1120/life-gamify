@@ -8,6 +8,7 @@ import { HabitsPage } from './pages/HabitsPage';
 import { HistoryPage } from './pages/HistoryPage';
 import { AnalyticsPage } from './pages/AnalyticsPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { HabitDetailPage } from './pages/HabitDetailPage';
 import OverlayDemoPage from './pages/OverlayDemoPage';
 import { FlyingReward } from './components/FlyingReward';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -37,6 +38,7 @@ const MainContent: React.FC = () => {
         {activeTab === 'log-activity' && <LogActivityPage />}
         {activeTab === 'store' && <StorePage />}
         {activeTab === 'habits' && <HabitsPage />}
+        {activeTab.startsWith('habits/') && <HabitDetailPage habitId={decodeURIComponent(activeTab.split('/')[1])} />}
         {activeTab === 'history' && <HistoryPage />}
         {activeTab === 'analytics' && <AnalyticsPage />}
         {activeTab === 'settings' && <SettingsPage />}

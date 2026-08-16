@@ -8,7 +8,7 @@ import { playSound } from '../services/sound';
 const PRESET_TAGS = ['All', '⭐️ Quick Habits', 'Work', 'Health', 'Career', 'Music', 'Fitness', 'Learning', 'Personal'];
 
 export const HabitsPage: React.FC = () => {
-  const { habits, deleteHabit, toggleHabitActive, reorderHabits, toggleQuickHabit, settings } = useApp();
+  const { habits, deleteHabit, toggleHabitActive, reorderHabits, toggleQuickHabit, settings, setActiveTab } = useApp();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
 
@@ -251,6 +251,15 @@ export const HabitsPage: React.FC = () => {
                 </span>
 
                 <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => setActiveTab(`habits/${habit.id}`)}
+                    title="View Details"
+                    className="p-2 rounded-xl cursor-pointer"
+                    style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-accent)' }}
+                  >
+                    <Eye className="w-4 h-4" />
+                  </button>
+
                   <button
                     onClick={() => toggleHabitActive(habit.id)}
                     title={habit.active ? 'Disable Habit' : 'Enable Habit'}

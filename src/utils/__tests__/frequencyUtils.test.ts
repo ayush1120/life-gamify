@@ -52,6 +52,22 @@ describe('Frequency Utilities Unit Tests', () => {
     expect(currentLogs[0].id).toBe('l1');
   });
 
+  it('correctly filters logs out that are past the current period end boundary', () => {
+    const todayISO = new Date().toISOString();
+    const tomorrowDate = new Date();
+    tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+    const tomorrowISO = tomorrowDate.toISOString();
+
+    const logs: RewardLog[] = [
+      { id: 'l1', activityId: 'h-daily', habitName: 'Water', icon: '💧', timestamp: todayISO, rewardEarned: 2, unit: 'Coins' },
+      { id: 'l2', activityId: 'h-daily', habitName: 'Water', icon: '💧', timestamp: tomorrowISO, rewardEarned: 2, unit: 'Coins' }
+    ];
+
+    const currentLogs = getLogsInCurrentPeriod(mockHabitDaily, logs);
+    expect(currentLogs).toHaveLength(1);
+    expect(currentLogs[0].id).toBe('l1');
+  });
+
   it('correctly calculates habit due status in period', () => {
     const todayISO = new Date().toISOString();
 

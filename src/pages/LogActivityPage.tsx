@@ -9,7 +9,7 @@ import { motion } from 'framer-motion';
 const PRESET_TAGS = ['All', '⭐️ Quick Habits', 'Work', 'Health', 'Career', 'Music', 'Fitness', 'Learning', 'Personal'];
 
 export const LogActivityPage: React.FC = () => {
-  const { habits, rewardLogs, logHabit, toggleQuickHabit, settings } = useApp();
+  const { habits, rewardLogs, logHabit, toggleQuickHabit, settings, setActiveTab } = useApp();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTag, setSelectedTag] = useState('All');
@@ -169,7 +169,8 @@ export const LogActivityPage: React.FC = () => {
                   key={habit.id}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.97 }}
-                  className={`relative p-3 sm:p-4 rounded-2xl glass-panel border transition-all flex flex-col justify-between ${
+                  onClick={() => setActiveTab(`habits/${habit.id}`)}
+                  className={`cursor-pointer relative p-3 sm:p-4 rounded-2xl glass-panel border transition-all flex flex-col justify-between ${
                     progress.isComplete ? 'opacity-70 bg-emerald-500/5 border-emerald-500/30' : 'border-amber-400/40 shadow-lg shadow-amber-500/10'
                   }`}
                 >
@@ -214,7 +215,10 @@ export const LogActivityPage: React.FC = () => {
 
                   {/* 1-Tap Log Action Button */}
                   <button
-                    onClick={(e) => logHabit(habit.id, e)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      logHabit(habit.id, e);
+                    }}
                     disabled={progress.isComplete && progress.max > 0}
                     className={`w-full py-2.5 px-4 rounded-xl font-outfit text-xs font-extrabold flex items-center justify-center space-x-2 transition-all cursor-pointer ${
                       progress.isComplete && progress.max > 0
@@ -277,7 +281,8 @@ export const LogActivityPage: React.FC = () => {
                 <motion.div
                   key={habit.id}
                   whileHover={{ y: -2 }}
-                  className="p-3 sm:p-4 rounded-2xl glass-panel border transition-all flex flex-col justify-between space-y-2 sm:space-y-3"
+                  onClick={() => setActiveTab(`habits/${habit.id}`)}
+                  className="cursor-pointer p-3 sm:p-4 rounded-2xl glass-panel border transition-all flex flex-col justify-between space-y-2 sm:space-y-3"
                   style={{ border: '1px solid var(--glass-border)' }}
                 >
                   {/* Top Bar */}
@@ -298,7 +303,10 @@ export const LogActivityPage: React.FC = () => {
 
                     {/* Star Favorite Button */}
                     <button
-                      onClick={() => toggleQuickHabit(habit.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleQuickHabit(habit.id);
+                      }}
                       className="p-1 rounded-full hover:bg-amber-500/20 cursor-pointer"
                       title={habit.isQuickHabit ? "Unmark Quick Habit" : "Mark as Quick Habit"}
                     >
@@ -334,7 +342,10 @@ export const LogActivityPage: React.FC = () => {
 
                   {/* Log Action Button */}
                   <button
-                    onClick={(e) => logHabit(habit.id, e)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      logHabit(habit.id, e);
+                    }}
                     disabled={progress.isComplete && progress.max > 0}
                     className={`w-full py-2.5 px-4 rounded-xl font-outfit text-xs font-extrabold flex items-center justify-center space-x-1.5 cursor-pointer ${
                       progress.isComplete && progress.max > 0

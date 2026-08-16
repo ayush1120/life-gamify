@@ -92,7 +92,7 @@ export const BottomNav: React.FC = () => {
         <div className="flex justify-around items-center h-[58px] px-1.5">
           {navItems.map((item) => {
             const Icon = item.icon;
-            const isActive = activeTab === item.id || (item.id === 'more' && ['history', 'analytics', 'settings'].includes(activeTab)) || (item.id === 'more' && isMoreOpen);
+            const isActive = activeTab === item.id || (item.id === 'habits' && activeTab.startsWith('habits/')) || (item.id === 'more' && ['history', 'analytics', 'settings'].includes(activeTab)) || (item.id === 'more' && isMoreOpen);
             
             return (
               <button

@@ -83,6 +83,7 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const lastLogTimeRef = React.useRef<Record<string, number>>({});
   const [habits, setHabits] = useState<Habit[]>(loadStoredHabits);
   const [rewards, setRewards] = useState<StoreReward[]>(loadStoredRewards);
   const [rewardLogs, setRewardLogs] = useState<RewardLog[]>(loadStoredLogs);
@@ -92,8 +93,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const hash = window.location.hash.replace('#', '').trim();
     const pathname = window.location.pathname.replace(/^\//, '').trim();
     const validTabs = ['dashboard', 'log-activity', 'store', 'habits', 'history', 'analytics', 'settings', 'overlay-demo'];
-    if (validTabs.includes(hash)) return hash;
-    if (validTabs.includes(pathname)) return pathname;
+    if (validTabs.includes(hash) || hash.startsWith('habits/')) return hash;
+    if (validTabs.includes(pathname) || pathname.startsWith('habits/')) return pathname;
     return 'dashboard';
   };
 
@@ -123,9 +124,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const hash = window.location.hash.replace('#', '').trim();
       const pathname = window.location.pathname.replace(/^\//, '').trim();
       const validTabs = ['dashboard', 'log-activity', 'store', 'habits', 'history', 'analytics', 'settings', 'overlay-demo'];
-      if (validTabs.includes(hash)) {
+      if (validTabs.includes(hash) || hash.startsWith('habits/')) {
         setActiveTabState(hash);
-      } else if (validTabs.includes(pathname)) {
+      } else if (validTabs.includes(pathname) || pathname.startsWith('habits/')) {
         setActiveTabState(pathname);
       }
     };
@@ -226,6 +227,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       unsubscribeAuth();
       unsubs.forEach(unsub => unsub());
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [settings.firebaseApiKey, settings.firebaseProjectId]);
 
   const signInWithGoogle = async () => {
@@ -275,9 +277,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Habit Logging Action
   const logHabit = (habitId: string, event?: React.MouseEvent) => {
     const habit = habits.find(h => h.id === habitId);
-    if (!habit) return;
+    if (!habit || !habit.active) return;
 
-    if (!isHabitDueInPeriod(habit, rewardLogs)) {
+    const now = Date.now();
+    if (lastLogTimeRef.current[habitId] && now - lastLogTimeRef.current[habitId] < 300) {
+      return;
+    }
+    lastLogTimeRef.current[habitId] = now;
+
+    const attemptTime = new Date(now);
+
+    if (!isHabitDueInPeriod(habit, rewardLogs, attemptTime)) {
       const label = getPeriodLabel(habit.frequency || 'daily');
       const max = habit.maxPerPeriod ?? habit.maxPerDay ?? 1;
       showToast(`Limit reached for "${habit.name}" (${max} max per ${label.toLowerCase()})! 🎯`);
@@ -296,11 +306,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
 
     const newLog: RewardLog = {
-      id: `log-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+      id: `log-${now}-${Math.random().toString(36).substring(2, 8)}`,
       activityId: habit.id,
       habitName: habit.name,
       icon: habit.icon,
-      timestamp: new Date().toISOString(),
+      timestamp: attemptTime.toISOString(),
       rewardEarned: habit.rewardValue,
       unit: settings.currencyName || 'Coins'
     };

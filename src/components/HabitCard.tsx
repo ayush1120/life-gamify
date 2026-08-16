@@ -12,7 +12,7 @@ interface HabitCardProps {
 }
 
 export const HabitCard: React.FC<HabitCardProps> = ({ habit }) => {
-  const { logHabit, rewardLogs, toggleQuickHabit } = useApp();
+  const { logHabit, rewardLogs, toggleQuickHabit, setActiveTab } = useApp();
   const progress = getPeriodProgress(habit, rewardLogs);
   const isMaxReached = progress.isComplete;
 
@@ -20,7 +20,7 @@ export const HabitCard: React.FC<HabitCardProps> = ({ habit }) => {
     <motion.div
       whileHover={{ y: isMaxReached ? 0 : -3, scale: isMaxReached ? 1 : 1.01 }}
       whileTap={{ scale: 0.97 }}
-      onClick={(e) => logHabit(habit.id, e)}
+      onClick={() => setActiveTab(`habits/${habit.id}`)}
       className={`group relative glass-panel glass-panel-hover rounded-2xl p-3 sm:p-4 cursor-pointer flex flex-col justify-between select-none overflow-hidden transition-all ${
         isMaxReached ? 'opacity-85 ring-1 ring-emerald-500/50' : ''
       }`}
@@ -116,17 +116,22 @@ export const HabitCard: React.FC<HabitCardProps> = ({ habit }) => {
         </div>
       </div>
 
-      {/* Footer Progress (Hidden on mobile for compactness) */}
-      <div
-        className="mt-3 pt-3 hidden sm:flex items-center justify-between pl-2 text-xs font-bold transition-colors"
+      {/* Footer Progress / Log Action */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          logHabit(habit.id, e);
+        }}
+        disabled={isMaxReached}
+        className={`mt-3 pt-3 flex items-center justify-between pl-2 text-xs font-bold transition-colors w-full cursor-pointer disabled:cursor-not-allowed`}
         style={{ borderTop: '1px solid var(--glass-border)', color: 'var(--text-muted)' }}
       >
         <span className={`flex items-center space-x-1 ${isMaxReached ? 'text-emerald-400' : 'group-hover:text-amber-500'} transition-colors`}>
           <PlusCircle className={`w-3.5 h-3.5 ${isMaxReached ? 'text-emerald-400' : 'text-amber-500 group-hover:rotate-90'} transition-transform duration-300`} />
           <span>{isMaxReached ? `Completed ${getPeriodLabel(habit.frequency || 'daily')}` : 'Tap to Earn'}</span>
         </span>
-        <span className="text-[11px] font-mono">{progress.max === 0 ? 'Unlimited' : `${progress.max}x/${habit.frequency || 'daily'}`}</span>
-      </div>
+        <span className="text-[11px] font-mono pr-2">{progress.max === 0 ? 'Unlimited' : `${progress.max}x/${habit.frequency || 'daily'}`}</span>
+      </button>
     </motion.div>
   );
 };
