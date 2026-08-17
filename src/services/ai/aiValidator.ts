@@ -4,8 +4,10 @@ import {
   QuestProposal, 
   BossProposal, 
   AchievementProposal,
+  NotificationProposal,
   GAME_MASTER_VERSION 
 } from './aiContract';
+
 import { 
   StatId, 
   Habit, 
@@ -360,7 +362,7 @@ export const convertProposalToAchievement = (
  * Converts a notification proposal into a game notification (Phase 23).
  */
 export const convertProposalToNotification = (
-  proposal: GameMasterResponse['notifications'][0]
+  proposal: NotificationProposal
 ): GameNotification => {
   return {
     id: `notif-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
@@ -372,3 +374,4 @@ export const convertProposalToNotification = (
     priority: proposal.priority || 'medium'
   };
 };
+

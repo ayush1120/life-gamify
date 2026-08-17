@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { LogoutModal } from '../components/LogoutModal';
+import { AIConfigCard } from '../components/AIConfigCard';
 import { exportAllData, importAllData } from '../services/storage';
 import { ThemeOption, CelebrationStyle } from '../types';
+
 import { Settings as SettingsIcon, Volume2, VolumeX, Shield, Download, Upload, Palette, Save, Sparkles, Sun, Moon, ChevronDown, ChevronUp, Image as ImageIcon, Layers, Crop, Scissors } from 'lucide-react';
 import { playSound } from '../services/sound';
 import { triggerCelebration } from '../services/celebration';
@@ -397,6 +399,9 @@ export const SettingsPage: React.FC = () => {
           )}
         </section>
 
+        {/* AI Game Master Section (Phase 13 & 14) */}
+        <AIConfigCard />
+
         {/* Save Settings Button */}
         <button
           type="submit"
@@ -406,6 +411,7 @@ export const SettingsPage: React.FC = () => {
           <span>Save Settings & Preferences</span>
         </button>
       </form>
+
 
       {/* Backup & Import Data Section */}
       <div className="glass-panel rounded-3xl p-6 sm:p-8 space-y-4" style={{ border: '1px solid var(--glass-border)' }}>

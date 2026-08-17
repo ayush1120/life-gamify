@@ -190,5 +190,21 @@ describe('Phase 9 & 10: AI Contract & Runtime Schema Validation', () => {
       expect(boss.xpReward).toBe(Math.round(2100 * 1.5));
       expect(boss.coinReward).toBe(Math.round(2100 * 0.1));
     });
+
+    it('calculates deterministic achievement properties from proposal', () => {
+      const achProp = {
+        name: 'Gym Legend',
+        description: 'Complete 50 gym sessions',
+        icon: '🏆',
+        category: 'Fitness',
+        requirements: [{ habitId: 'h_gym', targetCount: 50, description: '50 workouts' }]
+      };
+      const ach = convertProposalToAchievement(achProp);
+      expect(ach.name).toBe('Gym Legend');
+      expect(ach.xpReward).toBe(250);
+      expect(ach.coinReward).toBe(30);
+      expect(ach.status).toBe('locked');
+    });
   });
 });
+
