@@ -1,5 +1,6 @@
 import { RewardLog, RewardRedemption, HabitStats } from '../types';
 import { toLocalDateString } from '../utils/dateUtils';
+import { calculateXp, getLevelProgress } from '../utils/progressionUtils';
 
 /**
  * Calculates the 1% Mistake Fee for normal habit log deletions.
@@ -178,6 +179,10 @@ export const computeLedgerStats = (
   const daysActive = Math.max(1, Math.ceil((new Date().getTime() - firstLogDate.getTime()) / (1000 * 3600 * 24)));
   const averagePerDay = Number((totalCoinsEarned / daysActive).toFixed(1));
 
+  // --- PROGRESSION STATS ---
+  const totalXp = calculateXp(totalCoinsEarned);
+  const progress = getLevelProgress(totalXp);
+
   return {
     totalCoinsEarned,
     totalCoinsSpent,
@@ -187,6 +192,10 @@ export const computeLedgerStats = (
     todayCoinsEarned,
     currentStreak,
     longestStreak: Math.max(longestStreak, currentStreak),
-    averagePerDay
+    averagePerDay,
+    totalXp,
+    level: progress.level,
+    levelProgress: progress.percentage,
+    xpToNextLevel: progress.xpToNextLevel
   };
 };

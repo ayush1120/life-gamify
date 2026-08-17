@@ -1,5 +1,6 @@
 export type HabitFrequency = 'daily' | 'weekly' | 'monthly';
 export type HabitCategory = 'Work' | 'Health' | 'Career' | 'Music' | 'Personal' | 'Fitness' | 'Learning' | string;
+export type StatId = 'health' | 'fitness' | 'knowledge' | 'career' | 'creativity' | 'discipline' | 'social';
 
 export interface Habit {
   id: string;
@@ -93,4 +94,8 @@ export interface HabitStats {
   currentStreak: number;
   longestStreak: number;
   averagePerDay: number;
+  totalXp: number;
+  level: number;
+  levelProgress: number; // Percentage (0-100) towards the next level
+  xpToNextLevel: number; // Remaining XP needed to reach next level
 }

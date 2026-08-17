@@ -6,6 +6,7 @@ import { HabitCard } from '../components/HabitCard';
 import { HabitModal } from '../components/HabitModal';
 import { StoreRewardCard } from '../components/StoreRewardCard';
 import { CoinToken } from '../components/CoinToken';
+import { LevelProgressBar } from '../components/LevelProgressBar';
 import { toLocalDateString } from '../utils/dateUtils';
 import { Zap, ArrowRight, ShoppingBag, History } from 'lucide-react';
 
@@ -30,6 +31,11 @@ export const Dashboard: React.FC = () => {
 
       {/* Hero Banner */}
       <HeroBanner onOpenHabitModal={() => setIsHabitModalOpen(true)} />
+
+      {/* Level Progress */}
+      <div className="px-1">
+        <LevelProgressBar />
+      </div>
 
       {/* Coin Vault & Treasury */}
       <CoinVault />
