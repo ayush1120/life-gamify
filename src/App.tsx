@@ -9,6 +9,7 @@ import { HistoryPage } from './pages/HistoryPage';
 import { AnalyticsPage } from './pages/AnalyticsPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { HabitDetailPage } from './pages/HabitDetailPage';
+import { AdventurePage } from './pages/AdventurePage';
 import OverlayDemoPage from './pages/OverlayDemoPage';
 import { FlyingReward } from './components/FlyingReward';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -35,6 +36,7 @@ const MainContent: React.FC = () => {
 
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8">
         {activeTab === 'dashboard' && <Dashboard />}
+        {activeTab === 'adventure' && <AdventurePage />}
         {activeTab === 'log-activity' && <LogActivityPage />}
         {activeTab === 'store' && <StorePage />}
         {activeTab === 'habits' && <HabitsPage />}
@@ -44,6 +46,7 @@ const MainContent: React.FC = () => {
         {activeTab === 'settings' && <SettingsPage />}
         {activeTab === 'overlay-demo' && <OverlayDemoPage />}
       </main>
+
 
       {/* Purchase Success Celebration Modal */}
       <AnimatePresence>

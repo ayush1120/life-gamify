@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { LayoutDashboard, ShoppingBag, CheckSquare, Zap, Menu, History, BarChart2, Settings } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, CheckSquare, Zap, Menu, History, BarChart2, Settings, Compass } from 'lucide-react';
 import { playSound } from '../services/sound';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -53,10 +53,12 @@ export const BottomNav: React.FC = () => {
             >
               <div className="flex flex-col space-y-1">
                 {[
+                  { id: 'adventure', label: 'Adventure Hub', icon: Compass },
                   { id: 'history', label: 'History Ledger', icon: History },
                   { id: 'analytics', label: 'Analytics', icon: BarChart2 },
                   { id: 'settings', label: 'Settings', icon: Settings }
                 ].map(item => {
+
                   const Icon = item.icon;
                   const isActive = activeTab === item.id;
                   return (

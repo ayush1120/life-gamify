@@ -8,15 +8,20 @@ import { StoreRewardCard } from '../components/StoreRewardCard';
 import { CoinToken } from '../components/CoinToken';
 import { LevelProgressBar } from '../components/LevelProgressBar';
 import { CharacterStatsCard } from '../components/CharacterStatsCard';
+import { QuestCard } from '../components/QuestCard';
+import { BossCard } from '../components/BossCard';
 import { toLocalDateString } from '../utils/dateUtils';
-import { Zap, ArrowRight, ShoppingBag, History } from 'lucide-react';
+import { Zap, ArrowRight, ShoppingBag, History, Sword, Flame } from 'lucide-react';
+
 
 export const Dashboard: React.FC = () => {
-  const { habits, rewards, rewardLogs, setActiveTab } = useApp();
+  const { habits, rewards, rewardLogs, quests, bosses, setActiveTab } = useApp();
   const [isHabitModalOpen, setIsHabitModalOpen] = useState(false);
 
   const activeHabits = habits.filter(h => h.active).sort((a, b) => a.order - b.order);
   const featuredRewards = rewards.filter(r => r.active).slice(0, 3);
+  const activeQuests = quests.filter(q => q.status === 'active');
+  const activeBoss = bosses.find(b => b.status === 'active') || null;
 
   const todayStr = toLocalDateString(new Date());
   const todayLogs = rewardLogs.filter(l => toLocalDateString(l.timestamp) === todayStr);
@@ -43,8 +48,58 @@ export const Dashboard: React.FC = () => {
         <CharacterStatsCard />
       </div>
 
+      {/* Active Quests */}
+      {activeQuests.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Sword className="w-5 h-5" style={{ color: 'var(--text-accent)' }} />
+              <h2 className="font-outfit text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
+                Active RPG Quests ({activeQuests.length})
+              </h2>
+            </div>
+            <button
+              onClick={() => setActiveTab('adventure')}
+              className="text-xs font-bold flex items-center gap-1 cursor-pointer hover:opacity-80"
+              style={{ color: 'var(--text-accent)' }}
+            >
+              <span>Adventure Hub</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {activeQuests.slice(0, 2).map(quest => (
+              <QuestCard key={quest.id} quest={quest} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* World Boss Battle */}
+      {activeBoss && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Flame className="w-5 h-5 text-red-400" />
+              <h2 className="font-outfit text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
+                World Boss Battle
+              </h2>
+            </div>
+            <button
+              onClick={() => setActiveTab('adventure')}
+              className="text-xs font-bold flex items-center gap-1 cursor-pointer hover:opacity-80 text-red-400"
+            >
+              <span>Battle Arena</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+          <BossCard boss={activeBoss} />
+        </div>
+      )}
+
       {/* Coin Vault & Treasury */}
       <CoinVault />
+
 
 
       {/* Quick Log Habits Section */}

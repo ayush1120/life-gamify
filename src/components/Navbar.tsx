@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { CoinToken } from './CoinToken';
 import { LogoutModal } from './LogoutModal';
-import { LayoutDashboard, ShoppingBag, CheckSquare, History, BarChart3, Settings as SettingsIcon, Flame, Sun, Moon, LogIn, LogOut, User, Zap } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, CheckSquare, History, BarChart3, Settings as SettingsIcon, Flame, Sun, Moon, LogIn, LogOut, User, Zap, Compass } from 'lucide-react';
 import { playSound } from '../services/sound';
 
 export const Navbar: React.FC = () => {
@@ -25,6 +25,7 @@ export const Navbar: React.FC = () => {
 
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'adventure', label: 'Adventure', icon: Compass },
     { id: 'log-activity', label: 'Log Activity', icon: Zap },
     { id: 'store', label: 'Reward Store', icon: ShoppingBag },
     { id: 'habits', label: 'Habits', icon: CheckSquare },
@@ -32,6 +33,7 @@ export const Navbar: React.FC = () => {
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
     { id: 'settings', label: 'Settings', icon: SettingsIcon },
   ];
+
 
   return (
     <header
