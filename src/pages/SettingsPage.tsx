@@ -29,6 +29,7 @@ export const SettingsPage: React.FC = () => {
 
   const [theme, setTheme] = useState<ThemeOption>(settings.theme || 'dark');
   const [celebrationStyle, setCelebrationStyle] = useState<CelebrationStyle>(settings.celebrationStyle || 'confetti');
+  const [playerName, setPlayerName] = useState(settings.playerName || user?.displayName || '');
   const [currencySymbol, setCurrencySymbol] = useState(settings.currencySymbol || '🪙');
   const [currencyName, setCurrencyName] = useState(settings.currencyName || 'Coins');
   const [soundEnabled, setSoundEnabled] = useState(settings.soundEnabled);
@@ -41,6 +42,7 @@ export const SettingsPage: React.FC = () => {
     updateSettings({
       theme,
       celebrationStyle,
+      playerName: playerName.trim(),
       currencySymbol: currencySymbol.trim() || '🪙',
       currencyName: currencyName.trim() || 'Coins',
       soundEnabled,
@@ -50,6 +52,7 @@ export const SettingsPage: React.FC = () => {
     });
     playSound.click(soundEnabled);
   };
+
 
   const handleTestCelebration = (style: CelebrationStyle) => {
     setCelebrationStyle(style);
@@ -178,12 +181,27 @@ export const SettingsPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Currency & Audio Settings */}
+        {/* Profile & Currency Settings */}
         <div className="glass-panel rounded-3xl p-6 sm:p-8 space-y-6" style={{ border: '1px solid var(--glass-border)' }}>
           <h2 className="font-outfit text-xl font-bold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
             <SettingsIcon className="w-5 h-5" style={{ color: 'var(--text-accent)' }} />
-            <span>Currency & Audio Settings</span>
+            <span>Profile & Economy Settings</span>
           </h2>
+
+          <div className="space-y-1">
+            <label className="text-xs font-semibold flex items-center justify-between" style={{ color: 'var(--text-secondary)' }}>
+              <span>Player / Character Name</span>
+              <span className="text-[10px] text-gray-400">Synced to Firebase Profile</span>
+            </label>
+            <input
+              type="text"
+              value={playerName}
+              onChange={e => setPlayerName(e.target.value)}
+              placeholder={user?.displayName || "Adventurer"}
+              className="w-full px-4 py-2.5 rounded-xl text-sm focus:outline-none"
+              style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)' }}
+            />
+          </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
@@ -210,6 +228,7 @@ export const SettingsPage: React.FC = () => {
               />
             </div>
           </div>
+
 
           {/* Sound FX Toggle */}
           <div className="flex items-center justify-between p-4 rounded-2xl" style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)' }}>

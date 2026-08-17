@@ -10,7 +10,8 @@ interface HeroBannerProps {
 }
 
 export const HeroBanner: React.FC<HeroBannerProps> = ({ onOpenHabitModal }) => {
-  const { stats, settings } = useApp();
+  const { stats, settings, user } = useApp();
+  const playerName = settings.playerName || user?.displayName;
 
   return (
     <div className="relative hero-card rounded-2xl overflow-hidden sparkle-decoration">
@@ -22,11 +23,12 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ onOpenHabitModal }) => {
           {/* Top Row on Mobile: Pill + Title (Left), Chest (Right) */}
           <div className="flex flex-row items-center justify-between w-full gap-2">
             <div className="space-y-3 sm:space-y-4 flex-1 min-w-0">
-              {/* Pill Badge — amber toned, not purple */}
+              {/* Pill Badge */}
               <div className="pill-badge">
                 <Sparkles className="w-3.5 h-3.5" />
-                <span>Habit Gamified Economy</span>
+                <span>{playerName ? `${playerName}'s Quest Economy` : 'Habit Gamified Economy'}</span>
               </div>
+
 
               <h1 className="font-outfit text-3xl sm:text-[44px] font-extrabold tracking-tight leading-tight flex flex-wrap items-center gap-2" style={{ color: 'var(--text-primary)' }}>
                 <span>Build Habits,</span>

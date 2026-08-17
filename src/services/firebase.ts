@@ -97,7 +97,25 @@ export const signInWithGoogle = async (settings?: Settings) => {
   return await signInWithPopup(auth, provider);
 };
 
+export const syncFirestoreUserProfile = async (user: UserProfile) => {
+  if (!firestoreDb) return;
+  try {
+    const userDocRef = doc(firestoreDb, `users/${user.uid}`);
+    await setDoc(userDocRef, cleanUndefined({
+      uid: user.uid,
+      displayName: user.displayName || 'Player',
+      email: user.email,
+      photoURL: user.photoURL,
+      lastLoginAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }), { merge: true });
+  } catch (e) {
+    console.error('Error syncing user profile to Firestore:', e);
+  }
+};
+
 export const logoutFirebase = async () => {
+
   if (!firebaseApp) return;
   const auth = getAuth(firebaseApp);
   await signOut(auth);

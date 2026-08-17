@@ -192,6 +192,7 @@ export interface Settings {
   soundEnabled: boolean;
   currencySymbol: string; // '🪙'
   currencyName: string; // 'Coins'
+  playerName?: string; // Player display name
   allowedEmail?: string; // Owner email for single-user auth lock
   firebaseApiKey?: string;
   firebaseAuthDomain?: string;
@@ -201,6 +202,7 @@ export interface Settings {
   firebaseAppId?: string;
   aiSettings?: AISettings;
 }
+
 
 export interface UserProfile {
   uid: string;

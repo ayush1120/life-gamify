@@ -59,9 +59,11 @@ import {
   subscribeFirestoreNotifications,
   syncFirestoreNotification,
   deleteFirestoreNotification,
+  syncFirestoreUserProfile,
   signInWithGoogle as firebaseGoogleSignIn,
   logoutFirebase
 } from '../services/firebase';
+
 
 import { computeLedgerStats, calculateKarmaSurcharge, calculateMistakeFee, isHabitLogGracePeriod } from '../services/ledger';
 import { isHabitDueInPeriod, getPeriodLabel } from '../utils/frequencyUtils';
@@ -217,7 +219,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setUser(authUser);
 
       if (authUser) {
+        // Sync user profile (displayName, email, photoURL) to Firestore
+        syncFirestoreUserProfile(authUser);
+
         // 1. Live Habits Subscription
+
         const unsubHabits = subscribeFirestoreHabits(authUser.uid, (cloudHabits) => {
           if (cloudHabits.length > 0) {
             setHabits(cloudHabits);
