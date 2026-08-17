@@ -372,7 +372,7 @@ Deterministic engine:
 
 ------------------------------------------------------------------------
 
-# 8. Phase 0 --- Establish the Current Baseline
+# 8. Phase 0 --- Establish the Current Baseline ✅ [COMPLETED]
 
 Before adding RPG mechanics:
 
@@ -407,7 +407,7 @@ Do not refactor the entire application yet.
 
 ------------------------------------------------------------------------
 
-# 9. Phase 1 --- Separate Activity From Game Effects
+# 9. Phase 1 --- Separate Activity From Game Effects ✅ [COMPLETED]
 
 Introduce an activity event abstraction:
 
@@ -439,7 +439,7 @@ type GameEffect = {
 
 ------------------------------------------------------------------------
 
-# 10. Phase 2 --- Define Fixed Life Stats
+# 10. Phase 2 --- Define Fixed Life Stats ✅ [COMPLETED]
 
 Start with a controlled vocabulary:
 
@@ -457,7 +457,7 @@ Do not allow AI or users to create arbitrary stats initially.
 
 ------------------------------------------------------------------------
 
-# 11. Phase 3 --- Build Deterministic XP
+# 11. Phase 3 --- Build Deterministic XP ✅ [COMPLETED]
 
 XP must be mathematical and independent from AI.
 
@@ -485,7 +485,7 @@ Keep the formula centralized so it can later be tuned.
 
 ------------------------------------------------------------------------
 
-# 12. Phase 4 --- Build Deterministic Level Progression
+# 12. Phase 4 --- Build Deterministic Level Progression ✅ [COMPLETED]
 
 Store:
 
@@ -517,7 +517,7 @@ Requirements:
 
 ------------------------------------------------------------------------
 
-# 13. Phase 5 --- Character Progression UI
+# 13. Phase 5 --- Character Progression UI ✅ [COMPLETED]
 
 Add:
 
