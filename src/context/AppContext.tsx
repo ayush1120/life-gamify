@@ -675,6 +675,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const updateSettings = (newSettings: Partial<Settings>) => {
     setSettings(prev => {
       const updated = { ...prev, ...newSettings };
+      saveStoredSettings(updated);
       if (user && isFirebaseConfigured(updated)) {
         syncFirestoreSettings(user.uid, updated);
       }
@@ -682,6 +683,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
     showToast('Settings saved');
   };
+
 
   return (
     <AppContext.Provider

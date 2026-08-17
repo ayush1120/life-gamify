@@ -170,13 +170,22 @@ export const subscribeFirestoreSettings = (
   }, (err) => console.error('Settings snapshot error:', err));
 };
 
-// Helper to strip undefined values which crash Firestore setDoc
+// Helper to strip undefined values recursively which crash Firestore setDoc
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const cleanUndefined = <T extends Record<string, any>>(obj: T): T => {
-  return Object.fromEntries(
-    Object.entries(obj).filter(([, v]) => v !== undefined)
-  ) as T;
+const cleanUndefined = <T>(obj: T): T => {
+  if (obj === null || typeof obj !== 'object') return obj;
+  if (Array.isArray(obj)) {
+    return obj.map(item => cleanUndefined(item)) as unknown as T;
+  }
+  const cleaned: Record<string, any> = {};
+  for (const [k, v] of Object.entries(obj as Record<string, any>)) {
+    if (v !== undefined) {
+      cleaned[k] = cleanUndefined(v);
+    }
+  }
+  return cleaned as T;
 };
+
 
 // Firestore Sync Write Helpers
 export const syncFirestoreHabits = async (userId: string, habits: Habit[]) => {
