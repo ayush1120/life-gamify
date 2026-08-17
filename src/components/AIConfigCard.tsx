@@ -11,7 +11,7 @@ import {
 import { Bot, Key, Cpu, Play, CheckCircle2, AlertCircle, Eye, EyeOff, Loader2, Sparkles } from 'lucide-react';
 
 const MODEL_PRESETS: Record<AIProvider, string[]> = {
-  gemini: ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-1.5-pro'],
+  gemini: ['gemini-3.6-flash', 'gemini-2.5-pro', 'gemini-3.5-flash', 'gemini-flash-latest'],
   openai: ['gpt-4o-mini', 'gpt-4o', 'gpt-3.5-turbo'],
   anthropic: ['claude-3-5-haiku-20241022', 'claude-3-5-sonnet-20241022']
 };
@@ -35,7 +35,7 @@ export const AIConfigCard: React.FC = () => {
   const currentAI: AISettings = settings.aiSettings || {
     provider: 'gemini',
     apiKey: '',
-    model: 'gemini-1.5-flash',
+    model: 'gemini-3.6-flash',
     enabled: true
   };
 

@@ -19,15 +19,16 @@ export const getLLMProvider = (settings?: AISettings): LLMProvider | null => {
 
   switch (provider) {
     case 'gemini':
-      return new GeminiProvider(apiKey, settings.model || 'gemini-1.5-flash');
+      return new GeminiProvider(apiKey, settings.model || 'gemini-3.6-flash');
     case 'openai':
       return new OpenAIProvider(apiKey, settings.model || 'gpt-4o-mini');
     case 'anthropic':
       return new AnthropicProvider(apiKey, settings.model || 'claude-3-5-haiku-20241022');
     default:
-      return new GeminiProvider(apiKey, settings.model || 'gemini-1.5-flash');
+      return new GeminiProvider(apiKey, settings.model || 'gemini-3.6-flash');
   }
 };
+
 
 /**
  * Checks whether Game Master analysis should run based on cost control rules (Phase 29).

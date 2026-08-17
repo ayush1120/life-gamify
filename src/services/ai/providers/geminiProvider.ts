@@ -6,10 +6,11 @@ export class GeminiProvider {
   private apiKey: string;
   private model: string;
 
-  constructor(apiKey: string, model: string = 'gemini-1.5-flash') {
+  constructor(apiKey: string, model: string = 'gemini-3.6-flash') {
     this.apiKey = apiKey.trim();
     this.model = model.trim();
   }
+
 
   async testConnection(): Promise<{ success: boolean; model: string; message: string; latencyMs: number }> {
     const start = Date.now();
