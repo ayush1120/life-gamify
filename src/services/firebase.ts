@@ -355,3 +355,193 @@ export const fetchFirestoreSettings = async (userId: string): Promise<Partial<Se
     return null;
   }
 };
+
+// --- RPG ACTIVITY MAPPINGS ---
+export const subscribeFirestoreActivityMappings = (
+  userId: string,
+  callback: (mappings: Record<string, import('../types').ActivityMapping>) => void
+) => {
+  if (!firestoreDb) return () => {};
+  try {
+    const q = query(collection(firestoreDb, `users/${userId}/activityMappings`));
+    return onSnapshot(q, (snapshot) => {
+      const mappings: Record<string, import('../types').ActivityMapping> = {};
+      snapshot.forEach(docSnap => {
+        const data = docSnap.data() as import('../types').ActivityMapping;
+        mappings[data.habitId || docSnap.id] = data;
+      });
+      callback(mappings);
+    });
+  } catch (e) {
+    console.error('Error in subscribeFirestoreActivityMappings:', e);
+    return () => {};
+  }
+};
+
+export const syncFirestoreActivityMapping = async (userId: string, mapping: import('../types').ActivityMapping) => {
+  if (!firestoreDb || !mapping.habitId) return;
+  try {
+    await setDoc(doc(firestoreDb, `users/${userId}/activityMappings`, mapping.habitId), cleanUndefined(mapping));
+  } catch (e) {
+    console.error('Error syncing activity mapping to Firestore:', e);
+  }
+};
+
+export const syncFirestoreActivityMappings = async (userId: string, mappings: Record<string, import('../types').ActivityMapping>) => {
+  if (!firestoreDb) return;
+  for (const habitId of Object.keys(mappings)) {
+    await syncFirestoreActivityMapping(userId, mappings[habitId]);
+  }
+};
+
+// --- RPG QUESTS ---
+export const subscribeFirestoreQuests = (
+  userId: string,
+  callback: (quests: import('../types').QuestDefinition[]) => void
+) => {
+  if (!firestoreDb) return () => {};
+  try {
+    const q = query(collection(firestoreDb, `users/${userId}/quests`));
+    return onSnapshot(q, (snapshot) => {
+      const quests: import('../types').QuestDefinition[] = [];
+      snapshot.forEach(docSnap => quests.push(docSnap.data() as import('../types').QuestDefinition));
+      callback(quests);
+    });
+  } catch (e) {
+    console.error('Error in subscribeFirestoreQuests:', e);
+    return () => {};
+  }
+};
+
+export const syncFirestoreQuest = async (userId: string, quest: import('../types').QuestDefinition) => {
+  if (!firestoreDb || !quest.id) return;
+  try {
+    await setDoc(doc(firestoreDb, `users/${userId}/quests`, quest.id), cleanUndefined(quest));
+  } catch (e) {
+    console.error('Error syncing quest to Firestore:', e);
+  }
+};
+
+export const syncFirestoreQuests = async (userId: string, quests: import('../types').QuestDefinition[]) => {
+  if (!firestoreDb) return;
+  for (const quest of quests) {
+    await syncFirestoreQuest(userId, quest);
+  }
+};
+
+export const deleteFirestoreQuest = async (userId: string, questId: string) => {
+  if (!firestoreDb) return;
+  try {
+    await deleteDoc(doc(firestoreDb, `users/${userId}/quests`, questId));
+  } catch (e) {
+    console.error('Error deleting quest from Firestore:', e);
+  }
+};
+
+// --- RPG BOSSES ---
+export const subscribeFirestoreBosses = (
+  userId: string,
+  callback: (bosses: import('../types').BossDefinition[]) => void
+) => {
+  if (!firestoreDb) return () => {};
+  try {
+    const q = query(collection(firestoreDb, `users/${userId}/bosses`));
+    return onSnapshot(q, (snapshot) => {
+      const bosses: import('../types').BossDefinition[] = [];
+      snapshot.forEach(docSnap => bosses.push(docSnap.data() as import('../types').BossDefinition));
+      callback(bosses);
+    });
+  } catch (e) {
+    console.error('Error in subscribeFirestoreBosses:', e);
+    return () => {};
+  }
+};
+
+export const syncFirestoreBoss = async (userId: string, boss: import('../types').BossDefinition) => {
+  if (!firestoreDb || !boss.id) return;
+  try {
+    await setDoc(doc(firestoreDb, `users/${userId}/bosses`, boss.id), cleanUndefined(boss));
+  } catch (e) {
+    console.error('Error syncing boss to Firestore:', e);
+  }
+};
+
+export const syncFirestoreBosses = async (userId: string, bosses: import('../types').BossDefinition[]) => {
+  if (!firestoreDb) return;
+  for (const boss of bosses) {
+    await syncFirestoreBoss(userId, boss);
+  }
+};
+
+// --- RPG ACHIEVEMENTS ---
+export const subscribeFirestoreAchievements = (
+  userId: string,
+  callback: (achievements: import('../types').AchievementDefinition[]) => void
+) => {
+  if (!firestoreDb) return () => {};
+  try {
+    const q = query(collection(firestoreDb, `users/${userId}/achievements`));
+    return onSnapshot(q, (snapshot) => {
+      const achievements: import('../types').AchievementDefinition[] = [];
+      snapshot.forEach(docSnap => achievements.push(docSnap.data() as import('../types').AchievementDefinition));
+      callback(achievements);
+    });
+  } catch (e) {
+    console.error('Error in subscribeFirestoreAchievements:', e);
+    return () => {};
+  }
+};
+
+export const syncFirestoreAchievement = async (userId: string, achievement: import('../types').AchievementDefinition) => {
+  if (!firestoreDb || !achievement.id) return;
+  try {
+    await setDoc(doc(firestoreDb, `users/${userId}/achievements`, achievement.id), cleanUndefined(achievement));
+  } catch (e) {
+    console.error('Error syncing achievement to Firestore:', e);
+  }
+};
+
+export const syncFirestoreAchievements = async (userId: string, achievements: import('../types').AchievementDefinition[]) => {
+  if (!firestoreDb) return;
+  for (const ach of achievements) {
+    await syncFirestoreAchievement(userId, ach);
+  }
+};
+
+// --- RPG NOTIFICATIONS ---
+export const subscribeFirestoreNotifications = (
+  userId: string,
+  callback: (notifs: import('../types').GameNotification[]) => void
+) => {
+  if (!firestoreDb) return () => {};
+  try {
+    const q = query(collection(firestoreDb, `users/${userId}/notifications`));
+    return onSnapshot(q, (snapshot) => {
+      const notifs: import('../types').GameNotification[] = [];
+      snapshot.forEach(docSnap => notifs.push(docSnap.data() as import('../types').GameNotification));
+      callback(notifs);
+    });
+  } catch (e) {
+    console.error('Error in subscribeFirestoreNotifications:', e);
+    return () => {};
+  }
+};
+
+export const syncFirestoreNotification = async (userId: string, notif: import('../types').GameNotification) => {
+  if (!firestoreDb || !notif.id) return;
+  try {
+    await setDoc(doc(firestoreDb, `users/${userId}/notifications`, notif.id), cleanUndefined(notif));
+  } catch (e) {
+    console.error('Error syncing notification to Firestore:', e);
+  }
+};
+
+export const deleteFirestoreNotification = async (userId: string, notifId: string) => {
+  if (!firestoreDb) return;
+  try {
+    await deleteDoc(doc(firestoreDb, `users/${userId}/notifications`, notifId));
+  } catch (e) {
+    console.error('Error deleting notification from Firestore:', e);
+  }
+};
+

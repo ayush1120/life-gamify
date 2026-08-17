@@ -9,13 +9,15 @@ import {
   getHabitLongestStreak,
   getHabitTimeline
 } from '../utils/habitAnalytics';
+import { STAT_DEFINITIONS, getDefaultHabitMapping } from '../utils/progressionUtils';
 
 interface HabitDetailPageProps {
   habitId: string;
 }
 
 export const HabitDetailPage: React.FC<HabitDetailPageProps> = ({ habitId }) => {
-  const { habits, rewardLogs, rewards, logHabit, stats, setActiveTab, settings } = useApp();
+  const { habits, rewardLogs, rewards, logHabit, stats, setActiveTab, settings, activityMappings } = useApp();
+
 
   const habit = useMemo(() => habits.find(h => h.id === habitId), [habits, habitId]);
 
@@ -103,7 +105,7 @@ export const HabitDetailPage: React.FC<HabitDetailPageProps> = ({ habitId }) => 
             </span>
             <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 flex items-center space-x-1">
               <Coins className="w-3.5 h-3.5" />
-              <span>+{habit.rewardValue} {settings.currencySymbol}</span>
+              <span>+{habit.rewardValue} {settings.currencySymbol} (+{habit.rewardValue * 5} XP)</span>
             </span>
             {habit.category && (
               <span className="px-3 py-1 rounded-full text-xs font-bold bg-blue-500/10 text-blue-500 border border-blue-500/20">
@@ -116,8 +118,41 @@ export const HabitDetailPage: React.FC<HabitDetailPageProps> = ({ habitId }) => 
               </span>
             ))}
           </div>
+
+          {/* RPG Stat Attribution */}
+          <div className="pt-2">
+            <div className="text-[11px] font-bold uppercase tracking-wider text-amber-400/80 mb-1.5 flex items-center gap-1">
+              <span>RPG Stat Growth</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {(() => {
+                const mapping = activityMappings[habit.id] || getDefaultHabitMapping(habit);
+                const totalLogXp = habit.rewardValue * 5;
+                return mapping.stats.map(sw => {
+                  const def = STAT_DEFINITIONS[sw.stat];
+                  const earnedXp = Math.round(totalLogXp * sw.weight);
+                  return (
+                    <div
+                      key={sw.stat}
+                      className="px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center space-x-1.5"
+                      style={{
+                        background: `${def.color}15`,
+                        border: `1px solid ${def.color}35`,
+                        color: def.color
+                      }}
+                    >
+                      <span>{def.icon}</span>
+                      <span>{def.name} {Math.round(sw.weight * 100)}%</span>
+                      <span className="opacity-80 text-[10px]">({earnedXp} XP)</span>
+                    </div>
+                  );
+                });
+              })()}
+            </div>
+          </div>
         </div>
       </div>
+
 
       {/* Action & Progress */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

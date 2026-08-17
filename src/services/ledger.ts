@@ -1,6 +1,6 @@
-import { RewardLog, RewardRedemption, HabitStats } from '../types';
+import { RewardLog, RewardRedemption, HabitStats, Habit, ActivityMapping } from '../types';
 import { toLocalDateString } from '../utils/dateUtils';
-import { calculateXp, getLevelProgress } from '../utils/progressionUtils';
+import { calculateXp, getLevelProgress, computeStatsBreakdown } from '../utils/progressionUtils';
 
 /**
  * Calculates the 1% Mistake Fee for normal habit log deletions.
@@ -55,7 +55,9 @@ export const isGracePeriod = isRedemptionGracePeriod;
  */
 export const computeLedgerStats = (
   rewardLogs: RewardLog[],
-  redemptions: RewardRedemption[]
+  redemptions: RewardRedemption[],
+  habits: Habit[] = [],
+  activityMappings: Record<string, ActivityMapping> = {}
 ): HabitStats => {
   const validLogs = rewardLogs.filter(l => !l.isRetracted);
   const totalCoinsEarned = validLogs.reduce((sum, log) => sum + log.rewardEarned, 0);
@@ -182,6 +184,7 @@ export const computeLedgerStats = (
   // --- PROGRESSION STATS ---
   const totalXp = calculateXp(totalCoinsEarned);
   const progress = getLevelProgress(totalXp);
+  const statsBreakdown = computeStatsBreakdown(rewardLogs, habits, activityMappings);
 
   return {
     totalCoinsEarned,
@@ -196,6 +199,8 @@ export const computeLedgerStats = (
     totalXp,
     level: progress.level,
     levelProgress: progress.percentage,
-    xpToNextLevel: progress.xpToNextLevel
+    xpToNextLevel: progress.xpToNextLevel,
+    statsBreakdown
   };
 };
+

@@ -7,6 +7,7 @@ import { HabitModal } from '../components/HabitModal';
 import { StoreRewardCard } from '../components/StoreRewardCard';
 import { CoinToken } from '../components/CoinToken';
 import { LevelProgressBar } from '../components/LevelProgressBar';
+import { CharacterStatsCard } from '../components/CharacterStatsCard';
 import { toLocalDateString } from '../utils/dateUtils';
 import { Zap, ArrowRight, ShoppingBag, History } from 'lucide-react';
 
@@ -37,8 +38,14 @@ export const Dashboard: React.FC = () => {
         <LevelProgressBar />
       </div>
 
+      {/* Character Multi-Stat RPG Progression */}
+      <div className="px-1">
+        <CharacterStatsCard />
+      </div>
+
       {/* Coin Vault & Treasury */}
       <CoinVault />
+
 
       {/* Quick Log Habits Section */}
       <div className="space-y-4">

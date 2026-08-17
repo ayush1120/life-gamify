@@ -1,11 +1,27 @@
-import { Habit, StoreReward, RewardLog, RewardRedemption, Settings } from '../types';
+import { 
+  Habit, 
+  StoreReward, 
+  RewardLog, 
+  RewardRedemption, 
+  Settings, 
+  ActivityMapping, 
+  QuestDefinition, 
+  BossDefinition, 
+  AchievementDefinition, 
+  GameNotification 
+} from '../types';
 
 const STORAGE_KEYS = {
   HABITS: 'life_gamify_habits_v2',
   STORE_REWARDS: 'life_gamify_store_rewards_v2',
   REWARD_LOGS: 'life_gamify_reward_logs_v2',
   REDEMPTIONS: 'life_gamify_redemptions_v2',
-  SETTINGS: 'life_gamify_settings_v2'
+  SETTINGS: 'life_gamify_settings_v2',
+  ACTIVITY_MAPPINGS: 'life_gamify_activity_mappings_v2',
+  QUESTS: 'life_gamify_quests_v2',
+  BOSSES: 'life_gamify_bosses_v2',
+  ACHIEVEMENTS: 'life_gamify_achievements_v2',
+  NOTIFICATIONS: 'life_gamify_notifications_v2'
 };
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -295,6 +311,96 @@ export const saveStoredSettings = (settings: Settings): void => {
   }
 };
 
+export const loadStoredActivityMappings = (): Record<string, ActivityMapping> => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.ACTIVITY_MAPPINGS);
+    return raw ? JSON.parse(raw) : {};
+  } catch (e) {
+    console.error('Failed loading activity mappings from local storage', e);
+    return {};
+  }
+};
+
+export const saveStoredActivityMappings = (mappings: Record<string, ActivityMapping>): void => {
+  try {
+    localStorage.setItem(STORAGE_KEYS.ACTIVITY_MAPPINGS, JSON.stringify(mappings));
+  } catch (e) {
+    console.error('Failed saving activity mappings to local storage', e);
+  }
+};
+
+export const loadStoredQuests = (): QuestDefinition[] => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.QUESTS);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    console.error('Failed loading quests from local storage', e);
+    return [];
+  }
+};
+
+export const saveStoredQuests = (quests: QuestDefinition[]): void => {
+  try {
+    localStorage.setItem(STORAGE_KEYS.QUESTS, JSON.stringify(quests));
+  } catch (e) {
+    console.error('Failed saving quests to local storage', e);
+  }
+};
+
+export const loadStoredBosses = (): BossDefinition[] => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.BOSSES);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    console.error('Failed loading bosses from local storage', e);
+    return [];
+  }
+};
+
+export const saveStoredBosses = (bosses: BossDefinition[]): void => {
+  try {
+    localStorage.setItem(STORAGE_KEYS.BOSSES, JSON.stringify(bosses));
+  } catch (e) {
+    console.error('Failed saving bosses to local storage', e);
+  }
+};
+
+export const loadStoredAchievements = (): AchievementDefinition[] => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.ACHIEVEMENTS);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    console.error('Failed loading achievements from local storage', e);
+    return [];
+  }
+};
+
+export const saveStoredAchievements = (achievements: AchievementDefinition[]): void => {
+  try {
+    localStorage.setItem(STORAGE_KEYS.ACHIEVEMENTS, JSON.stringify(achievements));
+  } catch (e) {
+    console.error('Failed saving achievements to local storage', e);
+  }
+};
+
+export const loadStoredNotifications = (): GameNotification[] => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.NOTIFICATIONS);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    console.error('Failed loading notifications from local storage', e);
+    return [];
+  }
+};
+
+export const saveStoredNotifications = (notifications: GameNotification[]): void => {
+  try {
+    localStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify(notifications));
+  } catch (e) {
+    console.error('Failed saving notifications to local storage', e);
+  }
+};
+
 export const exportAllData = () => {
   return {
     habits: loadStoredHabits(),
@@ -302,6 +408,11 @@ export const exportAllData = () => {
     rewardLogs: loadStoredLogs(),
     redemptions: loadStoredRedemptions(),
     settings: loadStoredSettings(),
+    activityMappings: loadStoredActivityMappings(),
+    quests: loadStoredQuests(),
+    bosses: loadStoredBosses(),
+    achievements: loadStoredAchievements(),
+    notifications: loadStoredNotifications(),
     exportedAt: new Date().toISOString()
   };
 };
@@ -314,9 +425,15 @@ export const importAllData = (jsonString: string): boolean => {
     if (data.rewardLogs) saveStoredLogs(data.rewardLogs);
     if (data.redemptions) saveStoredRedemptions(data.redemptions);
     if (data.settings) saveStoredSettings(data.settings);
+    if (data.activityMappings) saveStoredActivityMappings(data.activityMappings);
+    if (data.quests) saveStoredQuests(data.quests);
+    if (data.bosses) saveStoredBosses(data.bosses);
+    if (data.achievements) saveStoredAchievements(data.achievements);
+    if (data.notifications) saveStoredNotifications(data.notifications);
     return true;
   } catch (e) {
     console.error('Failed importing data', e);
     return false;
   }
 };
+

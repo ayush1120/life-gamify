@@ -2,6 +2,33 @@ export type HabitFrequency = 'daily' | 'weekly' | 'monthly';
 export type HabitCategory = 'Work' | 'Health' | 'Career' | 'Music' | 'Personal' | 'Fitness' | 'Learning' | string;
 export type StatId = 'health' | 'fitness' | 'knowledge' | 'career' | 'creativity' | 'discipline' | 'social';
 
+export interface StatWeight {
+  stat: StatId;
+  weight: number; // 0.0 to 1.0, normalized so sum = 1.0
+}
+
+export interface ActivityMapping {
+  habitId: string;
+  stats: StatWeight[];
+  source: 'default' | 'ai' | 'user';
+  confidence?: number;
+  updatedAt?: string;
+}
+
+export interface StatProgress {
+  stat: StatId;
+  name: string;
+  icon: string;
+  color: string;
+  description: string;
+  xp: number;
+  level: number;
+  levelProgress: number; // 0 - 100%
+  xpToNextLevel: number;
+}
+
+export type StatBreakdown = Record<StatId, StatProgress>;
+
 export interface Habit {
   id: string;
   name: string;
@@ -58,6 +85,104 @@ export interface RewardRedemption {
   note?: string;
 }
 
+export type QuestType = 'daily' | 'weekly' | 'milestone';
+export type QuestDifficulty = 'easy' | 'medium' | 'hard';
+export type QuestStatus = 'active' | 'completed' | 'archived' | 'dismissed';
+
+export interface QuestRequirement {
+  habitId: string;
+  habitName?: string;
+  targetCount: number;
+  currentCount?: number;
+}
+
+export interface QuestDefinition {
+  id: string;
+  title: string;
+  description: string;
+  type: QuestType;
+  difficulty: QuestDifficulty;
+  requirements: QuestRequirement[];
+  xpReward: number;
+  coinReward: number;
+  status: QuestStatus;
+  createdAt: string;
+  completedAt?: string;
+  archivedAt?: string;
+  source: 'ai' | 'template' | 'user';
+}
+
+export type BossStatus = 'active' | 'defeated' | 'expired' | 'archived' | 'dismissed';
+export type BossDifficulty = 'easy' | 'medium' | 'hard' | 'epic';
+
+export interface BossDefinition {
+  id: string;
+  name: string;
+  title?: string;
+  theme: string;
+  description: string;
+  relevantStats: StatId[];
+  maxHp: number;
+  currentHp: number;
+  durationDays: number;
+  startDate: string;
+  endDate: string;
+  xpReward: number;
+  coinReward: number;
+  status: BossStatus;
+  createdAt: string;
+  defeatedAt?: string;
+  source: 'ai' | 'template';
+}
+
+export type AchievementStatus = 'locked' | 'unlocked' | 'archived' | 'dismissed';
+
+export interface AchievementRequirement {
+  habitId?: string;
+  stat?: StatId;
+  targetCount?: number;
+  targetLevel?: number;
+  description: string;
+}
+
+export interface AchievementDefinition {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  category?: string;
+  requirements: AchievementRequirement[];
+  xpReward: number;
+  coinReward: number;
+  status: AchievementStatus;
+  unlockedAt?: string;
+  source: 'ai' | 'system';
+}
+
+export type GameNotificationType = 'level_up' | 'quest_complete' | 'boss_defeated' | 'achievement_unlocked' | 'milestone' | 'game_master';
+
+export interface GameNotification {
+  id: string;
+  type: GameNotificationType;
+  title: string;
+  message: string;
+  icon?: string;
+  timestamp: string;
+  read: boolean;
+  priority?: 'low' | 'medium' | 'high';
+}
+
+export type AIProvider = 'gemini' | 'openai' | 'anthropic';
+
+export interface AISettings {
+  provider: AIProvider;
+  apiKey?: string;
+  model?: string;
+  enabled: boolean;
+  lastAnalysisAt?: string;
+  lastAnalysisActivityCount?: number;
+}
+
 export type ThemeOption = 'dark' | 'light';
 export type CelebrationStyle = 'confetti' | 'coinShower' | 'fireworks' | 'starburst';
 
@@ -74,6 +199,7 @@ export interface Settings {
   firebaseStorageBucket?: string;
   firebaseMessagingSenderId?: string;
   firebaseAppId?: string;
+  aiSettings?: AISettings;
 }
 
 export interface UserProfile {
@@ -98,4 +224,6 @@ export interface HabitStats {
   level: number;
   levelProgress: number; // Percentage (0-100) towards the next level
   xpToNextLevel: number; // Remaining XP needed to reach next level
+  statsBreakdown: StatBreakdown;
 }
+

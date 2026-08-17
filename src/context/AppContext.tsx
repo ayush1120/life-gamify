@@ -1,11 +1,29 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
-import { Habit, StoreReward, RewardLog, RewardRedemption, Settings, UserProfile, HabitStats } from '../types';
+import { 
+  Habit, 
+  StoreReward, 
+  RewardLog, 
+  RewardRedemption, 
+  Settings, 
+  UserProfile, 
+  HabitStats,
+  ActivityMapping,
+  QuestDefinition,
+  BossDefinition,
+  AchievementDefinition,
+  GameNotification
+} from '../types';
 import { 
   loadStoredHabits, saveStoredHabits,
   loadStoredRewards, saveStoredRewards,
   loadStoredLogs, saveStoredLogs,
   loadStoredRedemptions, saveStoredRedemptions,
-  loadStoredSettings, saveStoredSettings
+  loadStoredSettings, saveStoredSettings,
+  loadStoredActivityMappings, saveStoredActivityMappings,
+  loadStoredQuests, saveStoredQuests,
+  loadStoredBosses, saveStoredBosses,
+  loadStoredAchievements, saveStoredAchievements,
+  loadStoredNotifications, saveStoredNotifications
 } from '../services/storage';
 import { playSound } from '../services/sound';
 import { triggerCelebration } from '../services/celebration';
@@ -28,9 +46,23 @@ import {
   deleteFirestoreLog,
   syncFirestoreRedemption,
   deleteFirestoreRedemption,
+  subscribeFirestoreActivityMappings,
+  syncFirestoreActivityMapping,
+  syncFirestoreActivityMappings,
+  subscribeFirestoreQuests,
+  syncFirestoreQuest,
+  deleteFirestoreQuest,
+  subscribeFirestoreBosses,
+  syncFirestoreBoss,
+  subscribeFirestoreAchievements,
+  syncFirestoreAchievement,
+  subscribeFirestoreNotifications,
+  syncFirestoreNotification,
+  deleteFirestoreNotification,
   signInWithGoogle as firebaseGoogleSignIn,
   logoutFirebase
 } from '../services/firebase';
+
 import { computeLedgerStats, calculateKarmaSurcharge, calculateMistakeFee, isHabitLogGracePeriod } from '../services/ledger';
 import { isHabitDueInPeriod, getPeriodLabel } from '../utils/frequencyUtils';
 
@@ -42,6 +74,11 @@ interface AppContextType {
   settings: Settings;
   user: UserProfile | null;
   stats: HabitStats;
+  activityMappings: Record<string, ActivityMapping>;
+  quests: QuestDefinition[];
+  bosses: BossDefinition[];
+  achievements: AchievementDefinition[];
+  notifications: GameNotification[];
   activeTab: string;
   setActiveTab: (tab: string) => void;
   toastMessage: string | null;
@@ -69,6 +106,20 @@ interface AppContextType {
   deleteReward: (id: string) => void;
   toggleRewardActive: (id: string) => void;
   
+  // RPG State & Actions
+  updateActivityMapping: (mapping: ActivityMapping) => void;
+  addQuest: (quest: QuestDefinition) => void;
+  updateQuest: (quest: QuestDefinition) => void;
+  archiveQuest: (questId: string) => void;
+  deleteQuest: (questId: string) => void;
+  addBoss: (boss: BossDefinition) => void;
+  updateBoss: (boss: BossDefinition) => void;
+  archiveBoss: (bossId: string) => void;
+  updateAchievement: (achievement: AchievementDefinition) => void;
+  markNotificationRead: (id: string) => void;
+  dismissNotification: (id: string) => void;
+
+
   deleteLog: (logId: string) => void;
   deleteRedemption: (redemptionId: string) => void;
   updateSettings: (newSettings: Partial<Settings>) => void;
@@ -80,6 +131,7 @@ interface AppContextType {
   setShowPurchaseSuccessModal: (redemption: RewardRedemption | null) => void;
 }
 
+
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -89,10 +141,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [rewardLogs, setRewardLogs] = useState<RewardLog[]>(loadStoredLogs);
   const [redemptions, setRedemptions] = useState<RewardRedemption[]>(loadStoredRedemptions);
   const [settings, setSettings] = useState<Settings>(loadStoredSettings);
+  const [activityMappings, setActivityMappings] = useState<Record<string, ActivityMapping>>(loadStoredActivityMappings);
+  const [quests, setQuests] = useState<QuestDefinition[]>(loadStoredQuests);
+  const [bosses, setBosses] = useState<BossDefinition[]>(loadStoredBosses);
+  const [achievements, setAchievements] = useState<AchievementDefinition[]>(loadStoredAchievements);
+  const [notifications, setNotifications] = useState<GameNotification[]>(loadStoredNotifications);
+
   const getInitialTab = (): string => {
     const hash = window.location.hash.replace('#', '').trim();
     const pathname = window.location.pathname.replace(/^\//, '').trim();
-    const validTabs = ['dashboard', 'log-activity', 'store', 'habits', 'history', 'analytics', 'settings', 'overlay-demo'];
+    const validTabs = ['dashboard', 'adventure', 'log-activity', 'store', 'habits', 'history', 'analytics', 'settings', 'overlay-demo'];
     if (validTabs.includes(hash) || hash.startsWith('habits/')) return hash;
     if (validTabs.includes(pathname) || pathname.startsWith('habits/')) return pathname;
     return 'dashboard';
@@ -123,7 +181,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const handleHashOrPathChange = () => {
       const hash = window.location.hash.replace('#', '').trim();
       const pathname = window.location.pathname.replace(/^\//, '').trim();
-      const validTabs = ['dashboard', 'log-activity', 'store', 'habits', 'history', 'analytics', 'settings', 'overlay-demo'];
+      const validTabs = ['dashboard', 'adventure', 'log-activity', 'store', 'habits', 'history', 'analytics', 'settings', 'overlay-demo'];
       if (validTabs.includes(hash) || hash.startsWith('habits/')) {
         setActiveTabState(hash);
       } else if (validTabs.includes(pathname) || pathname.startsWith('habits/')) {
@@ -175,7 +233,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             setRewardLogs(cloudLogs);
             saveStoredLogs(cloudLogs);
           } else {
-            // If cloud logs are empty, sync existing local logs to cloud
             const localLogs = loadStoredLogs();
             if (localLogs.length > 0) {
               localLogs.forEach(log => syncFirestoreRewardLog(authUser.uid, log));
@@ -189,7 +246,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             setRedemptions(cloudRedemptions);
             saveStoredRedemptions(cloudRedemptions);
           } else {
-            // If cloud redemptions are empty, sync existing local redemptions to cloud
             const localRedemptions = loadStoredRedemptions();
             if (localRedemptions.length > 0) {
               localRedemptions.forEach(r => syncFirestoreRedemption(authUser.uid, r));
@@ -218,7 +274,60 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           }
         });
 
-        unsubs.push(unsubHabits, unsubLogs, unsubRedemptions, unsubSettings, unsubRewards);
+        // 6. Live Activity Mappings Subscription
+        const unsubMappings = subscribeFirestoreActivityMappings(authUser.uid, (cloudMappings) => {
+          if (Object.keys(cloudMappings).length > 0) {
+            setActivityMappings(cloudMappings);
+            saveStoredActivityMappings(cloudMappings);
+          } else {
+            syncFirestoreActivityMappings(authUser.uid, activityMappings);
+          }
+        });
+
+        // 7. Live Quests Subscription
+        const unsubQuests = subscribeFirestoreQuests(authUser.uid, (cloudQuests) => {
+          if (cloudQuests.length > 0) {
+            setQuests(cloudQuests);
+            saveStoredQuests(cloudQuests);
+          }
+        });
+
+        // 8. Live Bosses Subscription
+        const unsubBosses = subscribeFirestoreBosses(authUser.uid, (cloudBosses) => {
+          if (cloudBosses.length > 0) {
+            setBosses(cloudBosses);
+            saveStoredBosses(cloudBosses);
+          }
+        });
+
+        // 9. Live Achievements Subscription
+        const unsubAchievements = subscribeFirestoreAchievements(authUser.uid, (cloudAch) => {
+          if (cloudAch.length > 0) {
+            setAchievements(cloudAch);
+            saveStoredAchievements(cloudAch);
+          }
+        });
+
+        // 10. Live Notifications Subscription
+        const unsubNotifs = subscribeFirestoreNotifications(authUser.uid, (cloudNotifs) => {
+          if (cloudNotifs.length > 0) {
+            setNotifications(cloudNotifs);
+            saveStoredNotifications(cloudNotifs);
+          }
+        });
+
+        unsubs.push(
+          unsubHabits, 
+          unsubLogs, 
+          unsubRedemptions, 
+          unsubSettings, 
+          unsubRewards,
+          unsubMappings,
+          unsubQuests,
+          unsubBosses,
+          unsubAchievements,
+          unsubNotifs
+        );
         showToast(`Welcome, ${authUser.displayName || 'User'}! ☁️ Live Cloud Synced`);
       }
     }, settings);
@@ -263,16 +372,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => { saveStoredLogs(rewardLogs); }, [rewardLogs]);
   useEffect(() => { saveStoredRedemptions(redemptions); }, [redemptions]);
   useEffect(() => { saveStoredSettings(settings); }, [settings]);
+  useEffect(() => { saveStoredActivityMappings(activityMappings); }, [activityMappings]);
+  useEffect(() => { saveStoredQuests(quests); }, [quests]);
+  useEffect(() => { saveStoredBosses(bosses); }, [bosses]);
+  useEffect(() => { saveStoredAchievements(achievements); }, [achievements]);
+  useEffect(() => { saveStoredNotifications(notifications); }, [notifications]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3000);
   };
 
-  // Calculate Coin Economy Statistics using pure ledger service
+  // Calculate Coin Economy & Multi-Stat Progression Statistics using pure deterministic ledger service
   const stats: HabitStats = useMemo(() => {
-    return computeLedgerStats(rewardLogs, redemptions);
-  }, [rewardLogs, redemptions]);
+    return computeLedgerStats(rewardLogs, redemptions, habits, activityMappings);
+  }, [rewardLogs, redemptions, habits, activityMappings]);
 
   // Habit Logging Action
   const logHabit = (habitId: string, event?: React.MouseEvent) => {
@@ -312,158 +426,219 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       icon: habit.icon,
       timestamp: attemptTime.toISOString(),
       rewardEarned: habit.rewardValue,
-      unit: settings.currencyName || 'Coins'
+      unit: 'coins'
     };
 
-    setRewardLogs([newLog, ...rewardLogs]);
+    const updatedLogs = [newLog, ...rewardLogs];
+    setRewardLogs(updatedLogs);
     if (user) syncFirestoreRewardLog(user.uid, newLog);
+
     playSound.crunch(settings.soundEnabled);
-    showToast(`Completed "${habit.name}"! +${habit.rewardValue} ${settings.currencySymbol}`);
+    triggerCelebration(settings.celebrationStyle);
   };
 
-  // Store Reward Purchase Action
   const purchaseReward = (rewardId: string, note?: string): boolean => {
-    const targetReward = rewards.find(r => r.id === rewardId);
-    if (!targetReward) return false;
+    const reward = rewards.find(r => r.id === rewardId);
+    if (!reward) return false;
 
-    if (stats.coinBalance < targetReward.cost) {
-      showToast(`Not enough ${settings.currencyName}! You need ${targetReward.cost - stats.coinBalance} more coins.`);
-      playSound.pop(settings.soundEnabled);
+    if (stats.coinBalance < reward.cost) {
+      showToast(`Not enough coins! Need ${reward.cost - stats.coinBalance} more.`);
       return false;
     }
 
     const newRedemption: RewardRedemption = {
-      id: `redemption-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
-      rewardId: targetReward.id,
-      rewardName: targetReward.name,
-      coinsSpent: targetReward.cost,
+      id: `redemption-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
+      rewardId: reward.id,
+      rewardName: reward.name,
+      coinsSpent: reward.cost,
       timestamp: new Date().toISOString(),
-      icon: targetReward.icon,
-      image: targetReward.image,
+      icon: reward.icon,
+      image: reward.image,
       note
     };
 
-    setRedemptions([newRedemption, ...redemptions]);
+    const updated = [newRedemption, ...redemptions];
+    setRedemptions(updated);
     if (user) syncFirestoreRedemption(user.uid, newRedemption);
 
     playSound.fanfare(settings.soundEnabled);
-    triggerCelebration(settings.celebrationStyle);
+
     setShowPurchaseSuccessModal(newRedemption);
-    showToast(`Redeemed "${targetReward.name}" for ${targetReward.cost} ${settings.currencySymbol}! 🎉`);
     return true;
   };
 
-  // Habit CRUD Actions
+
   const addHabit = (habitData: Omit<Habit, 'id' | 'createdAt' | 'updatedAt'>) => {
+    const now = new Date().toISOString();
     const newHabit: Habit = {
       ...habitData,
-      id: `habit-${Date.now()}`,
-      order: habits.length + 1,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      id: `habit-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
+      createdAt: now,
+      updatedAt: now
     };
     const updated = [...habits, newHabit];
     setHabits(updated);
     if (user) syncFirestoreHabit(user.uid, newHabit);
-    showToast(`Added habit: ${newHabit.name}`);
+    showToast(`Added habit "${newHabit.name}"`);
   };
 
-  const updateHabit = (updated: Habit) => {
-    const updatedHabit = { ...updated, updatedAt: new Date().toISOString() };
-    const newHabits = habits.map(h => h.id === updated.id ? updatedHabit : h);
-    setHabits(newHabits);
+  const updateHabit = (updatedHabit: Habit) => {
+    const updated = habits.map(h => h.id === updatedHabit.id ? { ...updatedHabit, updatedAt: new Date().toISOString() } : h);
+    setHabits(updated);
     if (user) syncFirestoreHabit(user.uid, updatedHabit);
-    showToast(`Updated habit: ${updated.name}`);
+    showToast(`Updated habit "${updatedHabit.name}"`);
   };
 
   const deleteHabit = (id: string) => {
-    const newHabits = habits.filter(h => h.id !== id);
-    setHabits(newHabits);
+    const target = habits.find(h => h.id === id);
+    setHabits(habits.filter(h => h.id !== id));
     if (user) deleteFirestoreHabit(user.uid, id);
-    showToast('Habit deleted');
+    showToast(`Deleted habit "${target?.name || ''}"`);
   };
 
   const toggleHabitActive = (id: string) => {
     const target = habits.find(h => h.id === id);
     if (!target) return;
-    const updatedHabit = { ...target, active: !target.active, updatedAt: new Date().toISOString() };
-    const newHabits = habits.map(h => h.id === id ? updatedHabit : h);
-    setHabits(newHabits);
-    if (user) syncFirestoreHabit(user.uid, updatedHabit);
+    const updated = { ...target, active: !target.active, updatedAt: new Date().toISOString() };
+    updateHabit(updated);
   };
 
   const toggleQuickHabit = (id: string) => {
     const target = habits.find(h => h.id === id);
     if (!target) return;
-    const nextState = !target.isQuickHabit;
-    const updatedHabit = { ...target, isQuickHabit: nextState, updatedAt: new Date().toISOString() };
-    const newHabits = habits.map(h => h.id === id ? updatedHabit : h);
-    setHabits(newHabits);
-    if (user) syncFirestoreHabit(user.uid, updatedHabit);
-    showToast(nextState ? `Starred "${target.name}" as Quick Habit ⭐️` : `Unmarked "${target.name}" from Quick Habits`);
+    const updated = { ...target, isQuickHabit: !target.isQuickHabit, updatedAt: new Date().toISOString() };
+    updateHabit(updated);
   };
 
-  const reorderHabits = (newOrder: Habit[]) => {
-    const ordered = newOrder.map((h, i) => ({ ...h, order: i + 1 }));
-    setHabits(ordered);
-    if (user) syncFirestoreHabits(user.uid, ordered);
+  const reorderHabits = (newHabits: Habit[]) => {
+    const reordered = newHabits.map((h, idx) => ({ ...h, order: idx + 1 }));
+    setHabits(reordered);
+    if (user) syncFirestoreHabits(user.uid, reordered);
   };
 
-  // Store Reward CRUD Actions
   const addReward = (rewardData: Omit<StoreReward, 'id' | 'createdAt' | 'updatedAt'>) => {
+    const now = new Date().toISOString();
     const newReward: StoreReward = {
       ...rewardData,
-      id: `reward-${Date.now()}`,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      id: `reward-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
+      createdAt: now,
+      updatedAt: now
     };
     const updated = [...rewards, newReward];
     setRewards(updated);
     if (user) syncFirestoreReward(user.uid, newReward);
-    showToast(`Added Store Reward: ${newReward.name}`);
+    showToast(`Added reward "${newReward.name}"`);
   };
 
-  const updateReward = (updated: StoreReward) => {
-    const updatedReward = { ...updated, updatedAt: new Date().toISOString() };
-    const newRewards = rewards.map(r => r.id === updated.id ? updatedReward : r);
-    setRewards(newRewards);
+  const updateReward = (updatedReward: StoreReward) => {
+    const updated = rewards.map(r => r.id === updatedReward.id ? { ...updatedReward, updatedAt: new Date().toISOString() } : r);
+    setRewards(updated);
     if (user) syncFirestoreReward(user.uid, updatedReward);
-    showToast(`Updated reward: ${updated.name}`);
+    showToast(`Updated reward "${updatedReward.name}"`);
   };
 
   const deleteReward = (id: string) => {
-    const newRewards = rewards.filter(r => r.id !== id);
-    setRewards(newRewards);
+    const target = rewards.find(r => r.id === id);
+    setRewards(rewards.filter(r => r.id !== id));
     if (user) deleteFirestoreReward(user.uid, id);
-    showToast('Reward deleted');
+    showToast(`Deleted reward "${target?.name || ''}"`);
   };
 
   const toggleRewardActive = (id: string) => {
     const target = rewards.find(r => r.id === id);
     if (!target) return;
-    const updatedReward = { ...target, active: !target.active, updatedAt: new Date().toISOString() };
-    const newRewards = rewards.map(r => r.id === id ? updatedReward : r);
-    setRewards(newRewards);
-    if (user) syncFirestoreReward(user.uid, updatedReward);
+    const updated = { ...target, active: !target.active, updatedAt: new Date().toISOString() };
+    updateReward(updated);
+  };
+
+  // --- RPG ACTIONS ---
+  const updateActivityMapping = (mapping: ActivityMapping) => {
+    const updated = { ...activityMappings, [mapping.habitId]: mapping };
+    setActivityMappings(updated);
+    if (user) syncFirestoreActivityMapping(user.uid, mapping);
+    showToast('Activity stat mapping updated');
+  };
+
+  const addQuest = (quest: QuestDefinition) => {
+    const updated = [quest, ...quests];
+    setQuests(updated);
+    if (user) syncFirestoreQuest(user.uid, quest);
+  };
+
+  const updateQuest = (quest: QuestDefinition) => {
+    const updated = quests.map(q => q.id === quest.id ? quest : q);
+    setQuests(updated);
+    if (user) syncFirestoreQuest(user.uid, quest);
+  };
+
+  const archiveQuest = (questId: string) => {
+    const target = quests.find(q => q.id === questId);
+    if (!target) return;
+    const updatedQuest: QuestDefinition = {
+      ...target,
+      status: 'archived',
+      archivedAt: new Date().toISOString()
+    };
+    updateQuest(updatedQuest);
+    showToast(`Quest "${target.title}" archived`);
+  };
+
+  const deleteQuest = (questId: string) => {
+    setQuests(quests.filter(q => q.id !== questId));
+    if (user) deleteFirestoreQuest(user.uid, questId);
+  };
+
+  const addBoss = (boss: BossDefinition) => {
+
+    const updated = [boss, ...bosses];
+    setBosses(updated);
+    if (user) syncFirestoreBoss(user.uid, boss);
+  };
+
+  const updateBoss = (boss: BossDefinition) => {
+    const updated = bosses.map(b => b.id === boss.id ? boss : b);
+    setBosses(updated);
+    if (user) syncFirestoreBoss(user.uid, boss);
+  };
+
+  const archiveBoss = (bossId: string) => {
+    const target = bosses.find(b => b.id === bossId);
+    if (!target) return;
+    const updatedBoss: BossDefinition = {
+      ...target,
+      status: 'archived'
+    };
+    updateBoss(updatedBoss);
+    showToast(`Boss challenge "${target.name}" archived`);
+  };
+
+  const updateAchievement = (achievement: AchievementDefinition) => {
+    const updated = achievements.map(a => a.id === achievement.id ? achievement : a);
+    setAchievements(updated);
+    if (user) syncFirestoreAchievement(user.uid, achievement);
+  };
+
+  const markNotificationRead = (id: string) => {
+    const updated = notifications.map(n => n.id === id ? { ...n, read: true } : n);
+    setNotifications(updated);
+    const target = updated.find(n => n.id === id);
+    if (user && target) syncFirestoreNotification(user.uid, target);
+  };
+
+  const dismissNotification = (id: string) => {
+    setNotifications(notifications.filter(n => n.id !== id));
+    if (user) deleteFirestoreNotification(user.uid, id);
   };
 
   const deleteLog = (logId: string) => {
     const targetLog = rewardLogs.find(l => l.id === logId);
     if (!targetLog) return;
 
-    if (targetLog.isRetracted) {
-      showToast('This log has already been retracted');
-      return;
-    }
-
-    const validLogs = rewardLogs.filter(l => !l.isRetracted);
-    const totalEarned = validLogs.reduce((sum, log) => sum + log.rewardEarned, 0);
-    const totalSpent = redemptions.reduce((sum, r) => sum + r.coinsSpent, 0);
-    const isDeficit = (totalEarned - targetLog.rewardEarned) < totalSpent;
-
     const isFreeGrace = isHabitLogGracePeriod(targetLog.timestamp);
+    const wouldBeInDeficit = (stats.coinBalance - targetLog.rewardEarned) < 0;
 
-    if (isDeficit) {
+    if (wouldBeInDeficit && !isFreeGrace) {
+      // Deficit Retraction (Spent Coins Scenario): Apply 2% Karma Surcharge
       const karmaFee = calculateKarmaSurcharge(stats.coinBalance);
       const retractedLog: RewardLog = {
         ...targetLog,
@@ -475,7 +650,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (user) syncFirestoreRewardLog(user.uid, retractedLog);
       showToast(`Log retracted. Phantom Debt created (-${karmaFee} surcharge)`);
     } else {
-      // Non-Deficit Delete: Cleanly remove log from history (No Phantom Debt, No Retracted status!)
+      // Non-Deficit Delete: Cleanly remove log from history
       setRewardLogs(rewardLogs.filter(l => l.id !== logId));
       if (user) deleteFirestoreLog(user.uid, logId);
 
@@ -518,6 +693,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         settings,
         user,
         stats,
+        activityMappings,
+        quests,
+        bosses,
+        achievements,
+        notifications,
         activeTab,
         setActiveTab,
         toastMessage,
@@ -536,6 +716,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         updateReward,
         deleteReward,
         toggleRewardActive,
+        updateActivityMapping,
+        addQuest,
+        updateQuest,
+        archiveQuest,
+        deleteQuest,
+        addBoss,
+        updateBoss,
+        archiveBoss,
+
+        updateAchievement,
+        markNotificationRead,
+        dismissNotification,
         deleteLog,
         deleteRedemption,
         updateSettings,
