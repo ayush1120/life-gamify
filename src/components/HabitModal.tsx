@@ -21,8 +21,8 @@ export const HabitModal: React.FC<HabitModalProps> = ({ isOpen, onClose, habitTo
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [icon, setIcon] = useState('🏃');
-  const [rewardValue, setRewardValue] = useState(2);
-  const [maxPerPeriod, setMaxPerPeriod] = useState(1);
+  const [rewardValue, setRewardValue] = useState<number | string>(2);
+  const [maxPerPeriod, setMaxPerPeriod] = useState<number | string>(1);
   const [frequency, setFrequency] = useState<HabitFrequency>('daily');
   const [isQuickHabit, setIsQuickHabit] = useState(false);
   const [category, setCategory] = useState('Personal');
@@ -79,6 +79,8 @@ export const HabitModal: React.FC<HabitModalProps> = ({ isOpen, onClose, habitTo
     if (!name.trim()) return;
 
     const finalTags = Array.from(new Set([category, ...tags].map(sanitizeTag))).filter(Boolean);
+    const finalRewardValue = rewardValue === '' ? 0 : Number(rewardValue);
+    const finalMaxPerPeriod = maxPerPeriod === '' ? 0 : Number(maxPerPeriod);
 
     if (habitToEdit) {
       updateHabit({
@@ -86,9 +88,9 @@ export const HabitModal: React.FC<HabitModalProps> = ({ isOpen, onClose, habitTo
         name: name.trim(),
         description: description.trim(),
         icon,
-        rewardValue: Number(rewardValue) || 1,
-        maxPerPeriod: Number(maxPerPeriod) >= 0 ? Number(maxPerPeriod) : 1,
-        maxPerDay: Number(maxPerPeriod) >= 0 ? Number(maxPerPeriod) : 1,
+        rewardValue: finalRewardValue,
+        maxPerPeriod: finalMaxPerPeriod,
+        maxPerDay: finalMaxPerPeriod,
         frequency,
         isQuickHabit,
         category,
@@ -101,9 +103,9 @@ export const HabitModal: React.FC<HabitModalProps> = ({ isOpen, onClose, habitTo
         name: name.trim(),
         description: description.trim(),
         icon,
-        rewardValue: Number(rewardValue) || 1,
-        maxPerPeriod: Number(maxPerPeriod) >= 0 ? Number(maxPerPeriod) : 1,
-        maxPerDay: Number(maxPerPeriod) >= 0 ? Number(maxPerPeriod) : 1,
+        rewardValue: finalRewardValue,
+        maxPerPeriod: finalMaxPerPeriod,
+        maxPerDay: finalMaxPerPeriod,
         frequency,
         isQuickHabit,
         category,
@@ -294,11 +296,11 @@ export const HabitModal: React.FC<HabitModalProps> = ({ isOpen, onClose, habitTo
               </label>
               <input
                 type="number"
-                min={1}
+                min={0}
                 max={100}
                 required
                 value={rewardValue}
-                onChange={e => setRewardValue(Number(e.target.value))}
+                onChange={e => setRewardValue(e.target.value === '' ? '' : Number(e.target.value))}
                 className="w-full px-4 py-2.5 rounded-xl font-bold text-sm focus:outline-none"
                 style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)' }}
               />
@@ -314,7 +316,7 @@ export const HabitModal: React.FC<HabitModalProps> = ({ isOpen, onClose, habitTo
                 max={100}
                 required
                 value={maxPerPeriod}
-                onChange={e => setMaxPerPeriod(Number(e.target.value))}
+                onChange={e => setMaxPerPeriod(e.target.value === '' ? '' : Number(e.target.value))}
                 className="w-full px-4 py-2.5 rounded-xl font-bold text-sm focus:outline-none"
                 style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)' }}
               />

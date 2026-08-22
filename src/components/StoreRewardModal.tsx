@@ -20,7 +20,7 @@ export const StoreRewardModal: React.FC<StoreRewardModalProps> = ({ isOpen, onCl
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [cost, setCost] = useState(12);
+  const [cost, setCost] = useState<number | string>(12);
   const [icon, setIcon] = useState('🍪');
   const [image, setImage] = useState<string | undefined>(undefined);
   const [tempImage, setTempImage] = useState<string | null>(null);
@@ -61,12 +61,14 @@ export const StoreRewardModal: React.FC<StoreRewardModalProps> = ({ isOpen, onCl
     e.preventDefault();
     if (!name.trim()) return;
 
+    const finalCost = cost === '' ? 0 : Number(cost);
+
     if (rewardToEdit) {
       updateReward({
         ...rewardToEdit,
         name: name.trim(),
         description: description.trim(),
-        cost: Number(cost) || 1,
+        cost: finalCost,
         icon,
         image,
         category
@@ -75,7 +77,7 @@ export const StoreRewardModal: React.FC<StoreRewardModalProps> = ({ isOpen, onCl
       addReward({
         name: name.trim(),
         description: description.trim(),
-        cost: Number(cost) || 1,
+        cost: finalCost,
         icon,
         image,
         category,
@@ -134,11 +136,11 @@ export const StoreRewardModal: React.FC<StoreRewardModalProps> = ({ isOpen, onCl
               </label>
               <input
                 type="number"
-                min={1}
+                min={0}
                 max={500}
                 required
                 value={cost}
-                onChange={e => setCost(Number(e.target.value))}
+                onChange={e => setCost(e.target.value === '' ? '' : Number(e.target.value))}
                 className="w-full px-4 py-2.5 rounded-xl font-bold text-sm focus:outline-none"
                 style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)' }}
               />
