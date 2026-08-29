@@ -3,7 +3,7 @@ import { useApp } from '../context/AppContext';
 import { RewardLog, RewardRedemption } from '../types';
 import { DeleteLogModal } from '../components/DeleteLogModal';
 import { DeleteRedemptionModal } from '../components/DeleteRedemptionModal';
-import { History, Trash2, Search, RefreshCw, AlertCircle, ArrowLeft, ChevronDown, Plus, Clock } from 'lucide-react';
+import { Trash2, Search, RefreshCw, AlertCircle, ArrowLeft, ChevronDown, Plus, Clock } from 'lucide-react';
 import { CoinToken } from '../components/CoinToken';
 import { formatContextDate, formatTime, getWeekDays, isSameDay } from '../utils/dateUtils';
 
