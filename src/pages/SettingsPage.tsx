@@ -463,6 +463,29 @@ export const SettingsPage: React.FC = () => {
           </label>
         </div>
       </div>
+
+      {/* Developer Tools (Local / Unauthenticated Only) */}
+      {(import.meta.env.DEV || window.location.hostname === 'localhost') && !user && (
+        <div className="glass-panel rounded-3xl p-6 sm:p-8 space-y-4 border border-violet-500/30 bg-violet-500/5">
+          <h2 className="font-outfit text-xl font-bold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+            <SettingsIcon className="w-5 h-5 text-violet-400" />
+            <span>Developer Tools</span>
+          </h2>
+          <p className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
+            Local testing utilities for UI components and data population. (Visible in dev mode only)
+          </p>
+          <div className="pt-2">
+            <button
+              onClick={() => setActiveTab('devtools')}
+              className="px-5 py-3 rounded-2xl font-bold text-xs flex items-center space-x-2 shadow-sm cursor-pointer transition-colors hover:bg-violet-500/20"
+              style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-primary)' }}
+            >
+              <SettingsIcon className="w-4 h-4 text-violet-400" />
+              <span>Open DevTools Page</span>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

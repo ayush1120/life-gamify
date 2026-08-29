@@ -152,7 +152,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const getInitialTab = (): string => {
     const hash = window.location.hash.replace('#', '').trim();
     const pathname = window.location.pathname.replace(/^\//, '').trim();
-    const validTabs = ['dashboard', 'adventure', 'log-activity', 'store', 'habits', 'history', 'analytics', 'settings', 'overlay-demo'];
+    const validTabs = ['dashboard', 'adventure', 'log-activity', 'store', 'habits', 'history', 'analytics', 'settings', 'overlay-demo', 'devtools'];
     if (validTabs.includes(hash) || hash.startsWith('habits/')) return hash;
     if (validTabs.includes(pathname) || pathname.startsWith('habits/')) return pathname;
     return 'dashboard';
@@ -183,7 +183,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const handleHashOrPathChange = () => {
       const hash = window.location.hash.replace('#', '').trim();
       const pathname = window.location.pathname.replace(/^\//, '').trim();
-      const validTabs = ['dashboard', 'adventure', 'log-activity', 'store', 'habits', 'history', 'analytics', 'settings', 'overlay-demo'];
+      const validTabs = ['dashboard', 'adventure', 'log-activity', 'store', 'habits', 'history', 'analytics', 'settings', 'overlay-demo', 'devtools'];
       if (validTabs.includes(hash) || hash.startsWith('habits/')) {
         setActiveTabState(hash);
       } else if (validTabs.includes(pathname) || pathname.startsWith('habits/')) {

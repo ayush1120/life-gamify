@@ -11,6 +11,7 @@ import { SettingsPage } from './pages/SettingsPage';
 import { HabitDetailPage } from './pages/HabitDetailPage';
 import { AdventurePage } from './pages/AdventurePage';
 import OverlayDemoPage from './pages/OverlayDemoPage';
+import { DevToolsPage } from './pages/DevToolsPage';
 import { FlyingReward } from './components/FlyingReward';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle2 } from 'lucide-react';
@@ -45,6 +46,7 @@ const MainContent: React.FC = () => {
         {activeTab === 'analytics' && <AnalyticsPage />}
         {activeTab === 'settings' && <SettingsPage />}
         {activeTab === 'overlay-demo' && <OverlayDemoPage />}
+        {activeTab === 'devtools' && <DevToolsPage />}
       </main>
 
 

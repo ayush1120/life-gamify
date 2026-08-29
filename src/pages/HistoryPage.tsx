@@ -3,12 +3,15 @@ import { useApp } from '../context/AppContext';
 import { RewardLog, RewardRedemption } from '../types';
 import { DeleteLogModal } from '../components/DeleteLogModal';
 import { DeleteRedemptionModal } from '../components/DeleteRedemptionModal';
-import { History, Trash2, Search, RefreshCw, AlertCircle } from 'lucide-react';
+import { History, Trash2, Search, RefreshCw, AlertCircle, ArrowLeft, ChevronDown, Plus, Clock } from 'lucide-react';
 import { CoinToken } from '../components/CoinToken';
+import { formatContextDate, formatTime, getWeekDays, isSameDay } from '../utils/dateUtils';
 
 export const HistoryPage: React.FC = () => {
-  const { rewardLogs, redemptions, deleteLog, deleteRedemption } = useApp();
+  const { rewardLogs, redemptions, deleteLog, deleteRedemption, setActiveTab } = useApp();
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [currentWeekOffset, setCurrentWeekOffset] = useState<number>(0);
   
   const getInitialViewTab = (): 'logs' | 'redemptions' => {
     return window.location.hash.includes('redemptions') ? 'redemptions' : 'logs';
@@ -30,9 +33,12 @@ export const HistoryPage: React.FC = () => {
   const [logToDelete, setLogToDelete] = useState<RewardLog | null>(null);
   const [redemptionToDelete, setRedemptionToDelete] = useState<RewardRedemption | null>(null);
 
-  const filteredLogs = rewardLogs.filter(l => 
-    l.habitName.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredLogs = rewardLogs.filter(l => {
+    const logDate = new Date(l.timestamp);
+    const matchesDate = isSameDay(logDate, selectedDate);
+    const matchesSearch = l.habitName.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesDate && matchesSearch;
+  });
 
   const handleConfirmLogDelete = (log: RewardLog) => {
     deleteLog(log.id);
@@ -46,41 +52,160 @@ export const HistoryPage: React.FC = () => {
 
   return (
     <div className="space-y-6 pb-12">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="font-outfit text-3xl font-extrabold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
-            <History className="w-6 h-6" style={{ color: 'var(--text-accent)' }} />
-            <span>Activity & Redemption History</span>
-          </h1>
-          <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
-            Review past habit completions and store purchase milestones
-          </p>
+      {/* Calendar Header */}
+      <div className="flex items-center justify-between">
+        <button 
+          onClick={() => setActiveTab('dashboard')}
+          className="w-10 h-10 rounded-full flex items-center justify-center transition-transform hover:scale-105 shadow-sm cursor-pointer shrink-0"
+          style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)' }}
+          title="Back to Dashboard"
+        >
+          <ArrowLeft className="w-5 h-5" style={{ color: 'var(--text-primary)' }} />
+        </button>
+
+        <div className="flex items-center gap-2 sm:gap-4">
+          <button 
+            onClick={() => {
+              setCurrentWeekOffset(prev => prev - 1);
+              setSelectedDate(prev => {
+                const d = new Date(prev); d.setDate(d.getDate() - 7); return d;
+              });
+            }}
+            className="p-1.5 rounded-full hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" style={{ color: 'var(--text-secondary)' }} />
+          </button>
+          
+          <div className="flex flex-col items-center relative">
+            <span className="text-[11px] font-medium uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
+              {currentWeekOffset === 0 ? 'This week' : currentWeekOffset === -1 ? 'Last week' : `${currentWeekOffset > 0 ? 'Next' : 'Past'} ${Math.abs(currentWeekOffset)} weeks`}
+            </span>
+            <div className="relative flex justify-center">
+              <button className="flex items-center gap-1 font-outfit text-xl font-bold mt-1" style={{ color: 'var(--text-primary)' }}>
+                {formatContextDate(selectedDate)}
+                <ChevronDown className="w-4 h-4 ml-1 opacity-60" />
+              </button>
+              <input 
+                type="date"
+                max={new Date().toISOString().split('T')[0]}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                value={selectedDate.toISOString().split('T')[0]}
+                onChange={(e) => {
+                  const newDate = new Date(e.target.value);
+                  if (!isNaN(newDate.getTime())) {
+                    const today = new Date();
+                    today.setHours(0,0,0,0);
+                    const selectedDay = new Date(newDate);
+                    selectedDay.setHours(0,0,0,0);
+                    if (selectedDay.getTime() > today.getTime()) return;
+
+                    setSelectedDate(newDate);
+                    
+                    const selectedWeekStart = new Date(newDate);
+                    selectedWeekStart.setDate(selectedWeekStart.getDate() - selectedWeekStart.getDay());
+                    const todayWeekStart = new Date(today);
+                    todayWeekStart.setDate(todayWeekStart.getDate() - todayWeekStart.getDay());
+                    const diffTime = selectedWeekStart.getTime() - todayWeekStart.getTime();
+                    const diffWeeks = Math.round(diffTime / (7 * 24 * 60 * 60 * 1000));
+                    setCurrentWeekOffset(diffWeeks);
+                  }
+                }}
+              />
+            </div>
+          </div>
+
+          <button 
+            onClick={() => {
+              setCurrentWeekOffset(prev => prev + 1);
+              setSelectedDate(prev => {
+                const d = new Date(prev); d.setDate(d.getDate() + 7); return d;
+              });
+            }}
+            className="p-1.5 rounded-full hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer transition-colors"
+            style={{ transform: 'rotate(180deg)' }}
+          >
+            <ArrowLeft className="w-5 h-5" style={{ color: 'var(--text-secondary)' }} />
+          </button>
         </div>
 
+        <button 
+          onClick={() => setActiveTab('log-activity')}
+          className="w-9 h-9 rounded-full flex items-center justify-center transition-transform hover:scale-105 shadow-sm cursor-pointer" 
+          style={{ background: 'var(--pill-badge-bg)', color: 'var(--pill-badge-text)', border: '1px solid var(--pill-badge-border)' }}
+          title="Log Activity"
+        >
+          <Plus className="w-5 h-5" />
+        </button>
+      </div>
+
+      {/* Week Strip */}
+      <div className="flex justify-between items-center px-2 py-6 border-b border-dashed" style={{ borderColor: 'var(--glass-border)' }}>
+        {(() => {
+          const base = new Date();
+          base.setDate(base.getDate() + (currentWeekOffset * 7));
+          const weekDays = getWeekDays(base);
+          
+          return weekDays.map((day, idx) => {
+              const isSelected = isSameDay(day, selectedDate);
+              const isTodayStr = isSameDay(day, new Date());
+              
+              const today = new Date();
+              today.setHours(0, 0, 0, 0);
+              const dayStart = new Date(day);
+              dayStart.setHours(0, 0, 0, 0);
+              const isFuture = dayStart.getTime() > today.getTime();
+
+              return (
+                <div 
+                  key={idx} 
+                  onClick={() => {
+                    if (!isFuture) setSelectedDate(day);
+                  }}
+                  className={`flex flex-col items-center justify-center p-2 rounded-2xl transition-all ${isFuture ? 'cursor-not-allowed opacity-40' : 'cursor-pointer hover:bg-black/5 dark:hover:bg-white/5'}`}
+                  style={{
+                    background: isSelected ? 'var(--text-primary)' : 'transparent',
+                    color: isSelected ? 'var(--bg-primary)' : 'var(--text-secondary)'
+                  }}
+                >
+                  <span className="text-xs font-bold mb-1 opacity-60">
+                    {day.toLocaleDateString('en-US', { weekday: 'short' })}
+                  </span>
+                  <span className="text-lg font-extrabold">
+                    {day.getDate()}
+                  </span>
+                  {isTodayStr && !isSelected && (
+                    <div className="w-1 h-1 rounded-full mt-1" style={{ background: 'var(--text-accent)' }} />
+                  )}
+                </div>
+              );
+            })
+        })()}
+      </div>
+
+      <div className="flex items-center justify-between pt-2 pb-2">
         {/* View Switcher Tabs */}
         <div className="flex items-center p-1 rounded-2xl" style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)' }}>
           <button
             onClick={() => setViewTab('logs')}
-            className="px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer"
+            className="px-4 py-1.5 rounded-xl text-[11px] uppercase tracking-wide font-bold transition-all cursor-pointer"
             style={{
               background: viewTab === 'logs' ? 'var(--pill-badge-bg)' : 'transparent',
               border: viewTab === 'logs' ? '1px solid var(--pill-badge-border)' : '1px solid transparent',
               color: viewTab === 'logs' ? 'var(--pill-badge-text)' : 'var(--text-muted)',
             }}
           >
-            Habit Logs ({rewardLogs.length})
+            Logs
           </button>
           <button
             onClick={() => setViewTab('redemptions')}
-            className="px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer"
+            className="px-4 py-1.5 rounded-xl text-[11px] uppercase tracking-wide font-bold transition-all cursor-pointer"
             style={{
               background: viewTab === 'redemptions' ? 'var(--pill-badge-bg)' : 'transparent',
               border: viewTab === 'redemptions' ? '1px solid var(--pill-badge-border)' : '1px solid transparent',
               color: viewTab === 'redemptions' ? 'var(--pill-badge-text)' : 'var(--text-muted)',
             }}
           >
-            Store Purchases ({redemptions.length})
+            Purchases
           </button>
         </div>
       </div>
@@ -104,78 +229,74 @@ export const HistoryPage: React.FC = () => {
             />
           </div>
 
-          {/* Table Container */}
-          <div className="glass-panel rounded-3xl overflow-hidden shadow-xl" style={{ border: '1px solid var(--glass-border)' }}>
+          {/* Cards Container (Timeline styling removed) */}
+          <div className="mt-4 space-y-4 px-2">
             {filteredLogs.length === 0 ? (
               <div className="p-12 text-center" style={{ color: 'var(--text-muted)' }}>
-                No logs found.
+                No activity found for this day.
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm">
-                  <thead className="font-outfit text-xs uppercase tracking-wider" style={{ background: 'var(--glass-bg)', borderBottom: '1px solid var(--glass-border)', color: 'var(--text-secondary)' }}>
-                    <tr>
-                      <th className="p-4">Date & Time</th>
-                      <th className="p-4">Habit Activity</th>
-                      <th className="p-4">Coins Earned</th>
-                      <th className="p-4 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y" style={{ borderColor: 'var(--glass-border)' }}>
-                    {filteredLogs.map(log => {
-                      const d = new Date(log.timestamp);
-                      const dateStr = d.toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric' });
-                      const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                      const isRetracted = Boolean(log.isRetracted);
+              [...filteredLogs]
+                .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+                .map(log => {
+                  const logDate = new Date(log.timestamp);
+                  const timeStr = formatTime(logDate);
+                  const isRetracted = Boolean(log.isRetracted);
 
-                      return (
-                        <tr key={log.id} className={`transition-colors ${isRetracted ? 'opacity-55 bg-amber-500/5' : 'hover:opacity-90'}`}>
-                          <td className="p-4 font-mono text-xs">
-                            <div style={{ color: 'var(--text-primary)' }}>{dateStr}</div>
-                            <div className="text-[10px]" style={{ color: 'var(--text-muted)' }}>{timeStr}</div>
-                          </td>
-                          <td className="p-4 font-bold" style={{ color: 'var(--text-primary)' }}>
-                            <div className="flex items-center space-x-2">
-                              <span className="text-xl">{log.icon}</span>
-                              <span className={isRetracted ? 'line-through text-zinc-400' : ''}>
+                  return (
+                    <div key={log.id} className="relative group">
+                      
+                      {/* Card Content */}
+                      <div className="w-full rounded-3xl p-4 transition-transform hover:-translate-y-1 shadow-sm" style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', opacity: isRetracted ? 0.6 : 1 }}>
+                        <div className="flex justify-between items-start mb-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-xl" style={{ background: 'var(--bg-primary)', border: '1px solid var(--glass-border)' }}>
+                              {log.icon}
+                            </div>
+                            <div>
+                              <h3 className={`font-outfit font-bold text-sm ${isRetracted ? 'line-through text-zinc-400' : ''}`} style={{ color: 'var(--text-primary)' }}>
                                 {log.habitName}
-                              </span>
+                              </h3>
                               {isRetracted && (
-                                <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/40 flex items-center gap-1">
-                                  <AlertCircle className="w-3 h-3" /> 👻 Retracted Log
+                                <span className="text-[10px] mt-0.5 uppercase font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/40 inline-flex items-center gap-1">
+                                  <AlertCircle className="w-3 h-3" /> Retracted
                                 </span>
                               )}
                             </div>
-                          </td>
-                          <td className="p-4 font-outfit font-extrabold" style={{ color: isRetracted ? 'var(--text-muted)' : 'var(--text-accent)' }}>
+                          </div>
+                          {isRetracted ? (
+                            <span className="text-[10px] font-mono text-amber-400/70 font-semibold uppercase">Read-Only</span>
+                          ) : (
+                            <button
+                              onClick={() => setLogToDelete(log)}
+                              className="p-2 rounded-xl bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 transition-all cursor-pointer"
+                              title="Delete log"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                        
+                        <div className="flex items-center justify-between mt-1">
+                          <div className="flex items-center gap-1.5 text-xs font-mono font-medium" style={{ color: 'var(--text-secondary)' }}>
+                            <Clock className="w-3.5 h-3.5" />
+                            <span>{timeStr}</span>
+                          </div>
+                          <div className="font-outfit font-extrabold text-sm" style={{ color: isRetracted ? 'var(--text-muted)' : 'var(--text-accent)' }}>
                             {isRetracted ? (
-                              <span>0 (Retracted)</span>
+                              <span>0</span>
                             ) : (
-                              <div className="flex items-center space-x-1">
+                              <div className="flex items-center space-x-1 px-3 py-1 rounded-xl shadow-sm" style={{ background: 'var(--pill-badge-bg)', border: '1px solid var(--pill-badge-border)' }}>
                                 <span>+{log.rewardEarned}</span>
                                 <CoinToken size={14} />
                               </div>
                             )}
-                          </td>
-                          <td className="p-4 text-right">
-                            {isRetracted ? (
-                              <span className="text-[11px] font-mono text-amber-400/70 font-semibold">Read-Only</span>
-                            ) : (
-                              <button
-                                onClick={() => setLogToDelete(log)}
-                                className="p-1.5 rounded-lg bg-rose-500/15 text-rose-500 hover:bg-rose-500/25 border border-rose-500/30 cursor-pointer"
-                                title="Delete log"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
             )}
           </div>
         </div>
@@ -188,6 +309,7 @@ export const HistoryPage: React.FC = () => {
             </div>
           ) : (
             [...redemptions]
+              .filter(r => isSameDay(new Date(r.timestamp), selectedDate))
               .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
               .map(r => {
                 const d = new Date(r.timestamp);
