@@ -4,7 +4,7 @@ import { HabitFrequency } from '../types';
 import { CoinToken } from '../components/CoinToken';
 import { isHabitDueInPeriod, getPeriodProgress, getPeriodLabel } from '../utils/frequencyUtils';
 import { Zap, Search, Star, CheckCircle2, Filter, Sparkles, Clock } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const PRESET_TAGS = ['All', '⭐️ Quick Habits', 'Work', 'Health', 'Career', 'Music', 'Fitness', 'Learning', 'Personal'];
 
@@ -160,16 +160,21 @@ export const LogActivityPage: React.FC = () => {
             </span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <motion.div layout className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <AnimatePresence mode="popLayout">
             {quickHabits.map(habit => {
               const progress = getPeriodProgress(habit, rewardLogs);
 
               return (
                 <motion.div
+                  layout
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
                   key={habit.id}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.97 }}
-                  className={`relative rounded-2xl glass-panel border transition-all flex flex-col justify-between overflow-hidden ${
+                  className={`relative rounded-2xl glass-panel border transition-colors flex flex-col justify-between overflow-hidden ${
                     progress.isComplete ? 'opacity-70 bg-emerald-500/5 border-emerald-500/30' : 'border-amber-400/40 shadow-lg shadow-amber-500/10'
                   }`}
                 >
@@ -251,7 +256,8 @@ export const LogActivityPage: React.FC = () => {
                 </motion.div>
               );
             })}
-          </div>
+            </AnimatePresence>
+          </motion.div>
         </div>
       )}
 
@@ -282,15 +288,20 @@ export const LogActivityPage: React.FC = () => {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <motion.div layout className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <AnimatePresence mode="popLayout">
             {filteredHabits.map(habit => {
               const progress = getPeriodProgress(habit, rewardLogs);
 
               return (
                 <motion.div
+                  layout
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
                   key={habit.id}
                   whileHover={{ y: -2 }}
-                  className="rounded-2xl glass-panel border transition-all flex flex-col justify-between overflow-hidden"
+                  className="rounded-2xl glass-panel border transition-colors flex flex-col justify-between overflow-hidden"
                   style={{ border: '1px solid var(--glass-border)' }}
                 >
                   <div
@@ -387,7 +398,8 @@ export const LogActivityPage: React.FC = () => {
                 </motion.div>
               );
             })}
-          </div>
+            </AnimatePresence>
+          </motion.div>
         )}
       </div>
     </div>

@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { Habit, HabitFrequency } from '../types';
 import { HabitModal } from '../components/HabitModal';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Edit2, Trash2, Eye, EyeOff, ArrowUp, ArrowDown, Sparkles, Search, Star, Filter } from 'lucide-react';
 import { playSound } from '../services/sound';
 
@@ -148,7 +149,7 @@ export const HabitsPage: React.FC = () => {
       </div>
 
       {/* Habit List */}
-      <div className="space-y-3">
+      <motion.div layout className="space-y-3">
         {filteredHabits.length === 0 ? (
           <div className="glass-panel rounded-3xl p-12 text-center space-y-2" style={{ color: 'var(--text-muted)' }}>
             <div className="text-3xl">🔍</div>
@@ -156,10 +157,15 @@ export const HabitsPage: React.FC = () => {
             <p className="text-xs">Try clearing your search query or selecting a different tag filter.</p>
           </div>
         ) : (
-          filteredHabits.map((habit, idx) => (
-            <div
+          <AnimatePresence mode="popLayout">
+          {filteredHabits.map((habit, idx) => (
+            <motion.div
+              layout
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95 }}
               key={habit.id}
-              className={`glass-panel rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border transition-all ${
+              className={`glass-panel rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border transition-colors ${
                 habit.active ? 'opacity-100' : 'opacity-50'
               }`}
               style={{
@@ -291,10 +297,11 @@ export const HabitsPage: React.FC = () => {
                   </button>
                 </div>
               </div>
-            </div>
-          ))
+            </motion.div>
+          ))}
+          </AnimatePresence>
         )}
-      </div>
+      </motion.div>
 
       <HabitModal
         isOpen={isModalOpen}

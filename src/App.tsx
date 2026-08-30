@@ -34,6 +34,10 @@ const MainContent: React.FC = () => {
     settings 
   } = useApp();
 
+  React.useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [activeTab]);
+
   return (
     <PullToRefresh>
       <div className="min-h-screen flex flex-col font-sans pb-24 md:pb-0">
