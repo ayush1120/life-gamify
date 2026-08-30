@@ -68,38 +68,38 @@ export const Navbar: React.FC = () => {
         paddingTop: 'var(--safe-area-top)'
       }}
     >
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto px-2.5 sm:px-6 lg:px-8">
         {/* Top Row: Branding + Controls */}
-        <div className="flex items-center justify-between h-16 sm:h-[72px]">
+        <div className="flex items-center justify-between h-14 sm:h-16 gap-1.5 sm:gap-3">
 
-          {/* Logo & App Branding */}
+          {/* Logo & App Branding (Highest Priority - Always Visible Text) */}
           <div
             onClick={() => handleTabClick('dashboard')}
-            className="flex items-center space-x-3 cursor-pointer group"
+            className="flex items-center space-x-2 sm:space-x-3 cursor-pointer group shrink-0 min-w-0"
           >
-            {/* Golden Coin Emblem */}
-            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/30 border-2 border-amber-300/60 group-hover:scale-105 transition-transform overflow-hidden p-1">
-              <CoinToken size={36} />
+            {/* Golden Coin Emblem (Priority 2: Hide below 480px) */}
+            <div className="hidden min-[480px]:flex w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-600 items-center justify-center shadow-md shadow-amber-500/20 border-2 border-amber-300/60 group-hover:scale-105 transition-transform overflow-hidden p-0.5 shrink-0">
+              <CoinToken size={32} />
             </div>
-            <div>
-              <h1 className="font-outfit text-lg sm:text-xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>
+            <div className="truncate">
+              <h1 className="font-outfit text-base sm:text-xl font-extrabold tracking-tight truncate" style={{ color: 'var(--text-primary)' }}>
                 Life Gamify
               </h1>
-              <p className="text-[11px] hidden sm:block font-medium" style={{ color: 'var(--text-muted)' }}>
+              <p className="text-[11px] hidden md:block font-medium" style={{ color: 'var(--text-muted)' }}>
                 Habit Coin Economy & Reward Store
               </p>
             </div>
           </div>
 
-          {/* Right Controls */}
-          <div className="flex items-center space-x-1.5 sm:space-x-3 shrink-0">
+          {/* Right Controls - Minimal Pills Layout */}
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
 
             {/* Streak & Freeze Badges */}
-            <div className="flex items-center space-x-1 sm:space-x-1.5">
-              {/* Streak Badge */}
+            <div className="flex items-center gap-1 sm:gap-1.5">
+              {/* Streak Badge (Priority 3: Hide below 400px) */}
               <button
                 onClick={handleStreakClick}
-                className="flex items-center space-x-1 px-2.5 sm:px-3 py-1.5 rounded-full text-xs sm:text-sm font-bold cursor-pointer hover:scale-105 transition-all"
+                className="hidden min-[400px]:inline-flex items-center space-x-1 px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-full text-xs font-bold font-outfit cursor-pointer hover:scale-105 transition-all shrink-0"
                 style={{
                   background: 'var(--streak-bg)',
                   border: '1px solid var(--streak-border)',
@@ -107,35 +107,35 @@ export const Navbar: React.FC = () => {
                 }}
                 title={`Current Streak: ${stats.currentStreak} days (Click for streak details & calendar)`}
               >
-                <Flame className="w-4 h-4 text-amber-500 fill-amber-500 shrink-0" />
-                <span className="sm:hidden font-outfit">{stats.currentStreak}d</span>
-                <span className="hidden sm:inline font-outfit">{stats.currentStreak}d</span>
+                <Flame className="w-3.5 h-3.5 text-amber-500 fill-amber-500 shrink-0" />
+                <span>{stats.currentStreak}d</span>
               </button>
 
-              {/* Streak Freeze Pill */}
+              {/* Streak Freeze Pill (Priority 1: Hide below 540px) */}
               <button
                 onClick={handleFreezeClick}
-                className="flex items-center space-x-1 px-2 sm:px-2.5 py-1.5 rounded-full text-xs font-bold cursor-pointer hover:scale-105 transition-all bg-sky-500/15 dark:bg-sky-950/60 border border-sky-400/40 text-sky-600 dark:text-sky-300 shadow-sm"
+                className="hidden min-[540px]:inline-flex items-center space-x-1 px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-full text-xs font-bold font-outfit cursor-pointer hover:scale-105 transition-all bg-sky-500/15 dark:bg-sky-950/60 border border-sky-400/40 text-sky-600 dark:text-sky-300 shadow-sm shrink-0"
                 title={`Streak Freeze: ${freezeState.availableFreezes}/${freezeState.maxFreezes} available (Click to learn more)`}
               >
                 <span className="text-xs">❄️</span>
-                <span className="font-outfit text-xs font-extrabold">{freezeState.availableFreezes}</span>
+                <span>{freezeState.availableFreezes}</span>
               </button>
             </div>
 
-            {/* Coin Balance Pill */}
+            {/* Coin Balance Pill (Highest Priority - Always Visible) */}
             <button
               onClick={() => handleTabClick('store')}
-              className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full font-outfit text-xs sm:text-sm font-extrabold bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 text-white shadow-lg shadow-amber-500/25 hover:scale-105 border border-amber-400/50 transition-all cursor-pointer"
+              className="flex items-center space-x-1 px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-full font-outfit text-xs sm:text-sm font-extrabold bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 text-white shadow-md shadow-amber-500/20 hover:scale-105 border border-amber-400/50 transition-all cursor-pointer shrink-0"
+              title="Coin Balance (Click to visit Reward Store)"
             >
-              <CoinToken size={20} />
+              <CoinToken size={16} />
               <span>{stats.coinBalance}</span>
             </button>
 
-            {/* Theme Toggle */}
+            {/* Theme Toggle (Priority 4: Hide below 350px) */}
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-full transition-colors cursor-pointer"
+              className="hidden min-[350px]:flex p-1.5 sm:p-2 rounded-full transition-colors cursor-pointer shrink-0"
               style={{
                 background: 'var(--streak-bg)',
                 border: '1px solid var(--streak-border)',
@@ -143,10 +143,10 @@ export const Navbar: React.FC = () => {
               }}
               title={`Switch to ${settings.theme === 'dark' ? 'Light' : 'Dark'} Theme`}
             >
-              {settings.theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              {settings.theme === 'dark' ? <Sun className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <Moon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
             </button>
 
-            {/* Google Auth User Profile / Login */}
+            {/* Google Auth User Profile / Login (Highest Priority - Always Visible) */}
             {user ? (
               <>
                 {/* Mobile Profile Avatar Button */}
@@ -156,10 +156,10 @@ export const Navbar: React.FC = () => {
                   title={`Signed in as ${user.displayName || 'User'}. Tap to sign out.`}
                 >
                   {user.photoURL ? (
-                    <img src={user.photoURL} alt={user.displayName || 'User'} className="w-7 h-7 rounded-full object-cover" />
+                    <img src={user.photoURL} alt={user.displayName || 'User'} className="w-6 h-6 rounded-full object-cover" />
                   ) : (
-                    <div className="w-7 h-7 rounded-full bg-emerald-500 text-emerald-950 flex items-center justify-center font-bold text-xs">
-                      <User className="w-4 h-4" />
+                    <div className="w-6 h-6 rounded-full bg-emerald-500 text-emerald-950 flex items-center justify-center font-bold text-[10px]">
+                      <User className="w-3.5 h-3.5" />
                     </div>
                   )}
                 </button>
@@ -194,7 +194,7 @@ export const Navbar: React.FC = () => {
             ) : (
               <button
                 onClick={signInWithGoogle}
-                className="flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-white text-zinc-900 hover:bg-zinc-100 shadow-md cursor-pointer border border-zinc-200 shrink-0"
+                className="flex items-center space-x-1 sm:space-x-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs font-bold bg-white text-zinc-900 hover:bg-zinc-100 shadow-md cursor-pointer border border-zinc-200 shrink-0"
                 title="Sign in with Google"
               >
                 <LogIn className="w-3.5 h-3.5 text-blue-600" />
