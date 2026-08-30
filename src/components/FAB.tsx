@@ -23,13 +23,13 @@ export const FAB: React.FC = () => {
 
   return (
     <div 
-      className="fixed right-4 md:bottom-8 md:right-8 z-20 flex flex-col items-end md:hidden"
+      className="fixed right-4 md:bottom-8 md:right-8 z-20 flex flex-col items-end md:hidden pointer-events-none"
       style={{ bottom: 'var(--floating-bottom-offset)' }}
     >
       {/* Backdrop for mobile to focus on the menu */}
       {isOpen && (
         <div 
-          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[-1] transition-opacity"
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[-1] transition-opacity pointer-events-auto"
           onClick={() => setIsOpen(false)}
         />
       )}
@@ -37,7 +37,7 @@ export const FAB: React.FC = () => {
       {/* Menu Options */}
       <div 
         className={`flex flex-col space-y-3 mb-4 transition-all duration-300 origin-bottom ${
-          isOpen ? 'scale-100 opacity-100 translate-y-0' : 'scale-75 opacity-0 translate-y-10 pointer-events-none'
+          isOpen ? 'scale-100 opacity-100 translate-y-0 pointer-events-auto' : 'scale-75 opacity-0 translate-y-10 pointer-events-none'
         }`}
       >
         <button
@@ -64,7 +64,7 @@ export const FAB: React.FC = () => {
       {/* Primary FAB Button */}
       <button
         onClick={toggleMenu}
-        className={`w-14 h-14 rounded-full flex items-center justify-center shadow-2xl shadow-amber-500/40 text-white transition-all duration-300 z-10 cursor-pointer border-2 ${
+        className={`w-14 h-14 rounded-full flex items-center justify-center shadow-2xl shadow-amber-500/40 text-white transition-all duration-300 z-10 cursor-pointer border-2 pointer-events-auto ${
           isOpen 
             ? 'bg-zinc-800 hover:bg-zinc-700 border-zinc-600 rotate-45' 
             : 'bg-gradient-to-tr from-amber-600 via-amber-500 to-amber-400 hover:scale-105 border-amber-300/50'
