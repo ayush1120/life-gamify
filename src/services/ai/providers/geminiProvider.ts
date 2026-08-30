@@ -111,4 +111,55 @@ export class GeminiProvider {
 
     return validation.data;
   }
+
+  async chat(messages: { role: 'system' | 'user' | 'assistant', content: string }[]): Promise<string> {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${this.model}:generateContent?key=${this.apiKey}`;
+    
+    // Convert generic messages to Gemini format
+    const geminiContents = [];
+    
+    // Find system message to inject if any
+    const systemMsg = messages.find(m => m.role === 'system');
+    let systemInstruction;
+    if (systemMsg) {
+      systemInstruction = {
+        parts: [{ text: systemMsg.content }]
+      };
+    }
+    
+    const conversationMessages = messages.filter(m => m.role !== 'system');
+    for (const msg of conversationMessages) {
+      geminiContents.push({
+        role: msg.role === 'user' ? 'user' : 'model',
+        parts: [{ text: msg.content }]
+      });
+    }
+
+    const payload: any = {
+      contents: geminiContents,
+      generationConfig: {
+        temperature: 0.7
+      }
+    };
+    
+    if (systemInstruction) {
+      payload.systemInstruction = systemInstruction;
+    }
+
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`Gemini API Error (${res.status}): ${errText}`);
+    }
+
+    const data = await res.json();
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  }
 }

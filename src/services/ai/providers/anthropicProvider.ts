@@ -111,4 +111,46 @@ export class AnthropicProvider {
 
     return validation.data;
   }
+
+  async chat(messages: { role: 'system' | 'user' | 'assistant', content: string }[]): Promise<string> {
+    const url = 'https://api.anthropic.com/v1/messages';
+    
+    // Find system message to inject if any
+    const systemMsg = messages.find(m => m.role === 'system');
+    
+    const conversationMessages = messages.filter(m => m.role !== 'system').map(m => ({
+      role: m.role,
+      content: m.content
+    }));
+
+    const payload: any = {
+      model: this.model,
+      messages: conversationMessages,
+      max_tokens: 1000,
+      temperature: 0.7
+    };
+    
+    if (systemMsg) {
+      payload.system = systemMsg.content;
+    }
+
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': this.apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`Anthropic API Error (${res.status}): ${errText}`);
+    }
+
+    const data = await res.json();
+    return data.content?.[0]?.text || '';
+  }
 }

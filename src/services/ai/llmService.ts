@@ -3,10 +3,12 @@ import { GameMasterContext, GameMasterResponse } from './aiContract';
 import { GeminiProvider } from './providers/geminiProvider';
 import { OpenAIProvider } from './providers/openaiProvider';
 import { AnthropicProvider } from './providers/anthropicProvider';
+import { OpenRouterProvider } from './providers/openrouterProvider';
 
 export interface LLMProvider {
   testConnection(): Promise<{ success: boolean; model: string; message: string; latencyMs: number }>;
   generateGamePlan(context: GameMasterContext): Promise<GameMasterResponse>;
+  chat(messages: { role: 'system' | 'user' | 'assistant', content: string }[]): Promise<string>;
 }
 
 export const getLLMProvider = (settings?: AISettings): LLMProvider | null => {
@@ -24,6 +26,8 @@ export const getLLMProvider = (settings?: AISettings): LLMProvider | null => {
       return new OpenAIProvider(apiKey, settings.model || 'gpt-4o-mini');
     case 'anthropic':
       return new AnthropicProvider(apiKey, settings.model || 'claude-3-5-haiku-20241022');
+    case 'openrouter':
+      return new OpenRouterProvider(apiKey, settings.model || 'google/gemma-7b-it:free');
     default:
       return new GeminiProvider(apiKey, settings.model || 'gemini-3.6-flash');
   }
@@ -88,4 +92,16 @@ export const requestGameMasterPlan = async (
   }
 
   return await provider.generateGamePlan(context);
+};
+
+export const requestChat = async (
+  settings: AISettings,
+  messages: { role: 'system' | 'user' | 'assistant', content: string }[]
+): Promise<string> => {
+  const provider = getLLMProvider(settings);
+  if (!provider) {
+    throw new Error('AI Game Master is not configured. Add an API key in Settings.');
+  }
+
+  return await provider.chat(messages);
 };

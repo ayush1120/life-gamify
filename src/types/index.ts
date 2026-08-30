@@ -173,7 +173,7 @@ export interface GameNotification {
   priority?: 'low' | 'medium' | 'high';
 }
 
-export type AIProvider = 'gemini' | 'openai' | 'anthropic';
+export type AIProvider = 'gemini' | 'openai' | 'anthropic' | 'openrouter';
 
 export interface AISettings {
   provider: AIProvider;

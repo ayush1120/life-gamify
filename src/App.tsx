@@ -11,6 +11,8 @@ import { SettingsPage } from './pages/SettingsPage';
 import { HabitDetailPage } from './pages/HabitDetailPage';
 import { AdventurePage } from './pages/AdventurePage';
 import OverlayDemoPage from './pages/OverlayDemoPage';
+import { AISettingsPage } from './pages/AISettingsPage';
+import { AIChatPage } from './pages/AIChatPage';
 import { DevToolsPage } from './pages/DevToolsPage';
 import { FlyingReward } from './components/FlyingReward';
 import { StreakFreezeModal } from './components/StreakFreezeModal';
@@ -47,6 +49,8 @@ const MainContent: React.FC = () => {
         {activeTab === 'history' && <HistoryPage />}
         {activeTab === 'analytics' && <AnalyticsPage />}
         {activeTab === 'settings' && <SettingsPage />}
+        {activeTab === 'ai-settings' && <AISettingsPage />}
+        {activeTab === 'ai-chat' && <AIChatPage />}
         {activeTab === 'overlay-demo' && <OverlayDemoPage />}
         {activeTab === 'devtools' && <DevToolsPage />}
       </main>
