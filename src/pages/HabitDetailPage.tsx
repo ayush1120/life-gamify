@@ -5,10 +5,9 @@ import { getPeriodProgress, getPeriodLabel } from '../utils/frequencyUtils';
 import { 
   getValidHabitLogs, 
   getHabitLifetimeStats, 
-  getHabitCurrentStreak, 
-  getHabitLongestStreak,
   getHabitTimeline
 } from '../utils/habitAnalytics';
+import { DEFAULT_STREAK_FREEZE_STATE, evaluateHabitStreakAndFreezes } from '../utils/streakUtils';
 import { STAT_DEFINITIONS, getDefaultHabitMapping } from '../utils/progressionUtils';
 
 interface HabitDetailPageProps {
@@ -16,7 +15,19 @@ interface HabitDetailPageProps {
 }
 
 export const HabitDetailPage: React.FC<HabitDetailPageProps> = ({ habitId }) => {
-  const { habits, rewardLogs, rewards, logHabit, stats, setActiveTab, settings, activityMappings } = useApp();
+  const { 
+    habits, 
+    rewardLogs, 
+    rewards, 
+    logHabit, 
+    stats, 
+    setActiveTab, 
+    settings, 
+    activityMappings,
+    setSelectedHabitForFreezeModal,
+    setIsStreakFreezeModalOpen,
+    repairHabitStreak
+  } = useApp();
 
 
   const habit = useMemo(() => habits.find(h => h.id === habitId), [habits, habitId]);
@@ -24,9 +35,18 @@ export const HabitDetailPage: React.FC<HabitDetailPageProps> = ({ habitId }) => 
   const validLogs = useMemo(() => habit ? getValidHabitLogs(habit.id, rewardLogs) : [], [habit, rewardLogs]);
   const progress = useMemo(() => habit ? getPeriodProgress(habit, rewardLogs) : { count: 0, max: 1, percentage: 0, isComplete: false }, [habit, rewardLogs]);
   const lifetimeStats = useMemo(() => getHabitLifetimeStats(validLogs), [validLogs]);
-  const currentStreak = useMemo(() => habit ? getHabitCurrentStreak(habit, validLogs) : 0, [habit, validLogs]);
-  const bestStreak = useMemo(() => habit ? getHabitLongestStreak(habit, validLogs) : 0, [habit, validLogs]);
-  const timelineLogs = useMemo(() => getHabitTimeline(validLogs, 5), [validLogs]);
+  const evalResult = useMemo(() => {
+    if (!habit) return { currentStreak: 0, longestStreak: 0 };
+    const freezeState = stats.habitStreakFreezeStates?.[habit.id] || DEFAULT_STREAK_FREEZE_STATE;
+    return evaluateHabitStreakAndFreezes(habit, validLogs, freezeState);
+  }, [habit, validLogs, stats.habitStreakFreezeStates]);
+  
+  const currentStreak = evalResult.currentStreak;
+  const bestStreak = evalResult.longestStreak;
+  const timelineLogs = useMemo(() => {
+    const frozenDates = stats.habitStreakFreezeStates?.[habit?.id || '']?.frozenDates || [];
+    return getHabitTimeline(validLogs, frozenDates, 5);
+  }, [validLogs, habit?.id, stats.habitStreakFreezeStates]);
   
   // Reward Compass
   const activeRewards = useMemo(() => rewards.filter(r => r.active).sort((a, b) => a.cost - b.cost), [rewards]);
@@ -219,7 +239,7 @@ export const HabitDetailPage: React.FC<HabitDetailPageProps> = ({ habitId }) => 
             <Flame className="w-5 h-5" />
           </div>
           <p className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Current Streak</p>
-          <p className="text-2xl font-extrabold font-outfit" style={{ color: 'var(--text-primary)' }}>{currentStreak}</p>
+          <p className="text-2xl font-extrabold font-outfit" style={{ color: 'var(--text-primary)' }}>{currentStreak}d</p>
         </div>
         
         <div className="glass-panel p-5 rounded-3xl border border-[var(--glass-border)] text-center space-y-2">
@@ -227,7 +247,7 @@ export const HabitDetailPage: React.FC<HabitDetailPageProps> = ({ habitId }) => 
             <Trophy className="w-5 h-5" />
           </div>
           <p className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Best Streak</p>
-          <p className="text-2xl font-extrabold font-outfit" style={{ color: 'var(--text-primary)' }}>{bestStreak}</p>
+          <p className="text-2xl font-extrabold font-outfit" style={{ color: 'var(--text-primary)' }}>{bestStreak}d</p>
         </div>
 
         <div className="glass-panel p-5 rounded-3xl border border-[var(--glass-border)] text-center space-y-2">
@@ -247,6 +267,130 @@ export const HabitDetailPage: React.FC<HabitDetailPageProps> = ({ habitId }) => 
         </div>
       </div>
 
+      {/* Habit Streak Freeze & Repair Shield */}
+      {(() => {
+        const habitFreezeState = stats.habitStreakFreezeStates?.[habit.id] || {
+          availableFreezes: 0,
+          maxFreezes: 2,
+          consecutiveDaysForRecovery: 3,
+          consecutiveDaysCount: 0,
+          frozenDates: [],
+          pendingRepairDates: []
+        };
+        const pendingRepairs = habitFreezeState.pendingRepairDates || [];
+        const hasRepairs = pendingRepairs.length > 0;
+        const canRepairNow = hasRepairs && habitFreezeState.availableFreezes > 0;
+
+        return (
+          <div className="glass-panel p-6 rounded-3xl border border-sky-500/30 space-y-4 bg-gradient-to-r from-sky-950/30 via-slate-900/40 to-blue-950/30">
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-sky-500/20 border border-sky-400/40 flex items-center justify-center text-2xl">
+                  ❄️
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-outfit text-lg font-bold text-white">
+                      Habit Streak Freeze Shield
+                    </h3>
+                    <span className="px-2.5 py-0.5 rounded-full bg-sky-400/20 border border-sky-400/40 text-sky-300 text-xs font-extrabold font-outfit">
+                      {habitFreezeState.availableFreezes} / {habitFreezeState.maxFreezes} Available
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-300">
+                    Complete 3 consecutive days to earn 1 freeze. Up to 2 days grace period to repair a missed day.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => {
+                  setSelectedHabitForFreezeModal(habit);
+                  setIsStreakFreezeModalOpen(true);
+                }}
+                className="px-4 py-2 rounded-xl bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 text-xs font-bold border border-sky-400/40 transition-colors cursor-pointer"
+              >
+                Streak Freeze Rules
+              </button>
+            </div>
+
+            {/* 3-Day Recovery Progress */}
+            <div className="p-4 rounded-2xl bg-slate-900/60 border border-sky-500/20 space-y-2">
+              <div className="flex items-center justify-between text-xs font-bold text-sky-300 font-outfit">
+                <span>Recovery Progress Towards Next Freeze</span>
+                <span>
+                  {habitFreezeState.availableFreezes >= habitFreezeState.maxFreezes
+                    ? 'Max Capacity Stored (2/2)'
+                    : `${habitFreezeState.consecutiveDaysCount} / ${habitFreezeState.consecutiveDaysForRecovery} Days Active`}
+                </span>
+              </div>
+              <div className="grid grid-cols-3 gap-2 pt-1">
+                {Array.from({ length: habitFreezeState.consecutiveDaysForRecovery }).map((_, stepIdx) => {
+                  const isDone = habitFreezeState.consecutiveDaysCount > stepIdx;
+                  return (
+                    <div
+                      key={stepIdx}
+                      className={`p-2.5 rounded-xl border text-center font-outfit text-xs font-bold transition-all ${
+                        isDone
+                          ? 'bg-sky-500/20 border-sky-400/60 text-sky-300'
+                          : 'bg-slate-800/40 border-slate-700 text-slate-500'
+                      }`}
+                    >
+                      {stepIdx === 2 ? '+1 ❄️ Freeze' : `Day ${stepIdx + 1}`}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Retroactive Repair Window Action */}
+            {hasRepairs && (
+              <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-2">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div>
+                    <h4 className="font-outfit text-sm font-bold text-amber-300 flex items-center gap-1.5">
+                      <span>⚠️ Missed Days Eligible for Streak Repair</span>
+                    </h4>
+                    <p className="text-xs text-slate-300">
+                      You can use a Streak Freeze within 2 days of a missed habit to restore your active streak.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-2 pt-2">
+                  {pendingRepairs.map((repair) => (
+                    <div
+                      key={repair.dateStr}
+                      className="p-3 rounded-xl bg-slate-900/80 border border-amber-400/40 flex items-center justify-between"
+                    >
+                      <div className="text-xs">
+                        <span className="font-bold text-white">{repair.dateStr}</span>
+                        <span className="text-amber-400 ml-2 font-semibold font-outfit">
+                          ({repair.daysRemaining} {repair.daysRemaining === 1 ? 'day' : 'days'} left to repair)
+                        </span>
+                      </div>
+
+                      {canRepairNow ? (
+                        <button
+                          onClick={() => repairHabitStreak(habit.id, repair.dateStr)}
+                          className="px-3.5 py-1.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-white font-outfit text-xs font-extrabold shadow-md cursor-pointer transition-all hover:scale-105"
+                        >
+                          Use Freeze to Repair ❄️
+                        </button>
+                      ) : (
+                        <span className="text-[11px] text-slate-400 font-medium">
+                          0 freezes ready (earn via 3 active days)
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })()}
+
       {/* Quest Trail & Reward Compass grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
@@ -260,22 +404,31 @@ export const HabitDetailPage: React.FC<HabitDetailPageProps> = ({ habitId }) => 
             </div>
           ) : (
             <div className="space-y-4">
-              {timelineLogs.map(log => (
-                <div key={log.id} className="flex items-center justify-between p-3 rounded-2xl bg-black/10 border border-white/5">
+              {timelineLogs.map(event => (
+                <div key={event.id} className={`flex items-center justify-between p-3 rounded-2xl border ${event.type === 'freeze' ? 'bg-sky-500/10 border-sky-400/20' : 'bg-black/10 border-white/5'}`}>
                   <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 rounded-xl bg-black/20 flex items-center justify-center text-lg">
-                      {log.icon}
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg ${event.type === 'freeze' ? 'bg-sky-500/20 shadow-[0_0_10px_rgba(14,165,233,0.3)]' : 'bg-black/20'}`}>
+                      {event.type === 'freeze' ? '❄️' : event.icon}
                     </div>
                     <div>
-                      <p className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>{log.habitName}</p>
+                      <p className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>
+                        {event.type === 'freeze' ? 'Streak Repaired' : event.habitName}
+                      </p>
                       <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                        {new Date(log.timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                        {new Date(event.timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                        {event.type === 'log' && `, ${new Date(event.timestamp).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}`}
                       </p>
                     </div>
                   </div>
-                  <div className="font-bold text-emerald-400">
-                    +{log.rewardEarned}
-                  </div>
+                  {event.type === 'log' ? (
+                    <div className="font-bold text-emerald-400">
+                      +{event.rewardEarned}
+                    </div>
+                  ) : (
+                    <div className="font-bold text-sky-400 font-outfit text-xs px-2 py-1 bg-sky-500/10 rounded-lg">
+                      Freeze Used
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

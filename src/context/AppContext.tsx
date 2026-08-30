@@ -11,7 +11,8 @@ import {
   QuestDefinition,
   BossDefinition,
   AchievementDefinition,
-  GameNotification
+  GameNotification,
+  StreakFreezeState
 } from '../types';
 import { 
   loadStoredHabits, saveStoredHabits,
@@ -23,8 +24,11 @@ import {
   loadStoredQuests, saveStoredQuests,
   loadStoredBosses, saveStoredBosses,
   loadStoredAchievements, saveStoredAchievements,
-  loadStoredNotifications, saveStoredNotifications
+  loadStoredNotifications, saveStoredNotifications,
+  loadStoredStreakFreezes, saveStoredStreakFreezes,
+  loadStoredHabitStreakFreezes, saveStoredHabitStreakFreezes
 } from '../services/storage';
+import { DEFAULT_STREAK_FREEZE_STATE, applyStreakRepair, formatDateKey } from '../utils/streakUtils';
 import { playSound } from '../services/sound';
 import { triggerCelebration } from '../services/celebration';
 import { 
@@ -131,6 +135,14 @@ interface AppContextType {
   setFlyingReward: (val: { habitName: string; icon: string; amount: number; x: number; y: number } | null) => void;
   showPurchaseSuccessModal: RewardRedemption | null;
   setShowPurchaseSuccessModal: (redemption: RewardRedemption | null) => void;
+  isStreakFreezeModalOpen: boolean;
+  setIsStreakFreezeModalOpen: (open: boolean) => void;
+  isStreakDetailsModalOpen: boolean;
+  setIsStreakDetailsModalOpen: (open: boolean) => void;
+  selectedHabitForFreezeModal: Habit | null;
+  setSelectedHabitForFreezeModal: (habit: Habit | null) => void;
+  repairAppStreak: (dateStr: string) => boolean;
+  repairHabitStreak: (habitId: string, dateStr: string) => boolean;
 }
 
 
@@ -203,6 +215,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // FX States
   const [flyingReward, setFlyingReward] = useState<{ habitName: string; icon: string; amount: number; x: number; y: number } | null>(null);
   const [showPurchaseSuccessModal, setShowPurchaseSuccessModal] = useState<RewardRedemption | null>(null);
+  const [isStreakFreezeModalOpen, setIsStreakFreezeModalOpen] = useState(false);
+  const [isStreakDetailsModalOpen, setIsStreakDetailsModalOpen] = useState(false);
+  const [selectedHabitForFreezeModal, setSelectedHabitForFreezeModal] = useState<Habit | null>(null);
+  const [appStreakFreezeState, setAppStreakFreezeState] = useState<StreakFreezeState>(() => loadStoredStreakFreezes() || DEFAULT_STREAK_FREEZE_STATE);
+  const [habitStreakFreezeStates, setHabitStreakFreezeStates] = useState<Record<string, StreakFreezeState>>(() => loadStoredHabitStreakFreezes() || {});
 
   // User Profile state (null = Local Mode, UserProfile = Google Auth User)
   const [user, setUser] = useState<UserProfile | null>(null);
@@ -381,18 +398,89 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => { saveStoredActivityMappings(activityMappings); }, [activityMappings]);
   useEffect(() => { saveStoredQuests(quests); }, [quests]);
   useEffect(() => { saveStoredBosses(bosses); }, [bosses]);
+
+  // UTC / Semantic Date Migration (One-Time Live Update)
+  useEffect(() => {
+    let migrated = false;
+    const migratedLogs: RewardLog[] = [];
+    const upgradedLogs = rewardLogs.map(log => {
+      if (!log.localDateStr) {
+        migrated = true;
+        const up = { ...log, localDateStr: formatDateKey(new Date(log.timestamp)) };
+        migratedLogs.push(up);
+        return up;
+      }
+      return log;
+    });
+
+    if (migrated) {
+      setRewardLogs(upgradedLogs);
+      saveStoredLogs(upgradedLogs);
+      if (user) {
+        // Sync the specifically migrated logs to Firestore in the background
+        migratedLogs.forEach(log => {
+          syncFirestoreRewardLog(user.uid, log);
+        });
+      }
+      console.log(`Migrated ${migratedLogs.length} legacy reward logs to semantic local dates.`);
+    }
+  }, [rewardLogs, user]);
   useEffect(() => { saveStoredAchievements(achievements); }, [achievements]);
   useEffect(() => { saveStoredNotifications(notifications); }, [notifications]);
+
+  // Calculate Coin Economy & Multi-Stat Progression Statistics using pure deterministic ledger service
+  const stats: HabitStats = useMemo(() => {
+    return computeLedgerStats(
+      rewardLogs, 
+      redemptions, 
+      habits, 
+      activityMappings, 
+      appStreakFreezeState, 
+      habitStreakFreezeStates
+    );
+  }, [rewardLogs, redemptions, habits, activityMappings, appStreakFreezeState, habitStreakFreezeStates]);
+
+  useEffect(() => {
+    if (stats.streakFreezeState) {
+      saveStoredStreakFreezes(stats.streakFreezeState);
+    }
+    if (stats.habitStreakFreezeStates) {
+      saveStoredHabitStreakFreezes(stats.habitStreakFreezeStates);
+    }
+  }, [stats.streakFreezeState, stats.habitStreakFreezeStates]);
+
+  const repairAppStreak = (dateStr: string): boolean => {
+    if (stats.streakFreezeState.availableFreezes <= 0) {
+      showToast('No streak freezes available!');
+      return false;
+    }
+    const updated = applyStreakRepair(stats.streakFreezeState, dateStr);
+    setAppStreakFreezeState(updated);
+    saveStoredStreakFreezes(updated);
+    playSound.freezeChime(settings.soundEnabled);
+    showToast('❄️ App Streak Repaired!');
+    return true;
+  };
+
+  const repairHabitStreak = (habitId: string, dateStr: string): boolean => {
+    const currentHabitFreeze = stats.habitStreakFreezeStates?.[habitId] || DEFAULT_STREAK_FREEZE_STATE;
+    if (currentHabitFreeze.availableFreezes <= 0) {
+      showToast('No streak freezes available for this habit!');
+      return false;
+    }
+    const updated = applyStreakRepair(currentHabitFreeze, dateStr);
+    const nextMap = { ...habitStreakFreezeStates, [habitId]: updated };
+    setHabitStreakFreezeStates(nextMap);
+    saveStoredHabitStreakFreezes(nextMap);
+    playSound.freezeChime(settings.soundEnabled);
+    showToast('❄️ Habit Streak Repaired!');
+    return true;
+  };
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3000);
   };
-
-  // Calculate Coin Economy & Multi-Stat Progression Statistics using pure deterministic ledger service
-  const stats: HabitStats = useMemo(() => {
-    return computeLedgerStats(rewardLogs, redemptions, habits, activityMappings);
-  }, [rewardLogs, redemptions, habits, activityMappings]);
 
   // Habit Logging Action
   const logHabit = (habitId: string, event?: React.MouseEvent) => {
@@ -431,6 +519,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       habitName: habit.name,
       icon: habit.icon,
       timestamp: attemptTime.toISOString(),
+      localDateStr: formatDateKey(attemptTime),
       rewardEarned: habit.rewardValue,
       unit: 'coins'
     };
@@ -742,7 +831,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         flyingReward,
         setFlyingReward,
         showPurchaseSuccessModal,
-        setShowPurchaseSuccessModal
+        setShowPurchaseSuccessModal,
+        isStreakFreezeModalOpen,
+        setIsStreakFreezeModalOpen,
+        isStreakDetailsModalOpen,
+        setIsStreakDetailsModalOpen,
+        selectedHabitForFreezeModal,
+        setSelectedHabitForFreezeModal,
+        repairAppStreak,
+        repairHabitStreak
       }}
     >
       {children}

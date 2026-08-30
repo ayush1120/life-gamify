@@ -19,7 +19,14 @@ describe('Phase 11 & 29: AI Context Builder & Cost Controls', () => {
     level: 3,
     levelProgress: 45,
     xpToNextLevel: 100,
-    statsBreakdown: getDefaultStatsBreakdown()
+    statsBreakdown: getDefaultStatsBreakdown(),
+    streakFreezeState: {
+      availableFreezes: 2,
+      maxFreezes: 2,
+      consecutiveDaysForRecovery: 3,
+      consecutiveDaysCount: 0,
+      frozenDates: []
+    }
   };
 
   const mockHabits: Habit[] = [

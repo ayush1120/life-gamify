@@ -13,6 +13,8 @@ import { AdventurePage } from './pages/AdventurePage';
 import OverlayDemoPage from './pages/OverlayDemoPage';
 import { DevToolsPage } from './pages/DevToolsPage';
 import { FlyingReward } from './components/FlyingReward';
+import { StreakFreezeModal } from './components/StreakFreezeModal';
+import { StreakDetailsModal } from './components/StreakDetailsModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle2 } from 'lucide-react';
 import { BottomNav } from './components/BottomNav';
@@ -96,6 +98,10 @@ const MainContent: React.FC = () => {
         reward={flyingReward}
         onComplete={() => setFlyingReward(null)}
       />
+
+      {/* Streak Details & Streak Freeze Modals */}
+      <StreakFreezeModal />
+      <StreakDetailsModal />
 
       {/* Toast Notification Banner */}
       <AnimatePresence>

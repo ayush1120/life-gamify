@@ -133,5 +133,36 @@ export const playSound = {
     } catch (e) {
       console.warn('Audio play failed', e);
     }
+  },
+
+  // Sparkling crystalline chime when streak freeze is earned or used
+  freezeChime: (enabled: boolean = true) => {
+    if (!enabled) return;
+    try {
+      const ctx = getAudioContext();
+      if (!ctx) return;
+
+      // High shimmering bell notes
+      const frequencies = [1046.50, 1318.51, 1567.98, 2093.00]; // C6, E6, G6, C7
+      frequencies.forEach((freq, idx) => {
+        const now = ctx.currentTime + idx * 0.06;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, now);
+
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start(now);
+        osc.stop(now + 0.45);
+      });
+    } catch (e) {
+      console.warn('Audio play failed', e);
+    }
   }
 };

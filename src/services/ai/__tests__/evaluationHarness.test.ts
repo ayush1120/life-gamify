@@ -73,7 +73,14 @@ const createMockPersona = (
       level: 4,
       levelProgress: 50,
       xpToNextLevel: 150,
-      statsBreakdown: breakdown
+      statsBreakdown: breakdown,
+      streakFreezeState: {
+        availableFreezes: 2,
+        maxFreezes: 2,
+        consecutiveDaysForRecovery: 3,
+        consecutiveDaysCount: 0,
+        frozenDates: []
+      }
     }
   };
 };

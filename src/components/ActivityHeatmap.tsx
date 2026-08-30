@@ -4,10 +4,11 @@ import { Calendar as CalendarIcon } from 'lucide-react';
 import { toLocalDateString } from '../utils/dateUtils';
 
 export const ActivityHeatmap: React.FC = () => {
-  const { rewardLogs } = useApp();
+  const { rewardLogs, stats } = useApp();
+  const frozenDatesSet = useMemo(() => new Set(stats.streakFreezeState?.frozenDates || []), [stats.streakFreezeState?.frozenDates]);
 
   const heatmapDays = useMemo(() => {
-    const days: { dateStr: string; dayName: string; monthDay: string; count: number; rewards: number }[] = [];
+    const days: { dateStr: string; dayName: string; monthDay: string; count: number; rewards: number; isFrozen: boolean }[] = [];
     const today = new Date();
 
     for (let i = 89; i >= 0; i--) {
@@ -16,19 +17,22 @@ export const ActivityHeatmap: React.FC = () => {
       const dateStr = toLocalDateString(d);
       const dayLogs = rewardLogs.filter(l => toLocalDateString(l.timestamp) === dateStr);
       const rewards = dayLogs.reduce((sum, l) => sum + l.rewardEarned, 0);
+      const isFrozen = frozenDatesSet.has(dateStr);
 
       days.push({
         dateStr,
         dayName: d.toLocaleDateString('en-US', { weekday: 'short' }),
         monthDay: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
         count: dayLogs.length,
-        rewards
+        rewards,
+        isFrozen
       });
     }
     return days;
-  }, [rewardLogs]);
+  }, [rewardLogs, frozenDatesSet]);
 
-  const getIntensityStyle = (rewards: number) => {
+  const getIntensityStyle = (rewards: number, isFrozen: boolean) => {
+    if (isFrozen) return { background: '#0284c7', borderColor: '#38bdf8' };
     if (rewards === 0) return { background: 'var(--pill-badge-bg)', borderColor: 'var(--glass-border)' };
     if (rewards <= 3) return { background: '#f59e0b50', borderColor: '#f59e0b80' };
     if (rewards <= 6) return { background: '#f59e0b80', borderColor: '#f59e0b' };
@@ -38,13 +42,18 @@ export const ActivityHeatmap: React.FC = () => {
 
   return (
     <div className="glass-panel rounded-3xl p-6 space-y-4" style={{ border: '1px solid var(--glass-border)' }}>
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <h3 className="font-outfit text-lg font-bold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
           <CalendarIcon className="w-5 h-5" style={{ color: 'var(--text-accent)' }} />
           <span>Activity Heatmap (Last 90 Days)</span>
         </h3>
 
-        <div className="flex items-center space-x-1.5 text-xs" style={{ color: 'var(--text-muted)' }}>
+        <div className="flex items-center space-x-2 text-xs" style={{ color: 'var(--text-muted)' }}>
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 rounded bg-sky-600 border border-sky-400" />
+            <span>Frozen ❄️</span>
+          </div>
+          <span className="text-slate-500">•</span>
           <span>Less</span>
           <div className="w-3 h-3 rounded" style={{ background: 'var(--pill-badge-bg)', border: '1px solid var(--glass-border)' }} />
           <div className="w-3 h-3 rounded" style={{ background: '#f59e0b50' }} />
@@ -61,10 +70,16 @@ export const ActivityHeatmap: React.FC = () => {
           {heatmapDays.map((day) => (
             <div
               key={day.dateStr}
-              title={`${day.monthDay}: ${day.count} habits logged (${day.rewards} rewards)`}
-              className="w-4 h-4 rounded-md border transition-transform hover:scale-125 cursor-pointer"
-              style={getIntensityStyle(day.rewards)}
-            />
+              title={
+                day.isFrozen
+                  ? `${day.monthDay}: ❄️ Streak Frozen (Protected from breaking streak)`
+                  : `${day.monthDay}: ${day.count} habits logged (${day.rewards} rewards)`
+              }
+              className="w-4 h-4 rounded-md border transition-transform hover:scale-125 cursor-pointer flex items-center justify-center text-[8px]"
+              style={getIntensityStyle(day.rewards, day.isFrozen)}
+            >
+              {day.isFrozen && <span>❄️</span>}
+            </div>
           ))}
         </div>
       </div>

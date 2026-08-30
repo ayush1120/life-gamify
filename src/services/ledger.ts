@@ -1,4 +1,4 @@
-import { RewardLog, RewardRedemption, HabitStats, Habit, ActivityMapping } from '../types';
+import { RewardLog, RewardRedemption, HabitStats, Habit, ActivityMapping, StreakFreezeState } from '../types';
 import { toLocalDateString } from '../utils/dateUtils';
 import { calculateXp, getLevelProgress, computeStatsBreakdown } from '../utils/progressionUtils';
 
@@ -50,6 +50,8 @@ export const isRedemptionGracePeriod = (purchaseTimestamp: string, nowMs: number
 /** Alias for store redemption grace period */
 export const isGracePeriod = isRedemptionGracePeriod;
 
+import { evaluateStreakAndFreezes, evaluateHabitStreakAndFreezes, DEFAULT_STREAK_FREEZE_STATE } from '../utils/streakUtils';
+
 /**
  * Computes all Coin Economy Statistics dynamically from chronological transactions.
  */
@@ -57,7 +59,9 @@ export const computeLedgerStats = (
   rewardLogs: RewardLog[],
   redemptions: RewardRedemption[],
   habits: Habit[] = [],
-  activityMappings: Record<string, ActivityMapping> = {}
+  activityMappings: Record<string, ActivityMapping> = {},
+  initialStreakFreezeState: StreakFreezeState = DEFAULT_STREAK_FREEZE_STATE,
+  savedHabitFreezeStates: Record<string, StreakFreezeState> = {}
 ): HabitStats => {
   const validLogs = rewardLogs.filter(l => !l.isRetracted);
   const totalCoinsEarned = validLogs.reduce((sum, log) => sum + log.rewardEarned, 0);
@@ -133,46 +137,18 @@ export const computeLedgerStats = (
   const todayCount = todayLogs.length;
   const todayCoinsEarned = todayLogs.reduce((s, l) => s + l.rewardEarned, 0);
 
-  // Calculate streaks using valid logs only (in local timezone)
-  const uniqueLogDates = Array.from(
-    new Set(validLogs.map(l => toLocalDateString(l.timestamp)))
-  ).filter(Boolean).sort().reverse();
+  // Evaluate app-wide streaks and streak freezes (including 3-day recovery logic & 2-day repair)
+  const streakEval = evaluateStreakAndFreezes(validLogs, initialStreakFreezeState);
 
-  let currentStreak = 0;
-  const checkDate = new Date();
-
-  for (let i = 0; i < 365; i++) {
-    const dateStr = toLocalDateString(checkDate);
-    if (uniqueLogDates.includes(dateStr)) {
-      currentStreak++;
-      checkDate.setDate(checkDate.getDate() - 1);
-    } else if (i === 0) {
-      // If user hasn't logged today yet, check yesterday before breaking streak
-      checkDate.setDate(checkDate.getDate() - 1);
-    } else {
-      break;
-    }
-  }
-
-  let longestStreak = 0;
-  let tempStreak = 0;
-  const sortedDates = [...uniqueLogDates].sort();
-  let prevDateObj: Date | null = null;
-
-  for (const dStr of sortedDates) {
-    const dObj = new Date(`${dStr}T00:00:00`);
-    if (!prevDateObj) {
-      tempStreak = 1;
-    } else {
-      const diffDays = Math.round((dObj.getTime() - prevDateObj.getTime()) / (1000 * 3600 * 24));
-      if (diffDays === 1) {
-        tempStreak++;
-      } else {
-        tempStreak = 1;
-      }
-    }
-    prevDateObj = dObj;
-    if (tempStreak > longestStreak) longestStreak = tempStreak;
+  // Evaluate per-habit streaks and streak freezes
+  const evaluatedHabitFreezeStates: Record<string, StreakFreezeState> = {};
+  for (const habit of habits) {
+    const habitEval = evaluateHabitStreakAndFreezes(
+      habit, 
+      rewardLogs, 
+      savedHabitFreezeStates[habit.id] || DEFAULT_STREAK_FREEZE_STATE
+    );
+    evaluatedHabitFreezeStates[habit.id] = habitEval.streakFreezeState;
   }
 
   const firstLogDate = validLogs.length > 0 
@@ -193,14 +169,16 @@ export const computeLedgerStats = (
     phantomDebt: activePhantomDebt,
     todayCount,
     todayCoinsEarned,
-    currentStreak,
-    longestStreak: Math.max(longestStreak, currentStreak),
+    currentStreak: streakEval.currentStreak,
+    longestStreak: streakEval.longestStreak,
     averagePerDay,
     totalXp,
     level: progress.level,
     levelProgress: progress.percentage,
     xpToNextLevel: progress.xpToNextLevel,
-    statsBreakdown
+    statsBreakdown,
+    streakFreezeState: streakEval.streakFreezeState,
+    habitStreakFreezeStates: evaluatedHabitFreezeStates
   };
 };
 

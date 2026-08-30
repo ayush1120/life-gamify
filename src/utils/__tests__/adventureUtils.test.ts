@@ -154,7 +154,14 @@ describe('Phase 16-22: Deterministic Adventure Mechanics (Quests, Bosses, Achiev
       level: 0,
       levelProgress: 0,
       xpToNextLevel: 100,
-      statsBreakdown: getDefaultStatsBreakdown()
+      statsBreakdown: getDefaultStatsBreakdown(),
+      streakFreezeState: {
+        availableFreezes: 2,
+        maxFreezes: 2,
+        consecutiveDaysForRecovery: 3,
+        consecutiveDaysCount: 0,
+        frozenDates: []
+      }
     };
 
     it('returns true when activity count threshold is reached', () => {

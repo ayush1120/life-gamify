@@ -66,7 +66,8 @@ export interface RewardLog {
   activityId: string;
   habitName: string;
   icon: string;
-  timestamp: string; // ISO date string
+  timestamp: string; // ISO date string (absolute UTC time)
+  localDateStr?: string; // Semantic local date (e.g. "2026-08-30") when the log occurred
   rewardEarned: number; // Coins earned
   unit: string;
   isRetracted?: boolean; // True if retracted in deficit
@@ -212,6 +213,22 @@ export interface UserProfile {
   isOwner: boolean;
 }
 
+export interface PendingStreakRepair {
+  dateStr: string; // YYYY-MM-DD that was missed
+  expiresAtDateStr: string; // YYYY-MM-DD when the repair window closes
+  daysRemaining: number; // 1 or 2 days left to repair
+}
+
+export interface StreakFreezeState {
+  availableFreezes: number; // Current active streak freezes (0 to maxFreezes, default 0)
+  maxFreezes: number; // Max capacity (default 2)
+  consecutiveDaysForRecovery: number; // Consecutive active days needed to regain 1 freeze (default 3)
+  consecutiveDaysCount: number; // Current progress towards next freeze (0 to 3)
+  frozenDates: string[]; // List of YYYY-MM-DD dates protected by a streak freeze
+  pendingRepairDates?: PendingStreakRepair[]; // Missed dates within the 2-day repair window
+  lastEvaluatedDate?: string;
+}
+
 export interface HabitStats {
   totalCoinsEarned: number;
   totalCoinsSpent: number;
@@ -227,5 +244,7 @@ export interface HabitStats {
   levelProgress: number; // Percentage (0-100) towards the next level
   xpToNextLevel: number; // Remaining XP needed to reach next level
   statsBreakdown: StatBreakdown;
+  streakFreezeState: StreakFreezeState;
+  habitStreakFreezeStates?: Record<string, StreakFreezeState>;
 }
 

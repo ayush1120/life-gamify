@@ -6,7 +6,18 @@ import { LayoutDashboard, ShoppingBag, CheckSquare, History, BarChart3, Settings
 import { playSound } from '../services/sound';
 
 export const Navbar: React.FC = () => {
-  const { activeTab, setActiveTab, stats, settings, updateSettings, user, signInWithGoogle, logout, showToast } = useApp();
+  const { 
+    activeTab, 
+    setActiveTab, 
+    stats, 
+    settings, 
+    updateSettings, 
+    user, 
+    signInWithGoogle, 
+    logout, 
+    setIsStreakDetailsModalOpen,
+    setIsStreakFreezeModalOpen
+  } = useApp();
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
   const handleTabClick = (tabId: string) => {
@@ -22,6 +33,19 @@ export const Navbar: React.FC = () => {
     document.body.className = themeClass;
     playSound.click(settings.soundEnabled);
   };
+
+  const handleStreakClick = () => {
+    playSound.click(settings.soundEnabled);
+    setIsStreakDetailsModalOpen(true);
+  };
+
+  const handleFreezeClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    playSound.freezeChime(settings.soundEnabled);
+    setIsStreakFreezeModalOpen(true);
+  };
+
+  const freezeState = stats.streakFreezeState || { availableFreezes: 2, maxFreezes: 2 };
 
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -70,20 +94,33 @@ export const Navbar: React.FC = () => {
           {/* Right Controls */}
           <div className="flex items-center space-x-1.5 sm:space-x-3 shrink-0">
 
-            {/* Streak Badge */}
-            <div
-              onClick={() => showToast(`🔥 Current Streak: ${stats.currentStreak} Days (Longest: ${stats.longestStreak} Days)`)}
-              className="flex items-center space-x-1 px-2.5 sm:px-3 py-1.5 rounded-full text-xs sm:text-sm font-bold cursor-pointer hover:opacity-90 transition-opacity"
-              style={{
-                background: 'var(--streak-bg)',
-                border: '1px solid var(--streak-border)',
-                color: 'var(--streak-text)',
-              }}
-              title={`Current Streak: ${stats.currentStreak} days (Click for details)`}
-            >
-              <Flame className="w-4 h-4 text-amber-500 fill-amber-500 shrink-0" />
-              <span className="sm:hidden font-outfit">{stats.currentStreak}d</span>
-              <span className="hidden sm:inline font-outfit">{stats.currentStreak}d streak</span>
+            {/* Streak & Freeze Badges */}
+            <div className="flex items-center space-x-1 sm:space-x-1.5">
+              {/* Streak Badge */}
+              <button
+                onClick={handleStreakClick}
+                className="flex items-center space-x-1 px-2.5 sm:px-3 py-1.5 rounded-full text-xs sm:text-sm font-bold cursor-pointer hover:scale-105 transition-all"
+                style={{
+                  background: 'var(--streak-bg)',
+                  border: '1px solid var(--streak-border)',
+                  color: 'var(--streak-text)',
+                }}
+                title={`Current Streak: ${stats.currentStreak} days (Click for streak details & calendar)`}
+              >
+                <Flame className="w-4 h-4 text-amber-500 fill-amber-500 shrink-0" />
+                <span className="sm:hidden font-outfit">{stats.currentStreak}d</span>
+                <span className="hidden sm:inline font-outfit">{stats.currentStreak}d</span>
+              </button>
+
+              {/* Streak Freeze Pill */}
+              <button
+                onClick={handleFreezeClick}
+                className="flex items-center space-x-1 px-2 sm:px-2.5 py-1.5 rounded-full text-xs font-bold cursor-pointer hover:scale-105 transition-all bg-sky-500/15 dark:bg-sky-950/60 border border-sky-400/40 text-sky-600 dark:text-sky-300 shadow-sm"
+                title={`Streak Freeze: ${freezeState.availableFreezes}/${freezeState.maxFreezes} available (Click to learn more)`}
+              >
+                <span className="text-xs">❄️</span>
+                <span className="font-outfit text-xs font-extrabold">{freezeState.availableFreezes}</span>
+              </button>
             </div>
 
             {/* Coin Balance Pill */}

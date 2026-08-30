@@ -8,7 +8,10 @@ import { CoinToken } from '../components/CoinToken';
 import { formatContextDate, formatTime, getWeekDays, isSameDay } from '../utils/dateUtils';
 
 export const HistoryPage: React.FC = () => {
-  const { rewardLogs, redemptions, deleteLog, deleteRedemption, setActiveTab } = useApp();
+  const { 
+    rewardLogs, redemptions, habits, stats, 
+    deleteLog, deleteRedemption, setActiveTab
+  } = useApp();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [currentWeekOffset, setCurrentWeekOffset] = useState<number>(0);
@@ -33,7 +36,44 @@ export const HistoryPage: React.FC = () => {
   const [logToDelete, setLogToDelete] = useState<RewardLog | null>(null);
   const [redemptionToDelete, setRedemptionToDelete] = useState<RewardRedemption | null>(null);
 
-  const filteredLogs = rewardLogs.filter(l => {
+  // Combine actual logs with synthetic freeze logs
+  const allLogs = React.useMemo(() => {
+    const freezeLogs: RewardLog[] = [];
+    Object.entries(stats.habitStreakFreezeStates || {}).forEach(([habitId, state]) => {
+      const habit = habits.find(h => h.id === habitId);
+      if (!habit) return;
+      state.frozenDates.forEach(dateStr => {
+        freezeLogs.push({
+          id: `freeze-${habitId}-${dateStr}`,
+          activityId: habitId,
+          habitName: `Streak Repaired: ${habit.name}`,
+          icon: '❄️',
+          timestamp: `${dateStr}T23:59:59.000Z`,
+          rewardEarned: 0,
+          unit: 'freeze'
+        });
+      });
+    });
+    if (stats.streakFreezeState?.frozenDates) {
+      stats.streakFreezeState.frozenDates.forEach(dateStr => {
+        freezeLogs.push({
+          id: `freeze-app-${dateStr}`,
+          activityId: 'app',
+          habitName: `App Streak Repaired`,
+          icon: '❄️',
+          timestamp: `${dateStr}T23:59:59.000Z`,
+          rewardEarned: 0,
+          unit: 'freeze'
+        });
+      });
+    }
+    
+    return [...rewardLogs, ...freezeLogs].sort(
+      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    );
+  }, [rewardLogs, habits, stats.habitStreakFreezeStates, stats.streakFreezeState]);
+
+  const filteredLogs = allLogs.filter(l => {
     const logDate = new Date(l.timestamp);
     const matchesDate = isSameDay(logDate, selectedDate);
     const matchesSearch = l.habitName.toLowerCase().includes(searchTerm.toLowerCase());
@@ -266,6 +306,8 @@ export const HistoryPage: React.FC = () => {
                           </div>
                           {isRetracted ? (
                             <span className="text-[10px] font-mono text-amber-400/70 font-semibold uppercase">Read-Only</span>
+                          ) : log.unit === 'freeze' ? (
+                            <span className="text-[10px] font-mono text-sky-400/70 font-semibold uppercase px-2 py-1 bg-sky-500/10 rounded-lg">Freeze</span>
                           ) : (
                             <button
                               onClick={() => setLogToDelete(log)}
@@ -285,6 +327,8 @@ export const HistoryPage: React.FC = () => {
                           <div className="font-outfit font-extrabold text-sm" style={{ color: isRetracted ? 'var(--text-muted)' : 'var(--text-accent)' }}>
                             {isRetracted ? (
                               <span>0</span>
+                            ) : log.unit === 'freeze' ? (
+                              <span className="text-sky-400">Repaired</span>
                             ) : (
                               <div className="flex items-center space-x-1 px-3 py-1 rounded-xl shadow-sm" style={{ background: 'var(--pill-badge-bg)', border: '1px solid var(--pill-badge-border)' }}>
                                 <span>+{log.rewardEarned}</span>

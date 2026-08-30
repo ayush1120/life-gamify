@@ -15,7 +15,17 @@ import { Zap, ArrowRight, ShoppingBag, History, Sword, Flame } from 'lucide-reac
 
 
 export const Dashboard: React.FC = () => {
-  const { habits, rewards, rewardLogs, quests, bosses, setActiveTab } = useApp();
+  const { 
+    habits, 
+    rewards, 
+    rewardLogs, 
+    quests, 
+    bosses, 
+    stats,
+    setActiveTab, 
+    setIsStreakDetailsModalOpen, 
+    setIsStreakFreezeModalOpen 
+  } = useApp();
   const [isHabitModalOpen, setIsHabitModalOpen] = useState(false);
 
   const activeHabits = habits.filter(h => h.active).sort((a, b) => a.order - b.order);
@@ -30,13 +40,111 @@ export const Dashboard: React.FC = () => {
     return acc;
   }, {} as Record<string, number>);
 
-  const recentLogs = rewardLogs.slice(0, 5);
+  const recentLogs = React.useMemo(() => {
+    const freezeLogs: typeof rewardLogs = [];
+    Object.entries(stats.habitStreakFreezeStates || {}).forEach(([habitId, state]) => {
+      const habit = habits.find(h => h.id === habitId);
+      if (!habit) return;
+      state.frozenDates.forEach(dateStr => {
+        freezeLogs.push({
+          id: `freeze-${habitId}-${dateStr}`,
+          activityId: habitId,
+          habitName: `Streak Repaired: ${habit.name}`,
+          icon: '❄️',
+          timestamp: `${dateStr}T23:59:59.000Z`,
+          rewardEarned: 0,
+          unit: 'freeze'
+        });
+      });
+    });
+    
+    // Global App Freeze mapping
+    if (stats.streakFreezeState?.frozenDates) {
+      stats.streakFreezeState.frozenDates.forEach((dateStr: string) => {
+        freezeLogs.push({
+          id: `freeze-app-${dateStr}`,
+          activityId: 'app',
+          habitName: `App Streak Repaired`,
+          icon: '❄️',
+          timestamp: `${dateStr}T23:59:59.000Z`,
+          rewardEarned: 0,
+          unit: 'freeze'
+        });
+      });
+    }
+
+    return [...rewardLogs, ...freezeLogs]
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+      .slice(0, 5);
+  }, [rewardLogs, habits, stats.habitStreakFreezeStates, stats.streakFreezeState]);
+  const freezeState = stats.streakFreezeState || {
+    availableFreezes: 2,
+    maxFreezes: 2,
+    consecutiveDaysForRecovery: 3,
+    consecutiveDaysCount: 0,
+    frozenDates: []
+  };
 
   return (
     <div className="space-y-8 pb-12">
 
       {/* Hero Banner */}
       <HeroBanner onOpenHabitModal={() => setIsHabitModalOpen(true)} />
+
+      {/* Streak & Freeze Status Bar */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 px-1">
+        {/* Streak Pill Card */}
+        <div 
+          onClick={() => setIsStreakDetailsModalOpen(true)}
+          className="glass-panel p-4 rounded-2xl border border-amber-500/20 hover:border-amber-500/50 transition-all cursor-pointer flex items-center justify-between group"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <Flame className="w-6 h-6 text-amber-500 fill-amber-500" />
+            </div>
+            <div>
+              <div className="flex items-center gap-1.5">
+                <span className="font-outfit text-xl font-extrabold text-amber-400">
+                  {stats.currentStreak} Days
+                </span>
+                <span className="text-xs font-semibold text-slate-400">Streak</span>
+              </div>
+              <p className="text-[11px] text-slate-400">
+                Best: <span className="text-amber-300 font-bold">{stats.longestStreak}d</span> • Tap for calendar
+              </p>
+            </div>
+          </div>
+          <ArrowRight className="w-4 h-4 text-amber-400 opacity-70 group-hover:translate-x-1 transition-transform" />
+        </div>
+
+        {/* Streak Freeze Pill Card */}
+        <div 
+          onClick={() => setIsStreakFreezeModalOpen(true)}
+          className="glass-panel p-4 rounded-2xl border border-sky-500/20 hover:border-sky-400/50 transition-all cursor-pointer flex items-center justify-between group"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-sky-500/20 border border-sky-400/40 flex items-center justify-center text-xl group-hover:scale-105 transition-transform">
+              ❄️
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-outfit text-sm font-bold text-sky-400 dark:text-sky-300">
+                  Streak Freeze
+                </span>
+                <span className="px-2 py-0.5 rounded-full bg-sky-400/20 text-sky-300 text-[10px] font-extrabold font-outfit">
+                  {freezeState.availableFreezes}/{freezeState.maxFreezes} Ready
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-400">
+                {freezeState.availableFreezes >= freezeState.maxFreezes
+                  ? 'Max Capacity • Rest Day Shield'
+                  : `${freezeState.consecutiveDaysCount}/${freezeState.consecutiveDaysForRecovery} active days to regain ❄️`}
+              </p>
+            </div>
+          </div>
+          <ArrowRight className="w-4 h-4 text-sky-400 opacity-70 group-hover:translate-x-1 transition-transform" />
+        </div>
+      </div>
 
       {/* Level Progress */}
       <div className="px-1">
@@ -212,17 +320,21 @@ export const Dashboard: React.FC = () => {
                     </div>
                   </div>
                   <span
-                    className="font-outfit font-extrabold text-sm px-2.5 py-1 rounded-lg"
-                    style={{
+                    className={`font-outfit font-extrabold text-sm px-2.5 py-1 rounded-lg ${log.unit === 'freeze' ? 'text-sky-400 bg-sky-500/10 border border-sky-400/20' : ''}`}
+                    style={log.unit !== 'freeze' ? {
                       color: 'var(--text-accent)',
                       background: 'var(--pill-badge-bg)',
                       border: '1px solid var(--pill-badge-border)',
-                    }}
+                    } : {}}
                   >
-                    <div className="flex items-center space-x-1">
-                      <span>+{log.rewardEarned}</span>
-                      <CoinToken size={14} />
-                    </div>
+                    {log.unit === 'freeze' ? (
+                      <span>Freeze Used</span>
+                    ) : (
+                      <div className="flex items-center space-x-1">
+                        <span>+{log.rewardEarned}</span>
+                        <CoinToken size={14} />
+                      </div>
+                    )}
                   </span>
                 </div>
               );

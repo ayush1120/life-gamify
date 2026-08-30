@@ -8,7 +8,8 @@ import {
   QuestDefinition, 
   BossDefinition, 
   AchievementDefinition, 
-  GameNotification 
+  GameNotification,
+  StreakFreezeState
 } from '../types';
 
 const STORAGE_KEYS = {
@@ -21,7 +22,9 @@ const STORAGE_KEYS = {
   QUESTS: 'life_gamify_quests_v2',
   BOSSES: 'life_gamify_bosses_v2',
   ACHIEVEMENTS: 'life_gamify_achievements_v2',
-  NOTIFICATIONS: 'life_gamify_notifications_v2'
+  NOTIFICATIONS: 'life_gamify_notifications_v2',
+  STREAK_FREEZES: 'life_gamify_streak_freezes_v2',
+  HABIT_STREAK_FREEZES: 'life_gamify_habit_streak_freezes_v2'
 };
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -401,6 +404,44 @@ export const saveStoredNotifications = (notifications: GameNotification[]): void
   }
 };
 
+export const loadStoredStreakFreezes = (): StreakFreezeState | null => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.STREAK_FREEZES);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch (e) {
+    console.error('Failed loading streak freezes from local storage', e);
+    return null;
+  }
+};
+
+export const saveStoredStreakFreezes = (state: StreakFreezeState): void => {
+  try {
+    localStorage.setItem(STORAGE_KEYS.STREAK_FREEZES, JSON.stringify(state));
+  } catch (e) {
+    console.error('Failed saving streak freezes to local storage', e);
+  }
+};
+
+export const loadStoredHabitStreakFreezes = (): Record<string, StreakFreezeState> => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.HABIT_STREAK_FREEZES);
+    if (!raw) return {};
+    return JSON.parse(raw);
+  } catch (e) {
+    console.error('Failed loading habit streak freezes from local storage', e);
+    return {};
+  }
+};
+
+export const saveStoredHabitStreakFreezes = (states: Record<string, StreakFreezeState>): void => {
+  try {
+    localStorage.setItem(STORAGE_KEYS.HABIT_STREAK_FREEZES, JSON.stringify(states));
+  } catch (e) {
+    console.error('Failed saving habit streak freezes to local storage', e);
+  }
+};
+
 export const exportAllData = () => {
   return {
     habits: loadStoredHabits(),
@@ -413,6 +454,7 @@ export const exportAllData = () => {
     bosses: loadStoredBosses(),
     achievements: loadStoredAchievements(),
     notifications: loadStoredNotifications(),
+    streakFreezes: loadStoredStreakFreezes(),
     exportedAt: new Date().toISOString()
   };
 };
@@ -430,6 +472,7 @@ export const importAllData = (jsonString: string): boolean => {
     if (data.bosses) saveStoredBosses(data.bosses);
     if (data.achievements) saveStoredAchievements(data.achievements);
     if (data.notifications) saveStoredNotifications(data.notifications);
+    if (data.streakFreezes) saveStoredStreakFreezes(data.streakFreezes);
     return true;
   } catch (e) {
     console.error('Failed importing data', e);

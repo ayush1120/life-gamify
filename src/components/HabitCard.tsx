@@ -3,8 +3,11 @@ import { Habit } from '../types';
 import { useApp } from '../context/AppContext';
 import { CoinToken } from './CoinToken';
 import { getPeriodProgress, getPeriodLabel } from '../utils/frequencyUtils';
+import { getValidHabitLogs } from '../utils/habitAnalytics';
+import { DEFAULT_STREAK_FREEZE_STATE, evaluateHabitStreakAndFreezes } from '../utils/streakUtils';
 import { motion } from 'framer-motion';
-import { PlusCircle, Check, Star } from 'lucide-react';
+import { PlusCircle, Check, Star, Flame, Sparkles } from 'lucide-react';
+import { playSound } from '../services/sound';
 
 interface HabitCardProps {
   habit: Habit;
@@ -12,9 +15,41 @@ interface HabitCardProps {
 }
 
 export const HabitCard: React.FC<HabitCardProps> = ({ habit }) => {
-  const { logHabit, rewardLogs, toggleQuickHabit, setActiveTab } = useApp();
+  const { 
+    logHabit, 
+    rewardLogs, 
+    toggleQuickHabit, 
+    setActiveTab, 
+    stats, 
+    settings,
+    setSelectedHabitForFreezeModal, 
+    setIsStreakFreezeModalOpen,
+    repairHabitStreak
+  } = useApp();
+
   const progress = getPeriodProgress(habit, rewardLogs);
   const isMaxReached = progress.isComplete;
+
+  const validLogs = getValidHabitLogs(habit.id, rewardLogs);
+  const habitFreezeState = stats.habitStreakFreezeStates?.[habit.id] || DEFAULT_STREAK_FREEZE_STATE;
+  const habitStreak = evaluateHabitStreakAndFreezes(habit, validLogs, habitFreezeState).currentStreak;
+  const pendingRepairs = habitFreezeState.pendingRepairDates || [];
+  const canRepair = pendingRepairs.length > 0 && habitFreezeState.availableFreezes > 0;
+  const primaryPendingRepair = pendingRepairs[0];
+
+  const handleOpenFreezeModal = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    playSound.freezeChime(settings.soundEnabled);
+    setSelectedHabitForFreezeModal(habit);
+    setIsStreakFreezeModalOpen(true);
+  };
+
+  const handleRepairClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (primaryPendingRepair) {
+      repairHabitStreak(habit.id, primaryPendingRepair.dateStr);
+    }
+  };
 
   return (
     <motion.div
@@ -80,16 +115,30 @@ export const HabitCard: React.FC<HabitCardProps> = ({ habit }) => {
                 </p>
               )}
 
-              {/* Frequency & Category Badges */}
+              {/* Frequency, Category & Streak Badges */}
               <div className="flex flex-wrap items-center gap-1.5 mt-1.5 text-[10px] font-bold">
                 <span className="px-2 py-0.5 rounded-full capitalize bg-amber-500/10 text-amber-400 border border-amber-500/20">
                   {habit.frequency || 'daily'}
                 </span>
-                {habit.category && (
-                  <span className="px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                    {habit.category}
+                
+                {/* Habit Streak Badge */}
+                {habitStreak > 0 && (
+                  <span className="flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-orange-500/15 text-orange-400 border border-orange-500/30">
+                    <Flame className="w-3 h-3 fill-orange-400" />
+                    <span>{habitStreak}d</span>
                   </span>
                 )}
+
+                {/* Per-Habit Freeze Pill */}
+                <button
+                  type="button"
+                  onClick={handleOpenFreezeModal}
+                  className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-sky-500/15 text-sky-400 border border-sky-400/30 hover:bg-sky-500/25 transition-colors cursor-pointer"
+                  title={`Streak Freeze: ${habitFreezeState.availableFreezes}/${habitFreezeState.maxFreezes} (Click for freeze rules)`}
+                >
+                  <span className="text-[10px]">❄️</span>
+                  <span>{habitFreezeState.availableFreezes}/{habitFreezeState.maxFreezes}</span>
+                </button>
               </div>
             </div>
           </div>
@@ -120,6 +169,22 @@ export const HabitCard: React.FC<HabitCardProps> = ({ habit }) => {
             </span>
           </div>
         </div>
+
+        {/* 2-Day Streak Repair Notice Banner */}
+        {canRepair && (
+          <div className="mt-3 mx-2 p-2 rounded-xl bg-gradient-to-r from-sky-950/80 to-blue-950/80 border border-sky-400/50 flex items-center justify-between animate-pulse">
+            <div className="flex items-center gap-1.5 text-xs text-sky-300 font-bold font-outfit">
+              <Sparkles className="w-3.5 h-3.5 text-sky-400" />
+              <span>Missed {primaryPendingRepair.dateStr}! ({primaryPendingRepair.daysRemaining}d left to repair)</span>
+            </div>
+            <button
+              onClick={handleRepairClick}
+              className="px-2.5 py-1 rounded-lg bg-sky-500 hover:bg-sky-400 text-white text-[11px] font-extrabold font-outfit shadow-sm cursor-pointer transition-all hover:scale-105"
+            >
+              Repair ❄️
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Footer Progress / Log Action (Sibling, not nested) */}
