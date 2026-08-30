@@ -68,21 +68,22 @@ export const Navbar: React.FC = () => {
         paddingTop: 'var(--safe-area-top)'
       }}
     >
-      <div className="max-w-6xl mx-auto px-2.5 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto px-2 sm:px-6 lg:px-8">
         {/* Top Row: Branding + Controls */}
-        <div className="flex items-center justify-between h-14 sm:h-16 gap-1.5 sm:gap-3">
+        <div className="flex items-center justify-between h-14 sm:h-16 gap-1 sm:gap-3">
 
-          {/* Logo & App Branding (Highest Priority - Always Visible Text) */}
+          {/* Logo & App Branding */}
           <div
             onClick={() => handleTabClick('dashboard')}
             className="flex items-center space-x-2 sm:space-x-3 cursor-pointer group shrink-0 min-w-0"
           >
-            {/* Golden Coin Emblem (Priority 2: Hide below 480px) */}
-            <div className="hidden min-[480px]:flex w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-600 items-center justify-center shadow-md shadow-amber-500/20 border-2 border-amber-300/60 group-hover:scale-105 transition-transform overflow-hidden p-0.5 shrink-0">
+            {/* Golden Coin Emblem (Lowest Priority: Hidden on mobile to maximize space for game-status pills) */}
+            <div className="hidden sm:flex w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-600 items-center justify-center shadow-md shadow-amber-500/20 border-2 border-amber-300/60 group-hover:scale-105 transition-transform overflow-hidden p-0.5 shrink-0">
               <CoinToken size={32} />
             </div>
             <div className="truncate">
-              <h1 className="font-outfit text-base sm:text-xl font-extrabold tracking-tight truncate" style={{ color: 'var(--text-primary)' }}>
+              {/* Text branding: shown on screens >= 340px, hidden on ultra-compact < 340px */}
+              <h1 className="hidden min-[340px]:block font-outfit text-sm sm:text-lg md:text-xl font-extrabold tracking-tight truncate" style={{ color: 'var(--text-primary)' }}>
                 Life Gamify
               </h1>
               <p className="text-[11px] hidden md:block font-medium" style={{ color: 'var(--text-muted)' }}>
@@ -92,14 +93,14 @@ export const Navbar: React.FC = () => {
           </div>
 
           {/* Right Controls - Minimal Pills Layout */}
-          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+          <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
 
             {/* Streak & Freeze Badges */}
             <div className="flex items-center gap-1 sm:gap-1.5">
-              {/* Streak Badge (Priority 3: Hide below 400px) */}
+              {/* Streak Badge */}
               <button
                 onClick={handleStreakClick}
-                className="hidden min-[400px]:inline-flex items-center space-x-1 px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-full text-xs font-bold font-outfit cursor-pointer hover:scale-105 transition-all shrink-0"
+                className="flex items-center space-x-1 px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-full text-xs font-bold font-outfit cursor-pointer hover:scale-105 transition-all shrink-0"
                 style={{
                   background: 'var(--streak-bg)',
                   border: '1px solid var(--streak-border)',
@@ -111,10 +112,10 @@ export const Navbar: React.FC = () => {
                 <span>{stats.currentStreak}d</span>
               </button>
 
-              {/* Streak Freeze Pill (Priority 1: Hide below 540px) */}
+              {/* Streak Freeze Pill */}
               <button
                 onClick={handleFreezeClick}
-                className="hidden min-[540px]:inline-flex items-center space-x-1 px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-full text-xs font-bold font-outfit cursor-pointer hover:scale-105 transition-all bg-sky-500/15 dark:bg-sky-950/60 border border-sky-400/40 text-sky-600 dark:text-sky-300 shadow-sm shrink-0"
+                className="flex items-center space-x-1 px-1.5 sm:px-2.5 py-1 sm:py-1.5 rounded-full text-xs font-bold font-outfit cursor-pointer hover:scale-105 transition-all bg-sky-500/15 dark:bg-sky-950/60 border border-sky-400/40 text-sky-600 dark:text-sky-300 shadow-sm shrink-0"
                 title={`Streak Freeze: ${freezeState.availableFreezes}/${freezeState.maxFreezes} available (Click to learn more)`}
               >
                 <span className="text-xs">❄️</span>
@@ -122,20 +123,20 @@ export const Navbar: React.FC = () => {
               </button>
             </div>
 
-            {/* Coin Balance Pill (Highest Priority - Always Visible) */}
+            {/* Coin Balance Pill */}
             <button
               onClick={() => handleTabClick('store')}
-              className="flex items-center space-x-1 px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-full font-outfit text-xs sm:text-sm font-extrabold bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 text-white shadow-md shadow-amber-500/20 hover:scale-105 border border-amber-400/50 transition-all cursor-pointer shrink-0"
+              className="flex items-center space-x-1 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full font-outfit text-xs sm:text-sm font-extrabold bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 text-white shadow-md shadow-amber-500/20 hover:scale-105 border border-amber-400/50 transition-all cursor-pointer shrink-0"
               title="Coin Balance (Click to visit Reward Store)"
             >
-              <CoinToken size={16} />
+              <CoinToken size={15} />
               <span>{stats.coinBalance}</span>
             </button>
 
-            {/* Theme Toggle (Priority 4: Hide below 350px) */}
+            {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
-              className="hidden min-[350px]:flex p-1.5 sm:p-2 rounded-full transition-colors cursor-pointer shrink-0"
+              className="flex p-1.5 sm:p-2 rounded-full transition-colors cursor-pointer shrink-0"
               style={{
                 background: 'var(--streak-bg)',
                 border: '1px solid var(--streak-border)',
@@ -146,7 +147,7 @@ export const Navbar: React.FC = () => {
               {settings.theme === 'dark' ? <Sun className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <Moon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
             </button>
 
-            {/* Google Auth User Profile / Login (Highest Priority - Always Visible) */}
+            {/* Google Auth User Profile / Login */}
             {user ? (
               <>
                 {/* Mobile Profile Avatar Button */}
