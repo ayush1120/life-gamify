@@ -32,4 +32,11 @@
    - Habits can be mapped to deterministic RPG stats (Health, Fitness, Knowledge, Career, Creativity, Discipline, Social).
    - This mapping forms the bedrock of the AI Game Master features.
 
-For more technical details on the underlying state derivation, see [game-engine-architecture.md](game-engine-architecture.md).
+## Streaks & Streak Freezes
+To build consistency without punishing honest mistakes, Life Gamify implements a **Dual-Level Streak & Freeze** system:
+1. **Global Timeline Streaks**: Tracks consecutive calendar days where at least one habit was completed.
+2. **Per-Habit Freezes (Auto-Earned)**:
+   - Habits earn 1 `Freeze` automatically when the user maintains a 3x frequency period streak (e.g., 3 consecutive days for daily habits, 3 weeks for weekly habits).
+   - If a user misses a day/week, they have a **2-period retroactive repair window** where they can permanently spend a freeze to bridge the gap and save their streak.
+
+For more technical details on the underlying state derivation and AI integrations, see [game-engine-architecture.md](game-engine-architecture.md).

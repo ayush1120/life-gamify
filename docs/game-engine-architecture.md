@@ -103,9 +103,29 @@ Local & Firestore Persistence (users/{uid}/...)
 ---
 
 ## 7. Multi-Provider LLM Integration (`llmService.ts`)
-- **Google Gemini**: Uses `gemini-1.5-flash` / `gemini-2.0-flash` with structured JSON output.
+- **Google Gemini**: Uses `gemini-3.6-flash` / `gemini-2.5-pro` with structured JSON output.
 - **OpenAI**: Uses `gpt-4o-mini` / `gpt-4o` with `response_format: { type: "json_object" }`.
 - **Anthropic**: Uses `claude-3-5-haiku` / `claude-3-5-sonnet`.
-- **User-Owned Keys**: API keys are stored locally / in the user's private account.
+- **OpenRouter (Strictly Free)**: Automatically fetches the OpenRouter API model catalog, filtering strictly for models where `pricing.prompt === "0"` and `pricing.completion === "0"`.
+- **User-Owned Keys**: API keys are stored securely on-device and synced to private Firestore.
+- **AI Chat Testing Page**: Users can directly chat with the selected AI model via a dedicated UI to test prompt handling and API key connectivity.
 - **Diagnostic Connection Runner**: Verifies latency, key validity, and schema output without mutating game state.
 - **Cost Controls**: Enforces a 24-hour analysis cooldown unless at least 3 new activities have been logged or a manual refresh is requested.
+
+---
+
+## 8. Dual-Level Streaks & Freeze Engine (`streakUtils.ts`)
+- **Global / Timeline Streaks**: Measured by consecutive calendar days the user logs *any* activity.
+- **Per-Habit Streaks (Frequency Aware)**: Evaluated chronologically based on the habit's frequency (Daily, Weekly, Monthly).
+- **Auto-Recovery System (Streak Freezes)**:
+  - Users earn freezes automatically (e.g., 3 consecutive weeks = 1 Weekly Freeze).
+  - Freezes are immutable once spent and bridge missed periods natively inside the `evaluateHabitStreakAndFreezes` engine.
+  - **Chasm Detection**: If a period preceding a repair window is irreparably broken (e.g. T-3 is permanently missed), the engine detects the "chasm" and safely hides repair buttons for T-1 and T-2 to prevent wasted freezes.
+
+---
+
+## 9. Timezone & Semantic Date Architecture
+To prevent timezone travel bugs (e.g., a user flying from NY to Tokyo and losing streaks due to absolute UTC timeline shifts), Life Gamify uses **Semantic Local Date Locking**:
+- **`timestamp`**: Absolute UTC chronological value.
+- **`localDateStr`**: The semantic calendar date (e.g., `"2026-08-15"`) the user *believed* they were in when they tapped "Complete".
+- The game engine dynamically groups streaks and periods purely by `localDateStr`.
