@@ -12,12 +12,16 @@ export interface LLMProvider {
 }
 
 export const getLLMProvider = (settings?: AISettings): LLMProvider | null => {
-  if (!settings || !settings.apiKey || !settings.apiKey.trim()) {
+  if (!settings) {
     return null;
   }
 
   const provider = settings.provider || 'gemini';
-  const apiKey = settings.apiKey.trim();
+  const apiKey = (settings.apiKeys?.[provider] || settings.apiKey)?.trim();
+
+  if (!apiKey) {
+    return null;
+  }
 
   switch (provider) {
     case 'gemini':
@@ -45,7 +49,9 @@ export const shouldRunGameMasterAnalysis = (
   force: boolean = false
 ): boolean => {
   if (force) return true;
-  if (!aiSettings || !aiSettings.enabled || !aiSettings.apiKey) return false;
+  if (!aiSettings || !aiSettings.enabled) return false;
+  const activeKey = aiSettings.apiKeys?.[aiSettings.provider] || aiSettings.apiKey;
+  if (!activeKey) return false;
 
   const lastTime = aiSettings.lastAnalysisAt ? new Date(aiSettings.lastAnalysisAt).getTime() : 0;
   const lastCount = aiSettings.lastAnalysisActivityCount || 0;

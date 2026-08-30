@@ -40,7 +40,7 @@ export const AISettingsPage: React.FC = () => {
   };
 
   const [provider, setProvider] = useState<AIProvider>(currentAI.provider || 'gemini');
-  const [apiKey, setApiKey] = useState<string>(currentAI.apiKey || '');
+  const [apiKeys, setApiKeys] = useState<Partial<Record<AIProvider, string>>>(currentAI.apiKeys || { [currentAI.provider]: currentAI.apiKey || '' });
   const [model, setModel] = useState<string>(currentAI.model || MODEL_PRESETS[currentAI.provider || 'gemini'][0] || '');
   const [showKey, setShowKey] = useState<boolean>(false);
   const [isTesting, setIsTesting] = useState<boolean>(false);
@@ -90,7 +90,8 @@ export const AISettingsPage: React.FC = () => {
   const handleSave = () => {
     const updatedAISettings: AISettings = {
       provider,
-      apiKey: apiKey.trim(),
+      apiKeys: Object.fromEntries(Object.entries(apiKeys).map(([k, v]) => [k, (v || '').trim()])),
+      apiKey: (apiKeys[provider] || '').trim(),
       model: model.trim(),
       enabled: true
     };
@@ -99,7 +100,7 @@ export const AISettingsPage: React.FC = () => {
   };
 
   const handleRunDiagnostic = async () => {
-    if (!apiKey.trim()) {
+    if (!(apiKeys[provider] || '').trim()) {
       setTestResult({
         success: false,
         message: 'Please enter a valid API Key before testing.'
@@ -112,7 +113,8 @@ export const AISettingsPage: React.FC = () => {
 
     const result = await testAIConnection({
       provider,
-      apiKey: apiKey.trim(),
+      apiKeys,
+      apiKey: (apiKeys[provider] || '').trim(),
       model: model.trim(),
       enabled: true
     });
@@ -122,7 +124,7 @@ export const AISettingsPage: React.FC = () => {
   };
 
   const handleGenerateGamePlan = async () => {
-    if (!apiKey.trim()) {
+    if (!(apiKeys[provider] || '').trim()) {
       showToast('Please configure an API Key first.');
       return;
     }
@@ -145,7 +147,8 @@ export const AISettingsPage: React.FC = () => {
 
       const plan = await requestGameMasterPlan({
         provider,
-        apiKey: apiKey.trim(),
+        apiKeys,
+        apiKey: (apiKeys[provider] || '').trim(),
         model: model.trim(),
         enabled: true
       }, context);
@@ -181,7 +184,7 @@ export const AISettingsPage: React.FC = () => {
         aiSettings: {
           ...currentAI,
           provider,
-          apiKey: apiKey.trim(),
+          apiKey: (apiKeys[provider] || '').trim(),
           model: model.trim(),
           lastAnalysisAt: new Date().toISOString(),
           lastAnalysisActivityCount: rewardLogs.filter(l => !l.isRetracted).length
@@ -241,12 +244,12 @@ export const AISettingsPage: React.FC = () => {
               <span 
                 className="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider"
                 style={{ 
-                  background: apiKey ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-                  color: apiKey ? '#10b981' : '#ef4444',
-                  border: `1px solid ${apiKey ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`
+                  background: (apiKeys[provider] || '') ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                  color: (apiKeys[provider] || '') ? '#10b981' : '#ef4444',
+                  border: `1px solid ${(apiKeys[provider] || '') ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`
                 }}
               >
-                {apiKey ? 'Configured' : 'No Key Set'}
+                {(apiKeys[provider] || '') ? 'Configured' : 'No Key Set'}
               </span>
             </div>
             <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
@@ -317,41 +320,49 @@ export const AISettingsPage: React.FC = () => {
           </select>
         </div>
 
-        {/* API Key Input */}
-        <div className="space-y-1.5 md:col-span-2">
-          <label className="text-xs font-bold flex items-center justify-between" style={{ color: 'var(--text-secondary)' }}>
-            <span className="flex items-center gap-1.5">
-              <Key className="w-3.5 h-3.5 text-purple-400" />
-              <span>User-Owned API Key</span>
-            </span>
-            <span className="text-[10px] font-normal" style={{ color: 'var(--text-muted)' }}>
-              Stored locally on device / your private account
-            </span>
-          </label>
-          <div className="relative">
-            <input
-              type={showKey ? 'text' : 'password'}
-              placeholder={`Enter your ${provider.toUpperCase()} API key`}
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              className="w-full p-2.5 pr-10 rounded-xl text-xs focus:outline-none font-mono transition-colors"
-              style={{
-                background: 'var(--glass-bg)',
-                border: '1px solid var(--glass-border)',
-                color: 'var(--text-primary)'
-              }}
-            />
-            <button
-              type="button"
-              onClick={() => setShowKey(!showKey)}
-              className="absolute right-3 top-2.5 text-gray-400 hover:text-white transition-colors"
-            >
-              {showKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            </button>
+        
+        {/* API Keys Configuration */}
+        <div className="md:col-span-2 mt-4 pt-4" style={{ borderTop: '1px solid var(--glass-border)' }}>
+          <h4 className="font-outfit text-sm font-bold mb-3" style={{ color: 'var(--text-primary)' }}>
+            Secret API Keys
+          </h4>
+          <p className="text-xs mb-4" style={{ color: 'var(--text-muted)' }}>
+            Provide API keys for the providers you wish to use. Keys are stored locally.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {(['gemini', 'openai', 'anthropic', 'openrouter'] as AIProvider[]).map((prov) => (
+              <div key={prov} className="space-y-1.5">
+                <label className="text-xs font-bold flex items-center gap-1.5" style={{ color: 'var(--text-secondary)' }}>
+                  <Key className="w-3.5 h-3.5 text-purple-400" />
+                  <span className="capitalize">{prov} Key</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type={showKey ? 'text' : 'password'}
+                    placeholder={`${prov} API key`}
+                    value={apiKeys[prov] || ''}
+                    onChange={(e) => setApiKeys({ ...apiKeys, [prov]: e.target.value })}
+                    className="w-full pl-3 pr-10 py-2.5 rounded-xl text-xs focus:outline-none transition-colors"
+                    style={{
+                      background: 'var(--glass-bg)',
+                      border: '1px solid var(--glass-border)',
+                      color: 'var(--text-primary)'
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowKey(!showKey)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                  >
+                    {showKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
-
+      
       {/* Diagnostic Test Output Panel */}
       {testResult && (
         <div 
@@ -419,7 +430,7 @@ export const AISettingsPage: React.FC = () => {
         </div>
 
         {/* Generate Game Master Update Button */}
-        {apiKey && (
+        {(apiKeys[provider] || '') && (
           <button
             onClick={handleGenerateGamePlan}
             disabled={isGenerating}

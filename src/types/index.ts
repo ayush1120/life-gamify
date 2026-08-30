@@ -177,7 +177,8 @@ export type AIProvider = 'gemini' | 'openai' | 'anthropic' | 'openrouter';
 
 export interface AISettings {
   provider: AIProvider;
-  apiKey?: string;
+  apiKey?: string; // Legacy fallback
+  apiKeys?: Partial<Record<AIProvider, string>>;
   model?: string;
   enabled: boolean;
   lastAnalysisAt?: string;

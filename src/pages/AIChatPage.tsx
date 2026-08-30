@@ -14,7 +14,8 @@ export const AIChatPage: React.FC = () => {
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const isConfigured = Boolean(aiSettings?.apiKey && aiSettings?.enabled);
+  const activeKey = aiSettings?.apiKeys?.[aiSettings.provider] || aiSettings?.apiKey;
+  const isConfigured = Boolean(activeKey && aiSettings?.enabled);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
