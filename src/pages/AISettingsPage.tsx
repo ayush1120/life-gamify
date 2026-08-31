@@ -57,15 +57,41 @@ export const AISettingsPage: React.FC = () => {
         try {
           const res = await fetch('https://openrouter.ai/api/v1/models');
           const data = await res.json();
-          // Filter for strictly free models
+          
+          const NON_CHAT_KEYWORDS = ['safety', 'guard', 'moderation', 'embed', 'clip', 'preview', 'audio', 'lyria', 'tts', 'stt', 'music'];
+
+          // Filter for strictly free generative/chat models
           const freeModels = data.data
-            .filter((m: any) => m.pricing && m.pricing.prompt === "0" && m.pricing.completion === "0")
+            .filter((m: any) => {
+              const pricing = m.pricing;
+              const isFree = pricing && pricing.prompt === "0" && pricing.completion === "0";
+              if (!isFree) return false;
+              
+              const mid = (m.id || '').toLowerCase();
+              const name = (m.name || '').toLowerCase();
+              const desc = (m.description || '').toLowerCase();
+              
+              return !NON_CHAT_KEYWORDS.some(kw => 
+                mid.includes(kw) || name.includes(kw) || (desc.includes(kw) && !desc.includes('chat') && !desc.includes('instruct'))
+              );
+            })
             .map((m: any) => m.id);
+
+          // Sort so recommended models appear at the top
+          freeModels.sort((a: string, b: string) => {
+            if (a === 'openrouter/free') return -1;
+            if (b === 'openrouter/free') return 1;
+            if (a.includes('gemma') && !b.includes('gemma')) return -1;
+            if (!a.includes('gemma') && b.includes('gemma')) return 1;
+            if (a.includes('lightning') && !b.includes('lightning')) return -1;
+            if (!a.includes('lightning') && b.includes('lightning')) return 1;
+            return a.localeCompare(b);
+          });
           
           setOpenRouterModels(freeModels);
           
           if (!freeModels.includes(model)) {
-            setModel(freeModels[0] || '');
+            setModel(freeModels[0] || 'openrouter/free');
           }
         } catch (e) {
           console.error('Failed to fetch OpenRouter models', e);

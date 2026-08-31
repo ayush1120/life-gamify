@@ -7,9 +7,9 @@ export class OpenRouterProvider {
   private apiKey: string;
   private model: string;
 
-  constructor(apiKey: string, model: string = 'google/gemma-7b-it:free') {
+  constructor(apiKey: string, model: string = 'openrouter/free') {
     this.apiKey = apiKey.trim();
-    this.model = model.trim();
+    this.model = model.trim() || 'openrouter/free';
   }
 
   async testConnection(): Promise<{ success: boolean; model: string; message: string; latencyMs: number }> {
