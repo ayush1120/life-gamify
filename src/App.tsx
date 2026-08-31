@@ -39,26 +39,37 @@ const MainContent: React.FC = () => {
   }, [activeTab]);
 
   return (
-    <PullToRefresh>
-      <div className="min-h-screen flex flex-col font-sans pb-24 md:pb-0">
-      <Navbar />
+    <div className="min-h-screen flex flex-col font-sans">
+      <PullToRefresh>
+        <div className="min-h-screen flex flex-col pb-24 md:pb-0">
+          <Navbar />
 
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8">
-        {activeTab === 'dashboard' && <Dashboard />}
-        {activeTab === 'adventure' && <AdventurePage />}
-        {activeTab === 'log-activity' && <LogActivityPage />}
-        {activeTab === 'store' && <StorePage />}
-        {activeTab === 'habits' && <HabitsPage />}
-        {activeTab.startsWith('habits/') && <HabitDetailPage habitId={decodeURIComponent(activeTab.split('/')[1])} />}
-        {activeTab === 'history' && <HistoryPage />}
-        {activeTab === 'analytics' && <AnalyticsPage />}
-        {activeTab === 'settings' && <SettingsPage />}
-        {activeTab === 'ai-settings' && <AISettingsPage />}
-        {activeTab === 'ai-chat' && <AIChatPage />}
-        {activeTab === 'overlay-demo' && <OverlayDemoPage />}
-        {activeTab === 'devtools' && <DevToolsPage />}
-      </main>
+          <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8">
+            {activeTab === 'dashboard' && <Dashboard />}
+            {activeTab === 'adventure' && <AdventurePage />}
+            {activeTab === 'log-activity' && <LogActivityPage />}
+            {activeTab === 'store' && <StorePage />}
+            {activeTab === 'habits' && <HabitsPage />}
+            {activeTab.startsWith('habits/') && <HabitDetailPage habitId={decodeURIComponent(activeTab.split('/')[1])} />}
+            {activeTab === 'history' && <HistoryPage />}
+            {activeTab === 'analytics' && <AnalyticsPage />}
+            {activeTab === 'settings' && <SettingsPage />}
+            {activeTab === 'ai-settings' && <AISettingsPage />}
+            {activeTab === 'ai-chat' && <AIChatPage />}
+            {activeTab === 'overlay-demo' && <OverlayDemoPage />}
+            {activeTab === 'devtools' && <DevToolsPage />}
+          </main>
 
+          {/* Footer */}
+          <footer className="py-6 text-center text-xs pb-[90px] md:pb-6" style={{ borderTop: '1px solid var(--glass-border)', color: 'var(--text-muted)' }}>
+            <p>Life Gamify • Personal Habit Coin Economy & Reward Store</p>
+          </footer>
+        </div>
+      </PullToRefresh>
+
+      {/* Global Viewport-Fixed Overlays */}
+      <BottomNav />
+      <FAB />
 
       {/* Purchase Success Celebration Modal */}
       <AnimatePresence>
@@ -128,16 +139,7 @@ const MainContent: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Footer */}
-      <footer className="py-6 text-center text-xs pb-[90px] md:pb-6" style={{ borderTop: '1px solid var(--glass-border)', color: 'var(--text-muted)' }}>
-        <p>Life Gamify • Personal Habit Coin Economy & Reward Store</p>
-      </footer>
-
-      <BottomNav />
-      <FAB />
     </div>
-    </PullToRefresh>
   );
 };
 

@@ -82,47 +82,51 @@ export const BottomNav: React.FC = () => {
         )}
       </AnimatePresence>
 
-      <nav 
-        className="md:hidden fixed z-40 left-3 right-3 max-w-md mx-auto rounded-full backdrop-blur-2xl shadow-2xl select-none"
-        style={{ 
-          bottom: 'calc(var(--safe-area-bottom) + 2px)',
-          background: 'var(--glass-bg)', 
-          border: '1px solid var(--glass-border)',
-          boxShadow: '0 16px 36px -6px rgba(0, 0, 0, 0.75), 0 0 20px rgba(245, 158, 11, 0.12)'
-        }}
+      <div 
+        className="md:hidden fixed inset-x-0 bottom-0 z-40 pointer-events-none px-3"
+        style={{ paddingBottom: 'calc(var(--safe-area-bottom) + 2px)' }}
       >
-        <div className="flex justify-around items-center h-[58px] px-1">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = activeTab === item.id || (item.id === 'habits' && activeTab.startsWith('habits/')) || (item.id === 'more' && ['history', 'analytics', 'settings'].includes(activeTab)) || (item.id === 'more' && isMoreOpen);
-            
-            return (
-              <button
-                key={item.id}
-                onClick={() => handleTabClick(item.id)}
-                className={`flex flex-col items-center justify-center py-1 px-1 sm:px-2 rounded-full transition-all duration-300 relative cursor-pointer ${
-                  isActive ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30 shadow-inner' : 'hover:opacity-80'
-                }`}
-              >
-                <div 
-                  className={`transition-transform duration-300 ${isActive ? 'scale-110' : ''}`}
-                  style={{ 
-                    color: isActive ? 'var(--text-accent)' : 'var(--text-muted)' 
-                  }}
+        <nav 
+          className="max-w-md mx-auto rounded-full backdrop-blur-2xl shadow-2xl select-none pointer-events-auto"
+          style={{ 
+            background: 'var(--glass-bg)', 
+            border: '1px solid var(--glass-border)',
+            boxShadow: '0 16px 36px -6px rgba(0, 0, 0, 0.75), 0 0 20px rgba(245, 158, 11, 0.12)'
+          }}
+        >
+          <div className="flex justify-around items-center h-[58px] px-1">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = activeTab === item.id || (item.id === 'habits' && activeTab.startsWith('habits/')) || (item.id === 'more' && ['history', 'analytics', 'settings'].includes(activeTab)) || (item.id === 'more' && isMoreOpen);
+              
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => handleTabClick(item.id)}
+                  className={`flex flex-col items-center justify-center py-1 px-1 sm:px-2 rounded-full transition-all duration-300 relative cursor-pointer ${
+                    isActive ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30 shadow-inner' : 'hover:opacity-80'
+                  }`}
                 >
-                  <Icon className={`w-4 sm:w-5 h-4 sm:h-5 ${isActive && item.id === 'log-activity' ? 'fill-amber-400 text-amber-500 animate-pulse' : ''}`} />
-                </div>
-                <span 
-                  className="text-[9px] sm:text-[10px] font-bold mt-0.5 tracking-tight truncate max-w-[50px]"
-                  style={{ color: isActive ? 'var(--text-accent)' : 'var(--text-muted)' }}
-                >
-                  {item.label}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      </nav>
+                  <div 
+                    className={`transition-transform duration-300 ${isActive ? 'scale-110' : ''}`}
+                    style={{ 
+                      color: isActive ? 'var(--text-accent)' : 'var(--text-muted)' 
+                    }}
+                  >
+                    <Icon className={`w-4 sm:w-5 h-4 sm:h-5 ${isActive && item.id === 'log-activity' ? 'fill-amber-400 text-amber-500 animate-pulse' : ''}`} />
+                  </div>
+                  <span 
+                    className="text-[9px] sm:text-[10px] font-bold mt-0.5 tracking-tight truncate max-w-[50px]"
+                    style={{ color: isActive ? 'var(--text-accent)' : 'var(--text-muted)' }}
+                  >
+                    {item.label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </nav>
+      </div>
     </>
   );
 };
