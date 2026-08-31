@@ -1,6 +1,7 @@
 import { GameMasterContext, GameMasterResponse } from '../aiContract';
 import { GAME_MASTER_SYSTEM_PROMPT, buildGameMasterUserPrompt } from '../aiPrompt';
 import { validateGameMasterResponse } from '../aiValidator';
+import { extractAndParseJson } from '../jsonUtils';
 
 export class GeminiProvider {
   private apiKey: string;
@@ -97,12 +98,7 @@ export class GeminiProvider {
       throw new Error('Gemini returned an empty response');
     }
 
-    let parsedJson: unknown;
-    try {
-      parsedJson = JSON.parse(rawText);
-    } catch (e) {
-      throw new Error('Failed to parse Gemini response as JSON');
-    }
+    const parsedJson = extractAndParseJson(rawText, `Gemini (${this.model})`);
 
     const validation = validateGameMasterResponse(parsedJson, context);
     if (!validation.isValid || !validation.data) {

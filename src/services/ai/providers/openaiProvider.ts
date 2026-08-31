@@ -1,6 +1,7 @@
 import { GameMasterContext, GameMasterResponse } from '../aiContract';
 import { GAME_MASTER_SYSTEM_PROMPT, buildGameMasterUserPrompt } from '../aiPrompt';
 import { validateGameMasterResponse } from '../aiValidator';
+import { extractAndParseJson } from '../jsonUtils';
 
 export class OpenAIProvider {
   private apiKey: string;
@@ -92,12 +93,7 @@ export class OpenAIProvider {
       throw new Error('OpenAI returned an empty response');
     }
 
-    let parsedJson: unknown;
-    try {
-      parsedJson = JSON.parse(rawText);
-    } catch (e) {
-      throw new Error('Failed to parse OpenAI response as JSON');
-    }
+    const parsedJson = extractAndParseJson(rawText, `OpenAI (${this.model})`);
 
     const validation = validateGameMasterResponse(parsedJson, context);
     if (!validation.isValid || !validation.data) {

@@ -1,6 +1,7 @@
 import { GameMasterContext, GameMasterResponse } from '../aiContract';
 import { GAME_MASTER_SYSTEM_PROMPT, buildGameMasterUserPrompt } from '../aiPrompt';
 import { validateGameMasterResponse } from '../aiValidator';
+import { extractAndParseJson } from '../jsonUtils';
 
 export class OpenRouterProvider {
   private apiKey: string;
@@ -21,7 +22,7 @@ export class OpenRouterProvider {
           { role: 'user', content: 'Respond with exactly {"status":"ok","engine":"openrouter"} in raw JSON format.' }
         ],
         response_format: { type: 'json_object' },
-        max_tokens: 30
+        max_tokens: 50
       };
 
       const res = await fetch(url, {
@@ -91,26 +92,12 @@ export class OpenRouterProvider {
     }
 
     const data = await res.json();
-    let rawText = data.choices?.[0]?.message?.content;
+    const rawText = data.choices?.[0]?.message?.content;
     if (!rawText) {
       throw new Error('OpenRouter returned an empty response');
     }
 
-    // Sometimes free models wrap JSON in markdown block even with response_format json_object
-    rawText = rawText.trim();
-    if (rawText.startsWith('```json')) {
-      rawText = rawText.replace(/^```json/, '').replace(/```$/, '').trim();
-    } else if (rawText.startsWith('```')) {
-      rawText = rawText.replace(/^```/, '').replace(/```$/, '').trim();
-    }
-
-    let parsedJson: unknown;
-    try {
-      parsedJson = JSON.parse(rawText);
-    } catch (e) {
-      console.error('Failed JSON:', rawText);
-      throw new Error('Failed to parse OpenRouter response as JSON');
-    }
+    const parsedJson = extractAndParseJson(rawText, `OpenRouter (${this.model})`);
     
     const validation = validateGameMasterResponse(parsedJson, context);
     if (!validation.isValid) {

@@ -1,6 +1,7 @@
 import { GameMasterContext, GameMasterResponse } from '../aiContract';
 import { GAME_MASTER_SYSTEM_PROMPT, buildGameMasterUserPrompt } from '../aiPrompt';
 import { validateGameMasterResponse } from '../aiValidator';
+import { extractAndParseJson } from '../jsonUtils';
 
 export class AnthropicProvider {
   private apiKey: string;
@@ -89,20 +90,12 @@ export class AnthropicProvider {
     }
 
     const data = await res.json();
-    let rawText = data.content?.[0]?.text;
+    const rawText = data.content?.[0]?.text;
     if (!rawText) {
       throw new Error('Anthropic returned an empty response');
     }
 
-    // Strip markdown code fences if present
-    rawText = rawText.replace(/^```json\s*/, '').replace(/^```\s*/, '').replace(/\s*```$/, '').trim();
-
-    let parsedJson: unknown;
-    try {
-      parsedJson = JSON.parse(rawText);
-    } catch (e) {
-      throw new Error('Failed to parse Anthropic response as JSON');
-    }
+    const parsedJson = extractAndParseJson(rawText, `Anthropic (${this.model})`);
 
     const validation = validateGameMasterResponse(parsedJson, context);
     if (!validation.isValid || !validation.data) {
