@@ -39,8 +39,23 @@ export const AISettingsPage: React.FC = () => {
     enabled: true
   };
 
+  const envApiKeys: Partial<Record<AIProvider, string>> = {
+    gemini: (import.meta as any).env?.VITE_GEMINI_API_KEY || '',
+    openai: (import.meta as any).env?.VITE_OPENAI_API_KEY || '',
+    anthropic: (import.meta as any).env?.VITE_ANTHROPIC_API_KEY || '',
+    openrouter: (import.meta as any).env?.VITE_OPENROUTER_API_KEY || '',
+  };
+
   const [provider, setProvider] = useState<AIProvider>(currentAI.provider || 'gemini');
-  const [apiKeys, setApiKeys] = useState<Partial<Record<AIProvider, string>>>(currentAI.apiKeys || { [currentAI.provider]: currentAI.apiKey || '' });
+  const [apiKeys, setApiKeys] = useState<Partial<Record<AIProvider, string>>>(() => {
+    const existing = currentAI.apiKeys || (currentAI.apiKey ? { [currentAI.provider]: currentAI.apiKey } : {});
+    return {
+      gemini: existing.gemini || envApiKeys.gemini,
+      openai: existing.openai || envApiKeys.openai,
+      anthropic: existing.anthropic || envApiKeys.anthropic,
+      openrouter: existing.openrouter || envApiKeys.openrouter,
+    };
+  });
   const [model, setModel] = useState<string>(currentAI.model || MODEL_PRESETS[currentAI.provider || 'gemini'][0] || '');
   const [showKey, setShowKey] = useState<boolean>(false);
   const [isTesting, setIsTesting] = useState<boolean>(false);

@@ -17,7 +17,13 @@ export const getLLMProvider = (settings?: AISettings): LLMProvider | null => {
   }
 
   const provider = settings.provider || 'gemini';
-  const apiKey = (settings.apiKeys?.[provider] || settings.apiKey)?.trim();
+  const envKey = 
+    provider === 'gemini' ? (import.meta as any).env?.VITE_GEMINI_API_KEY :
+    provider === 'openai' ? (import.meta as any).env?.VITE_OPENAI_API_KEY :
+    provider === 'anthropic' ? (import.meta as any).env?.VITE_ANTHROPIC_API_KEY :
+    provider === 'openrouter' ? (import.meta as any).env?.VITE_OPENROUTER_API_KEY : '';
+
+  const apiKey = (settings.apiKeys?.[provider] || settings.apiKey || envKey)?.trim();
 
   if (!apiKey) {
     return null;
@@ -31,7 +37,7 @@ export const getLLMProvider = (settings?: AISettings): LLMProvider | null => {
     case 'anthropic':
       return new AnthropicProvider(apiKey, settings.model || 'claude-3-5-haiku-20241022');
     case 'openrouter':
-      return new OpenRouterProvider(apiKey, settings.model || 'google/gemma-7b-it:free');
+      return new OpenRouterProvider(apiKey, settings.model || 'openrouter/free');
     default:
       return new GeminiProvider(apiKey, settings.model || 'gemini-3.6-flash');
   }
@@ -50,7 +56,13 @@ export const shouldRunGameMasterAnalysis = (
 ): boolean => {
   if (force) return true;
   if (!aiSettings || !aiSettings.enabled) return false;
-  const activeKey = aiSettings.apiKeys?.[aiSettings.provider] || aiSettings.apiKey;
+  const provider = aiSettings.provider || 'gemini';
+  const envKey = 
+    provider === 'gemini' ? (import.meta as any).env?.VITE_GEMINI_API_KEY :
+    provider === 'openai' ? (import.meta as any).env?.VITE_OPENAI_API_KEY :
+    provider === 'anthropic' ? (import.meta as any).env?.VITE_ANTHROPIC_API_KEY :
+    provider === 'openrouter' ? (import.meta as any).env?.VITE_OPENROUTER_API_KEY : '';
+  const activeKey = aiSettings.apiKeys?.[provider] || aiSettings.apiKey || envKey;
   if (!activeKey) return false;
 
   const lastTime = aiSettings.lastAnalysisAt ? new Date(aiSettings.lastAnalysisAt).getTime() : 0;
