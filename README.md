@@ -1,50 +1,109 @@
-# React + TypeScript + Vite
+# Life Gamify 🎮✨
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Life Gamify is a gamified habit tracking, RPG progression, and AI-driven productivity platform. It turns your daily habits, streaks, and personal achievements into an engaging game world complete with XP levels, attribute mastery, world bosses, and reward stores.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🏛️ Repository Architecture
 
-## Expanding the ESLint configuration
+The project employs a clean multi-repository architecture where business logic remains in the shared application while thin native shells provide platform-specific capabilities.
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
-
-- Configure the top-level `parserOptions` property like this:
-
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+```text
+LifeGamify Workspace/
+├── life-gamify/           # Shared Application (React, TypeScript, Vite, Tailwind, Firebase)
+├── life-gamify-ios/       # Native iOS Layer (Swift, SwiftUI, WKWebView, WidgetKit, AppIntents)
+└── life-gamify-android/   # Native Android Layer (Kotlin, WebView, AppWidgets, WorkManager)
 ```
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
-
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
-
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
+```text
+                         ┌─────────────────────────┐
+                         │   Shared Application    │
+                         │   (React / TypeScript)  │
+                         │                         │
+                         │ • UI & RPG Game Engine  │
+                         │ • XP, Levels, Habits    │
+                         │ • Bosses, Streaks, AI   │
+                         │ • Firebase Sync         │
+                         └────────────┬────────────┘
+                                      │
+                         Type-Safe Bidirectional Bridge
+                         (window.LifeGamify Native SDK)
+                                      │
+                     ┌────────────────┴────────────────┐
+                     ▼                                 ▼
+         ┌─────────────────────┐           ┌─────────────────────┐
+         │   life-gamify-ios   │           │ life-gamify-android │
+         │                     │           │                     │
+         │ • SwiftUI WebView   │           │ • Android WebView   │
+         │ • WidgetKit Widgets │           │ • AppWidgets        │
+         │ • Local Notifs      │           │ • Local Notifs      │
+         │ • Siri Shortcuts    │           │ • App Shortcuts     │
+         │ • BGTaskScheduler   │           │ • WorkManager Sync  │
+         │ • On-Device AI      │           │ • On-Device AI      │
+         └─────────────────────┘           └─────────────────────┘
 ```
+
+---
+
+## 🚀 Quick Start & Unified CLI
+
+All development, builds, testing, and coordination across repositories are managed directly from this repository using simple executable scripts:
+
+### 1. Workspace Diagnostics & Setup
+```bash
+./setup
+```
+Verifies Node.js, dependencies, Swift/Xcode CLI, Java, Android SDK, and Gradle wrappers across all three repositories.
+
+### 2. Building
+```bash
+./build web       # Build production web bundle (dist/)
+./build ios       # Synchronize assets and validate iOS native layer
+./build android   # Synchronize assets and compile Android layer via Gradle
+./build apk       # Compile and generate standalone Android APK at dist/apk/app-debug.apk
+./build all       # Build Web, Android APK, and iOS assets in one command
+```
+
+### 3. Running & Local Development
+```bash
+./run web         # Start Vite dev server on http://localhost:5173
+./run ios         # Start Vite dev server and open LifeGamify.xcodeproj in Xcode
+./run android     # Install and launch debug APK on connected device / emulator
+```
+
+### 4. Cleaning
+```bash
+./clean           # Clean build caches across Web, Android Gradle, and iOS assets
+```
+
+---
+
+## 🔌 Bidirectional Native Bridge
+
+The shared application interacts with native platform layers via `src/services/native/bridge.ts` using typed JSON envelopes. In standard web browsers, it provides seamless, non-blocking fallbacks.
+
+- **Widgets**: Synchronizes streak counts, freeze shields, levels, coins, and quick habits with iOS WidgetKit and Android AppWidgets.
+- **Notifications**: Schedules local habit reminders, streak freeze alerts, and boss events.
+- **Shortcuts & Assistant**: Siri Shortcuts (`AppIntents`) and Android Dynamic Shortcuts (`ShortcutManagerCompat`).
+- **Background Tasks**: Periodic background synchronization via `BGTaskScheduler` (iOS) and `WorkManager` (Android).
+- **On-Device AI**: Local NLP and prompt generation fallbacks.
+
+---
+
+## 🧪 Testing & Validation
+
+```bash
+npm run test       # Run Vitest test suite (106+ unit tests)
+npm run build      # Validate TypeScript compilation & Vite bundle
+```
+
+---
+
+## 📚 Documentation
+
+- [00. Project Overview](docs/00-project-overview.md)
+- [03. Architecture & Data Flow](docs/03-architecture.md)
+- [06. Gamification Mechanics](docs/06-gamification.md)
+- [12. Karma Ledger & Economy Edge Cases](docs/12-karma-ledger-edge-cases.md)
+- [13. Firebase Authentication & Firestore Guide](docs/13-firebase-auth-firestore-guide.md)
+- [15. Native Layers, Bridge & Build System](docs/15-native-layers-and-build-system.md)
