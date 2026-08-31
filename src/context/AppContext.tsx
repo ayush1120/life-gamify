@@ -70,7 +70,8 @@ import {
 
 
 import { computeLedgerStats, calculateKarmaSurcharge, calculateMistakeFee, isHabitLogGracePeriod } from '../services/ledger';
-import { isHabitDueInPeriod, getPeriodLabel } from '../utils/frequencyUtils';
+import { isHabitDueInPeriod, getPeriodLabel, getPeriodProgress } from '../utils/frequencyUtils';
+import { nativeBridge, nativeWidgetService } from '../services/native/bridge';
 
 interface AppContextType {
   habits: Habit[];
@@ -448,6 +449,63 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       saveStoredHabitStreakFreezes(stats.habitStreakFreezeStates);
     }
   }, [stats.streakFreezeState, stats.habitStreakFreezeStates]);
+
+  // Synchronize Widget Data with Native Layers (iOS WidgetKit / Android AppWidgets)
+  useEffect(() => {
+    const activeBoss = bosses.find(b => b.status === 'active');
+    const quickHabits = habits
+      .filter(h => h.active && h.isQuickHabit)
+      .map(h => {
+        const prog = getPeriodProgress(h, rewardLogs);
+        return {
+          id: h.id,
+          name: h.name,
+          icon: h.icon,
+          color: h.color || '#f59e0b',
+          completed: prog.isComplete,
+          progressText: prog.max === 0 ? `${prog.count}x` : `${prog.count}/${prog.max}`,
+          rewardValue: h.rewardValue,
+        };
+      });
+
+    nativeWidgetService.updateData({
+      streak: stats.currentStreak,
+      availableFreezes: stats.streakFreezeState?.availableFreezes ?? 2,
+      coinBalance: stats.coinBalance,
+      level: stats.level,
+      xpProgress: stats.nextLevelProgress,
+      activeBoss: activeBoss ? {
+        name: activeBoss.name,
+        icon: activeBoss.icon,
+        hp: activeBoss.currentHp,
+        maxHp: activeBoss.maxHp,
+      } : undefined,
+      quickHabits,
+      updatedAt: new Date().toISOString(),
+    }).catch(() => {
+      // Non-blocking in web fallback
+    });
+  }, [stats, habits, bosses, rewardLogs]);
+
+  // Handle incoming native events (Widget Taps, Siri/Assistant Shortcuts, Notifications)
+  useEffect(() => {
+    const unsub = nativeBridge.onNativeEvent((event) => {
+      console.log('[Native Event Received]:', event);
+      if (event.type === 'widget_tap') {
+        const payload = event.payload;
+        if (payload?.action === 'log_habit' && payload?.habitId) {
+          logHabit(payload.habitId);
+        } else if (payload?.tab) {
+          setActiveTabState(payload.tab);
+        }
+      } else if (event.type === 'shortcut_invoked') {
+        if (event.payload?.action === 'log_habit' && event.payload?.habitId) {
+          logHabit(event.payload.habitId);
+        }
+      }
+    });
+    return unsub;
+  }, [habits, rewardLogs]);
 
   const repairAppStreak = (dateStr: string): boolean => {
     if (stats.streakFreezeState.availableFreezes <= 0) {

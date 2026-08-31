@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# Life Gamify — Unified Build Dispatcher
+# Usage: ./build [ios|android|apk|web|all]
+
+set -eo pipefail
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$ROOT_DIR/scripts/orchestrator.sh"
+
+TARGET="${1:-all}"
+
+case "$TARGET" in
+  web)
+    log_info "Building Web Production Bundle..."
+    cd "$ROOT_DIR"
+    npm run build
+    log_success "Web build ready in dist/"
+    ;;
+
+  ios)
+    log_info "Building iOS Native Layer..."
+    "$ROOT_DIR/scripts/build-ios.sh"
+    ;;
+
+  android)
+    log_info "Building Android Native Layer..."
+    "$ROOT_DIR/scripts/build-android.sh"
+    ;;
+
+  apk)
+    log_info "Building Android Debug APK..."
+    "$ROOT_DIR/scripts/build-android.sh"
+    log_success "APK ready at: $ROOT_DIR/dist/apk/app-debug.apk"
+    ;;
+
+  all)
+    log_info "Building All Platforms (Web, Android APK, iOS assets)..."
+    cd "$ROOT_DIR"
+    npm run build
+    "$ROOT_DIR/scripts/build-android.sh"
+    "$ROOT_DIR/scripts/build-ios.sh"
+    log_success "All platforms built successfully!"
+    ;;
+
+  *)
+    echo -e "${RED}Unknown target: $TARGET${RESET}"
+    echo "Usage: ./build [ios|android|apk|web|all]"
+    exit 1
+    ;;
+esac

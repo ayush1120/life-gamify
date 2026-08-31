@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+# Life Gamify — Unified Workspace Setup & Verification
+
+set -eo pipefail
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$ROOT_DIR/scripts/orchestrator.sh"
+
+echo -e "${BOLD}${BLUE}========================================${RESET}"
+echo -e "${BOLD}${BLUE}   Life Gamify — Workspace Setup Tool  ${RESET}"
+echo -e "${BOLD}${BLUE}========================================${RESET}"
+
+verify_workspace
+
+# 1. Node.js & Dependencies
+log_info "Checking Node.js & npm dependencies..."
+if command -v node >/dev/null 2>&1; then
+  log_success "Node.js found: $(node -v)"
+else
+  log_error "Node.js is not installed."
+  exit 1
+fi
+
+cd "$ROOT_DIR"
+if [[ ! -d "node_modules" ]]; then
+  log_info "Installing npm dependencies..."
+  npm install
+else
+  log_success "npm dependencies ready."
+fi
+
+# 2. iOS Tooling Check
+log_info "Checking iOS development environment..."
+if command -v swift >/dev/null 2>&1; then
+  log_success "Swift compiler ready: $(swift --version | head -n 1)"
+fi
+if [[ -d "$IOS_DIR" ]]; then
+  log_success "iOS project verified at: $IOS_DIR/LifeGamify.xcodeproj"
+fi
+
+# 3. Android Tooling Check
+log_info "Checking Android development environment..."
+if [[ -n "$JAVA_HOME" && -d "$JAVA_HOME" ]]; then
+  log_success "Java Home: $JAVA_HOME"
+fi
+if [[ -d "$ANDROID_HOME" ]]; then
+  log_success "Android SDK: $ANDROID_HOME"
+fi
+if [[ -d "$ANDROID_DIR" ]]; then
+  chmod +x "$ANDROID_DIR/gradlew"
+  log_success "Android Gradle wrapper verified."
+fi
+
+# 4. Make all scripts executable
+chmod +x "$ROOT_DIR"/setup "$ROOT_DIR"/build "$ROOT_DIR"/run "$ROOT_DIR"/clean "$ROOT_DIR"/scripts/*.sh
+
+echo -e "${BOLD}${GREEN}========================================${RESET}"
+echo -e "${BOLD}${GREEN}   Environment Ready!                   ${RESET}"
+echo -e "${BOLD}${GREEN}   Try: ./build android | ./build apk   ${RESET}"
+echo -e "${BOLD}${GREEN}        ./build ios     | ./run ios     ${RESET}"
+echo -e "${BOLD}${GREEN}========================================${RESET}"
