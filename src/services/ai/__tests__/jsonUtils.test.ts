@@ -90,6 +90,28 @@ Let me know if you need any adjustments!
     });
   });
 
+  it('repairs truncated JSON when model hits token limit', () => {
+    const raw = `
+{
+  "summary": "Building momentum",
+  "quests": [
+    {
+      "title": "Morning Jog",
+      "difficulty": "easy"
+    }
+`;
+    const result = extractAndParseJson(raw, 'OpenRouter');
+    expect(result).toEqual({
+      summary: 'Building momentum',
+      quests: [
+        {
+          title: 'Morning Jog',
+          difficulty: 'easy'
+        }
+      ]
+    });
+  });
+
   it('throws descriptive error if no valid JSON exists', () => {
     expect(() => extractAndParseJson('Just plain text with no json', 'OpenRouter')).toThrow(
       /Failed to parse OpenRouter response as JSON/

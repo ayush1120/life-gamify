@@ -73,7 +73,11 @@ export const AISettingsPage: React.FC = () => {
           const res = await fetch('https://openrouter.ai/api/v1/models');
           const data = await res.json();
           
-          const NON_CHAT_KEYWORDS = ['safety', 'guard', 'moderation', 'embed', 'clip', 'preview', 'audio', 'lyria', 'tts', 'stt', 'music'];
+          const NON_CHAT_KEYWORDS = [
+            'safety', 'guard', 'moderation', 'embed', 'clip', 'preview', 
+            'audio', 'lyria', 'tts', 'stt', 'music', 'code', 'coder', 
+            'coding', 'laguna', 'north-mini', 'note'
+          ];
 
           // Filter for strictly free generative/chat models
           const freeModels = data.data
