@@ -14,8 +14,9 @@ export const AIChatPage: React.FC = () => {
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  const isAppleFoundation = aiSettings?.provider === 'apple-foundation';
   const activeKey = aiSettings?.apiKeys?.[aiSettings.provider] || aiSettings?.apiKey;
-  const isConfigured = Boolean(activeKey && aiSettings?.enabled);
+  const isConfigured = Boolean((isAppleFoundation || activeKey) && aiSettings?.enabled !== false);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });

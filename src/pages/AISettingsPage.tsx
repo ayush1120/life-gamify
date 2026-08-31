@@ -153,7 +153,7 @@ export const AISettingsPage: React.FC = () => {
   };
 
   const handleRunDiagnostic = async () => {
-    if (!(apiKeys[provider] || '').trim()) {
+    if (provider !== 'apple-foundation' && !(apiKeys[provider] || '').trim()) {
       setTestResult({
         success: false,
         message: 'Please enter a valid API Key before testing.'
@@ -177,7 +177,7 @@ export const AISettingsPage: React.FC = () => {
   };
 
   const handleGenerateGamePlan = async () => {
-    if (!(apiKeys[provider] || '').trim()) {
+    if (provider !== 'apple-foundation' && !(apiKeys[provider] || '').trim()) {
       showToast('Please configure an API Key first.');
       return;
     }

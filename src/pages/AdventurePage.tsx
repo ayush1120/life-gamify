@@ -61,7 +61,7 @@ export const AdventurePage: React.FC = () => {
       provider === 'anthropic' ? (import.meta as any).env?.VITE_ANTHROPIC_API_KEY :
       provider === 'openrouter' ? (import.meta as any).env?.VITE_OPENROUTER_API_KEY : '';
     const activeKey = (ai?.apiKeys?.[provider] || ai?.apiKey || envKey)?.trim();
-    if (!activeKey) {
+    if (provider !== 'apple-foundation' && !activeKey) {
       showToast('Please configure an API Key in AI Settings first.');
       setActiveTab('ai-settings');
       return;

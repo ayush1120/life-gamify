@@ -5,7 +5,7 @@ import { Bot, ChevronRight, CheckCircle2, AlertCircle } from 'lucide-react';
 export const AIConfigCard: React.FC = () => {
   const { settings, setActiveTab } = useApp();
   const currentAI = settings.aiSettings;
-  const isConfigured = Boolean(currentAI?.apiKey && currentAI?.enabled);
+  const isConfigured = Boolean((currentAI?.provider === 'apple-foundation' || currentAI?.apiKey || currentAI?.apiKeys?.[currentAI?.provider]) && currentAI?.enabled !== false);
 
   return (
     <div 
