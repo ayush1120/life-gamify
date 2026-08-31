@@ -3,7 +3,7 @@ import { useApp } from '../context/AppContext';
 import { Habit, HabitFrequency } from '../types';
 import { HabitModal } from '../components/HabitModal';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Edit2, Trash2, Eye, EyeOff, ArrowUp, ArrowDown, Sparkles, Search, Star, Filter } from 'lucide-react';
+import { Plus, Edit2, Trash2, Eye, EyeOff, ArrowUp, ArrowDown, Sparkles, Search, Star, Filter, ExternalLink } from 'lucide-react';
 import { playSound } from '../services/sound';
 
 const PRESET_TAGS = ['All', '⭐️ Quick Habits', 'Work', 'Health', 'Career', 'Music', 'Fitness', 'Learning', 'Personal'];
@@ -149,7 +149,7 @@ export const HabitsPage: React.FC = () => {
       </div>
 
       {/* Habit List */}
-      <motion.div layout className="space-y-3">
+      <motion.div layout className="space-y-3 pb-28 sm:pb-16">
         {filteredHabits.length === 0 ? (
           <div className="glass-panel rounded-3xl p-12 text-center space-y-2" style={{ color: 'var(--text-muted)' }}>
             <div className="text-3xl">🔍</div>
@@ -179,18 +179,20 @@ export const HabitsPage: React.FC = () => {
                   <button
                     disabled={idx === 0}
                     onClick={() => handleMove(idx, 'up')}
-                    className="p-1 rounded cursor-pointer disabled:opacity-30"
+                    className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center p-1 rounded-lg cursor-pointer disabled:opacity-30 transition-transform active:scale-95"
                     style={{ background: 'var(--pill-badge-bg)', color: 'var(--text-accent)' }}
+                    title="Move habit up"
                   >
-                    <ArrowUp className="w-3.5 h-3.5" />
+                    <ArrowUp className="w-4 h-4" />
                   </button>
                   <button
                     disabled={idx === habits.length - 1}
                     onClick={() => handleMove(idx, 'down')}
-                    className="p-1 rounded cursor-pointer disabled:opacity-30"
+                    className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center p-1 rounded-lg cursor-pointer disabled:opacity-30 transition-transform active:scale-95"
                     style={{ background: 'var(--pill-badge-bg)', color: 'var(--text-accent)' }}
+                    title="Move habit down"
                   >
-                    <ArrowDown className="w-3.5 h-3.5" />
+                    <ArrowDown className="w-4 h-4" />
                   </button>
                 </div>
 
@@ -260,16 +262,16 @@ export const HabitsPage: React.FC = () => {
                   <button
                     onClick={() => setActiveTab(`habits/${habit.id}`)}
                     title="View Details"
-                    className="p-2 rounded-xl cursor-pointer"
+                    className="p-2 rounded-xl cursor-pointer hover:bg-amber-500/10 transition-colors"
                     style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-accent)' }}
                   >
-                    <Eye className="w-4 h-4" />
+                    <ExternalLink className="w-4 h-4" />
                   </button>
 
                   <button
                     onClick={() => toggleHabitActive(habit.id)}
                     title={habit.active ? 'Disable Habit' : 'Enable Habit'}
-                    className="p-2 rounded-xl cursor-pointer"
+                    className="p-2 rounded-xl cursor-pointer hover:bg-white/5 transition-colors"
                     style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-secondary)' }}
                   >
                     {habit.active ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4 opacity-50" />}

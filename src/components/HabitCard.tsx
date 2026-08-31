@@ -202,7 +202,7 @@ export const HabitCard: React.FC<HabitCardProps> = ({ habit }) => {
           <PlusCircle className={`w-3.5 h-3.5 ${isMaxReached ? 'text-emerald-400' : 'text-amber-500 group-hover:rotate-90'} transition-transform duration-300`} />
           <span>{isMaxReached ? `Completed ${getPeriodLabel(habit.frequency || 'daily')}` : 'Tap to Earn'}</span>
         </span>
-        <span className="text-[11px] font-mono pr-2">{progress.max === 0 ? 'Unlimited' : `${progress.max}x/${habit.frequency || 'daily'}`}</span>
+        <span className="text-[11px] font-mono pr-2 shrink-0">{progress.max === 0 ? 'Unlimited' : `${progress.max}x/${habit.frequency || 'daily'}`}</span>
       </button>
     </motion.div>
   );

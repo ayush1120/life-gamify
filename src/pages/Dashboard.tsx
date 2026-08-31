@@ -86,7 +86,7 @@ export const Dashboard: React.FC = () => {
   };
 
   return (
-    <div className="space-y-8 pb-12">
+    <div className="space-y-8 pb-28 sm:pb-16">
 
       {/* Hero Banner */}
       <HeroBanner onOpenHabitModal={() => setIsHabitModalOpen(true)} />

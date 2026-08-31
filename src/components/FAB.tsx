@@ -1,14 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, Zap, ShoppingBag, X } from 'lucide-react';
 import { playSound } from '../services/sound';
 import { useApp } from '../context/AppContext';
 
 export const FAB: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { setActiveTab } = useApp();
+  const { activeTab, setActiveTab } = useApp();
+
+  useEffect(() => {
+    setIsOpen(false);
+  }, [activeTab]);
+
+  useEffect(() => {
+    const handleClose = () => setIsOpen(false);
+    window.addEventListener('close-fab', handleClose);
+    return () => window.removeEventListener('close-fab', handleClose);
+  }, []);
 
   const toggleMenu = () => {
     playSound.click(true);
+    if (!isOpen) {
+      window.dispatchEvent(new CustomEvent('close-more'));
+    }
     setIsOpen(!isOpen);
   };
 

@@ -2,7 +2,7 @@ import React from 'react';
 import { StoreReward } from '../types';
 import { useApp } from '../context/AppContext';
 import { motion } from 'framer-motion';
-import { ShoppingBag, Lock } from 'lucide-react';
+import { ShoppingBag, Lock, Edit2 } from 'lucide-react';
 import { playSound } from '../services/sound';
 import { CoinToken } from './CoinToken';
 
@@ -99,11 +99,12 @@ export const StoreRewardCard: React.FC<StoreRewardCardProps> = ({ reward, onEdit
         {onEdit && (
           <button
             onClick={() => onEdit(reward)}
-            className="p-2.5 rounded-xl text-xs font-bold cursor-pointer"
+            className="p-2.5 rounded-xl text-xs font-bold cursor-pointer shrink-0 transition-colors hover:bg-amber-500/10 active:scale-95"
             style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', color: 'var(--text-accent)' }}
             title="Edit Store Item"
+            aria-label="Edit Store Item"
           >
-            Edit
+            <Edit2 className="w-4 h-4" />
           </button>
         )}
       </div>

@@ -91,7 +91,7 @@ export const HistoryPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="space-y-6 pb-28 sm:pb-16">
       {/* Calendar Header */}
       <div className="flex items-center justify-between">
         <button 
@@ -121,9 +121,9 @@ export const HistoryPage: React.FC = () => {
               {currentWeekOffset === 0 ? 'This week' : currentWeekOffset === -1 ? 'Last week' : `${currentWeekOffset > 0 ? 'Next' : 'Past'} ${Math.abs(currentWeekOffset)} weeks`}
             </span>
             <div className="relative flex justify-center">
-              <button className="flex items-center gap-1 font-outfit text-xl font-bold mt-1" style={{ color: 'var(--text-primary)' }}>
+              <button className="flex items-center gap-1 font-outfit text-base sm:text-xl font-bold mt-1 max-w-[200px] sm:max-w-none truncate" style={{ color: 'var(--text-primary)' }}>
                 {formatContextDate(selectedDate)}
-                <ChevronDown className="w-4 h-4 ml-1 opacity-60" />
+                <ChevronDown className="w-4 h-4 ml-1 opacity-60 shrink-0" />
               </button>
               <input 
                 type="date"

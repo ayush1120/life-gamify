@@ -64,7 +64,7 @@ export const LogActivityPage: React.FC = () => {
   }, [activeHabits, rewardLogs]);
 
   return (
-    <div className="space-y-8 pb-12">
+    <div className="space-y-8 pb-28 sm:pb-16">
       
       {/* Top Banner & Search / Filter Controls */}
       <div className="space-y-4">

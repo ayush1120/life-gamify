@@ -131,7 +131,7 @@ export const AdventurePage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-8 pb-16 animate-fade-in">
+    <div className="space-y-8 pb-28 sm:pb-16 animate-fade-in">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -267,9 +267,10 @@ export const AdventurePage: React.FC = () => {
             {questFilter === 'active' && (
               <button
                 onClick={handleAskGameMaster}
-                className="px-4 py-2 rounded-xl bg-amber-500 text-amber-950 font-bold text-xs hover:bg-amber-400 transition-colors cursor-pointer"
+                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-amber-950 font-bold text-xs shadow-lg hover:opacity-90 active:scale-95 transition-all cursor-pointer inline-flex items-center gap-1.5"
               >
-                Generate Quests
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Generate Quests</span>
               </button>
             )}
           </div>

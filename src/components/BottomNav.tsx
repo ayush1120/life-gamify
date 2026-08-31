@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { LayoutDashboard, ShoppingBag, CheckSquare, Zap, Menu, History, BarChart2, Settings, Compass } from 'lucide-react';
 import { playSound } from '../services/sound';
@@ -8,11 +8,22 @@ export const BottomNav: React.FC = () => {
   const { activeTab, setActiveTab, settings } = useApp();
   const [isMoreOpen, setIsMoreOpen] = useState(false);
 
+  useEffect(() => {
+    const handleClose = () => setIsMoreOpen(false);
+    window.addEventListener('close-more', handleClose);
+    return () => window.removeEventListener('close-more', handleClose);
+  }, []);
+
   const handleTabClick = (tabId: string) => {
     playSound.click(settings.soundEnabled);
     if (tabId === 'more') {
-      setIsMoreOpen(!isMoreOpen);
+      const nextState = !isMoreOpen;
+      if (nextState) {
+        window.dispatchEvent(new CustomEvent('close-fab'));
+      }
+      setIsMoreOpen(nextState);
     } else {
+      window.dispatchEvent(new CustomEvent('close-fab'));
       setActiveTab(tabId);
       setIsMoreOpen(false);
     }

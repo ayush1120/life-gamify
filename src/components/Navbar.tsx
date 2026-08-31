@@ -115,7 +115,7 @@ export const Navbar: React.FC = () => {
               {/* Streak Freeze Pill */}
               <button
                 onClick={handleFreezeClick}
-                className="flex items-center space-x-1 px-1.5 sm:px-2.5 py-1 sm:py-1.5 rounded-full text-xs font-bold font-outfit cursor-pointer hover:scale-105 transition-all bg-sky-500/15 dark:bg-sky-950/60 border border-sky-400/40 text-sky-600 dark:text-sky-300 shadow-sm shrink-0"
+                className="flex items-center space-x-1 px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-full text-xs font-bold font-outfit cursor-pointer hover:scale-105 transition-all bg-sky-500/20 dark:bg-sky-950/60 border border-sky-500/40 dark:border-sky-400/40 text-sky-700 dark:text-sky-300 shadow-sm shrink-0"
                 title={`Streak Freeze: ${freezeState.availableFreezes}/${freezeState.maxFreezes} available (Click to learn more)`}
               >
                 <span className="text-xs">❄️</span>
