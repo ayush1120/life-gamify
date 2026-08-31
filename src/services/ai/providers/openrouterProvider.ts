@@ -51,7 +51,8 @@ export class OpenRouterProvider {
       }
 
       const data = await res.json();
-      const content = data.choices?.[0]?.message?.content;
+      const choice = data.choices?.[0];
+      const content = choice?.message?.content || choice?.message?.reasoning;
       if (content) {
         return { success: true, model: this.model, message: 'Connection successful & structured output verified via OpenRouter', latencyMs };
       }
@@ -69,9 +70,10 @@ export class OpenRouterProvider {
       model: this.model,
       messages: [
         { role: 'system', content: GAME_MASTER_SYSTEM_PROMPT },
-        { role: 'user', content: userPrompt }
+        { role: 'user', content: `${GAME_MASTER_SYSTEM_PROMPT}\n\n${userPrompt}` }
       ],
-      temperature: 0.3
+      max_tokens: 1500,
+      temperature: 0.2
     };
 
     const referer = typeof window !== 'undefined' ? window.location.origin : 'https://life-gamify.app';
@@ -92,7 +94,8 @@ export class OpenRouterProvider {
     }
 
     const data = await res.json();
-    const rawText = data.choices?.[0]?.message?.content;
+    const choice = data.choices?.[0];
+    const rawText = choice?.message?.content || choice?.message?.reasoning;
     if (!rawText) {
       throw new Error('OpenRouter returned an empty response');
     }

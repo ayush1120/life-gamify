@@ -77,5 +77,7 @@ Return a JSON object conforming to this schema:
       "priority": "medium" | "high" | "low"
     }
   ]
-}`;
+}
+
+CRITICAL: Respond ONLY with the valid JSON object adhering directly to the schema above, starting with { and ending with }. Do NOT write conversational explanations before or after the JSON.`;
 };
