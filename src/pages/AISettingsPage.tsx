@@ -8,6 +8,7 @@ import {
   convertProposalToBoss, 
   convertProposalToAchievement 
 } from '../services/ai/aiValidator';
+import { nativeBridge } from '../services/native/bridge';
 import { Bot, Key, Cpu, Play, CheckCircle2, AlertCircle, Eye, EyeOff, Loader2, Sparkles, ArrowLeft } from 'lucide-react';
 
 const MODEL_PRESETS: Record<AIProvider, string[]> = {
@@ -46,6 +47,12 @@ export const AISettingsPage: React.FC = () => {
     anthropic: (import.meta as any).env?.VITE_ANTHROPIC_API_KEY || '',
     openrouter: (import.meta as any).env?.VITE_OPENROUTER_API_KEY || '',
   };
+
+  const isIOS = typeof window !== 'undefined' && (
+    nativeBridge.getPlatform() === 'ios' || 
+    /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+    Boolean(window.webkit?.messageHandlers?.lifeGamifyBridge)
+  );
 
   const [provider, setProvider] = useState<AIProvider>(currentAI.provider || 'gemini');
   const [apiKeys, setApiKeys] = useState<Partial<Record<AIProvider, string>>>(() => {
@@ -326,7 +333,9 @@ export const AISettingsPage: React.FC = () => {
               color: 'var(--text-primary)'
             }}
           >
-            <option value="apple-foundation">🍏 Apple Foundation Model (On-Device)</option>
+            {isIOS && (
+              <option value="apple-foundation">🍏 Apple Foundation Model (On-Device)</option>
+            )}
             <option value="gemini">Google Gemini (Recommended)</option>
             <option value="openai">OpenAI (GPT-4o)</option>
             <option value="anthropic">Anthropic (Claude 3.5)</option>
