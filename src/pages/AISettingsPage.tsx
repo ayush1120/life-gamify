@@ -14,7 +14,8 @@ const MODEL_PRESETS: Record<AIProvider, string[]> = {
   gemini: ['gemini-3.6-flash', 'gemini-2.5-pro', 'gemini-3.5-flash', 'gemini-flash-latest'],
   openai: ['gpt-4o-mini', 'gpt-4o', 'gpt-3.5-turbo'],
   anthropic: ['claude-3-5-haiku-20241022', 'claude-3-5-sonnet-20241022'],
-  openrouter: [] // Fetched dynamically
+  openrouter: [], // Fetched dynamically
+  'apple-foundation': ['Apple Intelligence (On-Device)', 'CoreML Neural Engine (Fast)']
 };
 
 export const AISettingsPage: React.FC = () => {
@@ -325,6 +326,7 @@ export const AISettingsPage: React.FC = () => {
               color: 'var(--text-primary)'
             }}
           >
+            <option value="apple-foundation">🍏 Apple Foundation Model (On-Device)</option>
             <option value="gemini">Google Gemini (Recommended)</option>
             <option value="openai">OpenAI (GPT-4o)</option>
             <option value="anthropic">Anthropic (Claude 3.5)</option>
@@ -366,6 +368,19 @@ export const AISettingsPage: React.FC = () => {
             )}
           </select>
         </div>
+
+        {/* Apple Foundation Model On-Device Card */}
+        {provider === 'apple-foundation' && (
+          <div className="md:col-span-2 p-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 flex items-start gap-3">
+            <Sparkles className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+            <div className="text-xs space-y-1">
+              <div className="font-bold text-emerald-300">Apple Intelligence / On-Device Foundation Model</div>
+              <p className="text-emerald-200/80">
+                Runs locally via native iOS Neural Engine bridge. Zero cloud API key required, 100% private, instantaneous response times, and works completely offline.
+              </p>
+            </div>
+          </div>
+        )}
 
         
         {/* API Keys Configuration */}

@@ -4,6 +4,7 @@ import { GeminiProvider } from './providers/geminiProvider';
 import { OpenAIProvider } from './providers/openaiProvider';
 import { AnthropicProvider } from './providers/anthropicProvider';
 import { OpenRouterProvider } from './providers/openrouterProvider';
+import { AppleFoundationProvider } from './providers/appleFoundationProvider';
 
 export interface LLMProvider {
   testConnection(): Promise<{ success: boolean; model: string; message: string; latencyMs: number }>;
@@ -17,6 +18,11 @@ export const getLLMProvider = (settings?: AISettings): LLMProvider | null => {
   }
 
   const provider = settings.provider || 'gemini';
+
+  if (provider === 'apple-foundation') {
+    return new AppleFoundationProvider(settings.model || 'Apple Intelligence (On-Device)');
+  }
+
   const envKey = 
     provider === 'gemini' ? (import.meta as any).env?.VITE_GEMINI_API_KEY :
     provider === 'openai' ? (import.meta as any).env?.VITE_OPENAI_API_KEY :
@@ -57,13 +63,15 @@ export const shouldRunGameMasterAnalysis = (
   if (force) return true;
   if (!aiSettings || !aiSettings.enabled) return false;
   const provider = aiSettings.provider || 'gemini';
-  const envKey = 
-    provider === 'gemini' ? (import.meta as any).env?.VITE_GEMINI_API_KEY :
-    provider === 'openai' ? (import.meta as any).env?.VITE_OPENAI_API_KEY :
-    provider === 'anthropic' ? (import.meta as any).env?.VITE_ANTHROPIC_API_KEY :
-    provider === 'openrouter' ? (import.meta as any).env?.VITE_OPENROUTER_API_KEY : '';
-  const activeKey = aiSettings.apiKeys?.[provider] || aiSettings.apiKey || envKey;
-  if (!activeKey) return false;
+  if (provider !== 'apple-foundation') {
+    const envKey = 
+      provider === 'gemini' ? (import.meta as any).env?.VITE_GEMINI_API_KEY :
+      provider === 'openai' ? (import.meta as any).env?.VITE_OPENAI_API_KEY :
+      provider === 'anthropic' ? (import.meta as any).env?.VITE_ANTHROPIC_API_KEY :
+      provider === 'openrouter' ? (import.meta as any).env?.VITE_OPENROUTER_API_KEY : '';
+    const activeKey = aiSettings.apiKeys?.[provider] || aiSettings.apiKey || envKey;
+    if (!activeKey) return false;
+  }
 
   const lastTime = aiSettings.lastAnalysisAt ? new Date(aiSettings.lastAnalysisAt).getTime() : 0;
   const lastCount = aiSettings.lastAnalysisActivityCount || 0;
