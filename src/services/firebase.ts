@@ -1,5 +1,5 @@
 import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, User } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged, User } from 'firebase/auth';
 import { 
   getFirestore, 
   collection, 
@@ -72,6 +72,13 @@ export const onAuthChange = (
     return () => {};
   }
   const auth = getAuth(app);
+  getRedirectResult(auth).catch((err) => {
+    // Non-critical if no redirect occurred
+    if (err?.code !== 'auth/null-user') {
+      console.warn('Redirect auth result warning:', err);
+    }
+  });
+
   return onAuthStateChanged(auth, (user: User | null) => {
     if (user) {
       callback({
@@ -94,7 +101,16 @@ export const signInWithGoogle = async (settings?: Settings) => {
   }
   const auth = getAuth(app);
   const provider = new GoogleAuthProvider();
-  return await signInWithPopup(auth, provider);
+  provider.setCustomParameters({ prompt: 'select_account' });
+  try {
+    return await signInWithPopup(auth, provider);
+  } catch (err: any) {
+    if (err?.code === 'auth/popup-blocked' || err?.code === 'auth/cancelled-popup-request') {
+      console.log('Popup blocked in WebView, falling back to signInWithRedirect');
+      return await signInWithRedirect(auth, provider);
+    }
+    throw err;
+  }
 };
 
 export const syncFirestoreUserProfile = async (user: UserProfile) => {
