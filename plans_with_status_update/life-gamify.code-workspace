@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": ".."
+		},
+		{
+			"path": "../../life-gamify-ios"
+		},
+		{
+			"path": "../../life-gamify-android"
+		}
+	],
+	"settings": {}
+}

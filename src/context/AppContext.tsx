@@ -473,10 +473,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       availableFreezes: stats.streakFreezeState?.availableFreezes ?? 2,
       coinBalance: stats.coinBalance,
       level: stats.level,
-      xpProgress: stats.nextLevelProgress,
+      xpProgress: stats.levelProgress,
       activeBoss: activeBoss ? {
         name: activeBoss.name,
-        icon: activeBoss.icon,
+        icon: activeBoss.theme || '👾',
         hp: activeBoss.currentHp,
         maxHp: activeBoss.maxHp,
       } : undefined,
