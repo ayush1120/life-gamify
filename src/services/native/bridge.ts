@@ -210,7 +210,7 @@ export const nativeAssistantService = {
 
 export const nativeOnDeviceAIService = {
   generate: (payload: OnDeviceAIPromptPayload) => 
-    nativeBridge.sendRequest<OnDeviceAIResponseData>('onDeviceAI', 'generate', payload),
+    nativeBridge.sendRequest<OnDeviceAIResponseData>('onDeviceAI', 'generate', payload, 60000),
 };
 
 export const nativeDeviceService = {

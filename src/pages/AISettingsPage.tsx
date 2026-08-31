@@ -48,11 +48,6 @@ export const AISettingsPage: React.FC = () => {
     openrouter: (import.meta as any).env?.VITE_OPENROUTER_API_KEY || '',
   };
 
-  const isIOS = typeof window !== 'undefined' && (
-    nativeBridge.getPlatform() === 'ios' || 
-    /iPad|iPhone|iPod/.test(navigator.userAgent) || 
-    Boolean(window.webkit?.messageHandlers?.lifeGamifyBridge)
-  );
 
   const [provider, setProvider] = useState<AIProvider>(currentAI.provider || 'gemini');
   const [apiKeys, setApiKeys] = useState<Partial<Record<AIProvider, string>>>(() => {
@@ -70,8 +65,20 @@ export const AISettingsPage: React.FC = () => {
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [testResult, setTestResult] = useState<{ success: boolean; message: string; latencyMs?: number; model?: string } | null>(null);
 
+  const [hasOnDeviceAI, setHasOnDeviceAI] = useState<boolean>(false);
   const [openRouterModels, setOpenRouterModels] = useState<string[]>([]);
   const [isLoadingOpenRouter, setIsLoadingOpenRouter] = useState(false);
+
+  // Check if device supports Apple Foundation Model (iOS 26+)
+  useEffect(() => {
+    if (nativeBridge.getPlatform() === 'ios') {
+      import('../services/native/bridge').then(({ nativeDeviceService }) => {
+        nativeDeviceService.getDeviceInfo().then(info => {
+          setHasOnDeviceAI(info.hasOnDeviceAI === true);
+        }).catch(() => setHasOnDeviceAI(false));
+      });
+    }
+  }, []);
 
   useEffect(() => {
     if (provider === 'openrouter') {
@@ -333,7 +340,7 @@ export const AISettingsPage: React.FC = () => {
               color: 'var(--text-primary)'
             }}
           >
-            {isIOS && (
+            {hasOnDeviceAI && (
               <option value="apple-foundation">🍏 Apple Foundation Model (On-Device)</option>
             )}
             <option value="gemini">Google Gemini (Recommended)</option>
