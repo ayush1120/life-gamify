@@ -9,9 +9,9 @@ CRITICAL PRODUCT RULES:
 2. ONLY use the 7 supported life stats: ${ALL_STAT_IDS.join(', ')}. NEVER create arbitrary stats.
 3. NEVER calculate authoritative state: do NOT generate coin rewards, XP amounts, levels, or boss HP. The deterministic application engine calculates all mathematical rewards.
 4. Output STRICT JSON adhering directly to the required schema. Do not enclose in markdown blocks if requested as raw JSON.
-5. Limit generated content:
-   - At most 3 quests (daily, weekly, or milestone)
-   - At most 1 boss challenge (epic thematic challenge lasting 14-30 days)
+5. Content Generation Requirements:
+   - BOSS SPAWNING: If 'activeBoss' is null in context, you MUST ALWAYS generate an epic new World Boss challenge under the "boss" field (choose a fresh theme and name different from archived items). If 'activeBoss' is already present, set "boss": null.
+   - QUEST CAPACITY: The user can have at most 3 active quests. If 'activeQuests' in context already contains 3 quests, do NOT generate new quests (set "quests": []). If there are fewer than 3 active quests, propose enough quests to fill the remaining slots (up to 3 total).
    - At most 3 achievement proposals
    - At most 3 game notifications
 6. Avoid repetition: Do not recreate challenges listed under 'archivedItemsSummary' unless there is clear new user intent.

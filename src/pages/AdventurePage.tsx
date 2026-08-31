@@ -53,11 +53,27 @@ export const AdventurePage: React.FC = () => {
   const activeBoss = bosses.find(b => b.status === 'active') || null;
 
   const handleAskGameMaster = async () => {
-    if (!settings.aiSettings?.apiKey) {
-      showToast('Please configure an API Key in Settings first.');
-      setActiveTab('settings');
+    const ai = settings.aiSettings;
+    const provider = ai?.provider || 'gemini';
+    const envKey = 
+      provider === 'gemini' ? (import.meta as any).env?.VITE_GEMINI_API_KEY :
+      provider === 'openai' ? (import.meta as any).env?.VITE_OPENAI_API_KEY :
+      provider === 'anthropic' ? (import.meta as any).env?.VITE_ANTHROPIC_API_KEY :
+      provider === 'openrouter' ? (import.meta as any).env?.VITE_OPENROUTER_API_KEY : '';
+    const activeKey = (ai?.apiKeys?.[provider] || ai?.apiKey || envKey)?.trim();
+    if (!activeKey) {
+      showToast('Please configure an API Key in AI Settings first.');
+      setActiveTab('ai-settings');
       return;
     }
+
+    const aiConfig = {
+      provider,
+      apiKeys: ai?.apiKeys || {},
+      apiKey: activeKey,
+      model: ai?.model || 'gemini-3.6-flash',
+      enabled: true
+    };
 
     setIsConsulting(true);
     try {
@@ -72,11 +88,12 @@ export const AdventurePage: React.FC = () => {
         archivedBosses
       );
 
-      const plan = await requestGameMasterPlan(settings.aiSettings, context);
+      const plan = await requestGameMasterPlan(aiConfig, context);
       let count = 0;
 
       if (plan.quests && plan.quests.length > 0) {
-        for (const qProp of plan.quests) {
+        const availableSlots = Math.max(0, 3 - activeQuests.length);
+        for (const qProp of plan.quests.slice(0, availableSlots)) {
           const quest = convertProposalToQuest(qProp, habits);
           addQuest(quest);
           count++;
@@ -98,7 +115,7 @@ export const AdventurePage: React.FC = () => {
 
       updateSettings({
         aiSettings: {
-          ...settings.aiSettings,
+          ...aiConfig,
           lastAnalysisAt: new Date().toISOString(),
           lastAnalysisActivityCount: rewardLogs.filter(l => !l.isRetracted).length
         }

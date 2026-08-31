@@ -200,9 +200,11 @@ export const AISettingsPage: React.FC = () => {
 
       let createdCount = 0;
 
-      // 1. Quests
-      if (plan.quests && plan.quests.length > 0) {
-        for (const qProp of plan.quests) {
+      // 1. Quests (up to max 3 active slots)
+      const currentActiveQuests = quests.filter(q => q.status === 'active');
+      const availableSlots = Math.max(0, 3 - currentActiveQuests.length);
+      if (plan.quests && plan.quests.length > 0 && availableSlots > 0) {
+        for (const qProp of plan.quests.slice(0, availableSlots)) {
           const quest = convertProposalToQuest(qProp, habits);
           addQuest(quest);
           createdCount++;
