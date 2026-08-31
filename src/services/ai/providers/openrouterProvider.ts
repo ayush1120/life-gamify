@@ -21,16 +21,16 @@ export class OpenRouterProvider {
         messages: [
           { role: 'user', content: 'Respond with exactly {"status":"ok","engine":"openrouter"} in raw JSON format.' }
         ],
-        response_format: { type: 'json_object' },
         max_tokens: 50
       };
 
+      const referer = typeof window !== 'undefined' ? window.location.origin : 'https://life-gamify.app';
       const res = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${this.apiKey}`,
-          'HTTP-Referer': window.location.origin,
+          'HTTP-Referer': referer,
           'X-Title': 'Life Gamify'
         },
         body: JSON.stringify(payload)
@@ -71,16 +71,16 @@ export class OpenRouterProvider {
         { role: 'system', content: GAME_MASTER_SYSTEM_PROMPT },
         { role: 'user', content: userPrompt }
       ],
-      response_format: { type: 'json_object' },
       temperature: 0.3
     };
 
+    const referer = typeof window !== 'undefined' ? window.location.origin : 'https://life-gamify.app';
     const res = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${this.apiKey}`,
-        'HTTP-Referer': window.location.origin,
+        'HTTP-Referer': referer,
         'X-Title': 'Life Gamify'
       },
       body: JSON.stringify(payload)
@@ -116,12 +116,13 @@ export class OpenRouterProvider {
       temperature: 0.7
     };
 
+    const referer = typeof window !== 'undefined' ? window.location.origin : 'https://life-gamify.app';
     const res = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${this.apiKey}`,
-        'HTTP-Referer': window.location.origin,
+        'HTTP-Referer': referer,
         'X-Title': 'Life Gamify'
       },
       body: JSON.stringify(payload)
