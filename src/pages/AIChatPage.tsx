@@ -1,17 +1,18 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import { requestChat } from '../services/ai/llmService';
-import { Bot, User, ArrowLeft, Send, Loader2, Sparkles, AlertCircle } from 'lucide-react';
+import { aiGateway, AIStreamEvent } from '../services/ai/gateway/aiGateway';
+import { Bot, User, ArrowLeft, Send, Loader2, Sparkles, AlertCircle, Wrench } from 'lucide-react';
 
 export const AIChatPage: React.FC = () => {
-  const { settings, setActiveTab, showToast } = useApp();
+  const { settings, setActiveTab, showToast, user } = useApp();
   const aiSettings = settings.aiSettings;
 
   const [messages, setMessages] = useState<{role: 'system'|'user'|'assistant', content: string}[]>([
-    { role: 'assistant', content: `Hello! I'm ready to chat using **${aiSettings?.provider}** (${aiSettings?.model}). How can I help you test the connection?` }
+    { role: 'assistant', content: `Hello! I'm your AI Game Master powered by **${aiSettings?.provider}** (${aiSettings?.model}). Ask me about your habits, quests, or daily progress!` }
   ]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [activeToolEvent, setActiveToolEvent] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const isAppleFoundation = aiSettings?.provider === 'apple-foundation';
@@ -20,7 +21,7 @@ export const AIChatPage: React.FC = () => {
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isTyping]);
+  }, [messages, isTyping, activeToolEvent]);
 
   const handleSend = async () => {
     if (!input.trim() || !isConfigured || !aiSettings) return;
@@ -31,16 +32,35 @@ export const AIChatPage: React.FC = () => {
     const newMessages = [...messages, { role: 'user' as const, content: userText }];
     setMessages(newMessages);
     setIsTyping(true);
+    setActiveToolEvent(null);
 
     try {
-      const responseText = await requestChat(aiSettings, newMessages);
-      setMessages([...newMessages, { role: 'assistant', content: responseText }]);
+      let currentAssistantMessage = '';
+      await aiGateway.streamChat(
+        {
+          message: userText,
+          history: newMessages,
+          userId: user?.uid
+        },
+        (event: AIStreamEvent) => {
+          if (event.type === 'tool_call') {
+            setActiveToolEvent(`Executing tool: ${event.payload?.tool}...`);
+          } else if (event.type === 'tool_result') {
+            setActiveToolEvent(`Tool ${event.payload?.tool} completed.`);
+            setTimeout(() => setActiveToolEvent(null), 1200);
+          } else if (event.type === 'message_delta') {
+            currentAssistantMessage = event.payload.text;
+            setMessages([...newMessages, { role: 'assistant', content: currentAssistantMessage }]);
+          }
+        }
+      );
     } catch (e: any) {
       console.error(e);
       showToast(`Chat error: ${e.message}`);
       setMessages([...newMessages, { role: 'assistant', content: `**Error:** ${e.message}` }]);
     } finally {
       setIsTyping(false);
+      setActiveToolEvent(null);
     }
   };
 
@@ -129,6 +149,15 @@ export const AIChatPage: React.FC = () => {
                 </div>
               </div>
             ))}
+            
+            {activeToolEvent && (
+              <div className="flex justify-start my-1">
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-300 text-xs font-mono animate-pulse">
+                  <Wrench className="w-3.5 h-3.5 text-purple-400" />
+                  <span>{activeToolEvent}</span>
+                </div>
+              </div>
+            )}
             
             {isTyping && (
               <div className="flex justify-start">

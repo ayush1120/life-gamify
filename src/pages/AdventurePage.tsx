@@ -15,7 +15,7 @@ import {
   Loader2 
 } from 'lucide-react';
 
-import { requestGameMasterPlan } from '../services/ai/llmService';
+import { aiGateway } from '../services/ai/gateway/aiGateway';
 import { buildGameMasterContext } from '../services/ai/aiContextBuilder';
 import { 
   convertProposalToQuest, 
@@ -88,7 +88,7 @@ export const AdventurePage: React.FC = () => {
         archivedBosses
       );
 
-      const plan = await requestGameMasterPlan(aiConfig, context);
+      const plan = await aiGateway.generateQuests({ context });
       let count = 0;
 
       if (plan.quests && plan.quests.length > 0) {
