@@ -134,8 +134,8 @@ describe('Life Gamify AI & Native Architecture Goal', () => {
       expect(result.totalXp).toBeDefined();
     });
 
-    it('executes createQuestTool with validated schema', async () => {
-      const quest = await LIFE_GAMIFY_TOOLS.createQuestTool.execute({
+    it('executes createQuestTool producing a mutation proposal awaiting user approval', async () => {
+      const result = await LIFE_GAMIFY_TOOLS.createQuestTool.execute({
         title: 'Neural Flow',
         description: 'Focus for 30 minutes',
         type: 'daily',
@@ -144,8 +144,9 @@ describe('Life Gamify AI & Native Architecture Goal', () => {
         coinReward: 6,
         requirements: [{ habitId: 'h-test', targetCount: 1 }]
       });
-      expect(quest.id).toBeDefined();
-      expect(quest.xpReward).toBe(60);
+      expect(result.proposed).toBe(true);
+      expect(result.proposalId).toBeDefined();
+      expect(result.proposal.status).toBe('pending');
     });
 
     it('executes dailyProgressAnalysisWorkflow', async () => {

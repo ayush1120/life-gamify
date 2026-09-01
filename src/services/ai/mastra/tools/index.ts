@@ -7,12 +7,14 @@ import { AchievementService } from '../../../domain/achievementService';
 import { ProgressService } from '../../../domain/progressService';
 import { StatIdSchema, QuestDifficultySchema, QuestTypeSchema } from '../../../../domain/contracts';
 
+import { mutationApprovalService } from '../../gateway/mutationApprovalService';
+
 export interface MastraToolDefinition<TInput = any, TOutput = any> {
   id: string;
   name: string;
   description: string;
   schema: z.ZodType<TInput>;
-  execute: (input: TInput, context?: { userId?: string }) => Promise<TOutput>;
+  execute: (input: TInput, context?: { userId?: string; requireApproval?: boolean }) => Promise<TOutput>;
 }
 
 // ==========================================
@@ -93,6 +95,21 @@ export const createQuestTool: MastraToolDefinition = {
     ).min(1)
   }),
   execute: async (input, context) => {
+    if (context?.requireApproval !== false) {
+      const proposal = mutationApprovalService.createProposal(
+        'create_quest',
+        input.title,
+        input.description,
+        `Proposes new ${input.difficulty} quest with ${input.xpReward} XP & ${input.coinReward} Coins reward`,
+        input
+      );
+      return {
+        proposed: true,
+        proposalId: proposal.id,
+        message: `Proposed quest "${input.title}". Awaiting user approval.`,
+        proposal
+      };
+    }
     return await QuestService.createQuest(input, context?.userId);
   }
 };
@@ -106,6 +123,21 @@ export const updateQuestStatusTool: MastraToolDefinition = {
     status: z.enum(['active', 'completed', 'archived', 'dismissed'])
   }),
   execute: async ({ questId, status }, context) => {
+    if (context?.requireApproval !== false) {
+      const proposal = mutationApprovalService.createProposal(
+        'update_quest_status',
+        `Update Quest Status to ${status}`,
+        `Update status of quest ${questId} to ${status}`,
+        `Change status of quest to ${status}`,
+        { questId, status }
+      );
+      return {
+        proposed: true,
+        proposalId: proposal.id,
+        message: `Proposed updating quest status to ${status}. Awaiting user approval.`,
+        proposal
+      };
+    }
     return await QuestService.updateQuestStatus(questId, status, context?.userId);
   }
 };
@@ -143,6 +175,21 @@ export const createBossTool: MastraToolDefinition = {
     coinReward: z.number().int().min(5).max(200)
   }),
   execute: async (input, context) => {
+    if (context?.requireApproval !== false) {
+      const proposal = mutationApprovalService.createProposal(
+        'create_boss',
+        input.name,
+        input.description,
+        `Proposes spawning boss ${input.name} (${input.maxHp} HP, ${input.xpReward} XP, ${input.coinReward} Coins)`,
+        input
+      );
+      return {
+        proposed: true,
+        proposalId: proposal.id,
+        message: `Proposed spawning boss "${input.name}". Awaiting user approval.`,
+        proposal
+      };
+    }
     return await BossService.createBoss(input, context?.userId);
   }
 };
@@ -198,6 +245,21 @@ export const createAchievementTool: MastraToolDefinition = {
     )
   }),
   execute: async (input, context) => {
+    if (context?.requireApproval !== false) {
+      const proposal = mutationApprovalService.createProposal(
+        'create_achievement',
+        input.name,
+        input.description,
+        `Proposes new achievement "${input.name}" with ${input.xpReward} XP reward`,
+        input
+      );
+      return {
+        proposed: true,
+        proposalId: proposal.id,
+        message: `Proposed achievement "${input.name}". Awaiting user approval.`,
+        proposal
+      };
+    }
     return await AchievementService.createAchievement(input, context?.userId);
   }
 };

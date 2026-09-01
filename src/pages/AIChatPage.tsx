@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { aiGateway, AIStreamEvent } from '../services/ai/gateway/aiGateway';
+import { AIMutationProposal, mutationApprovalService } from '../services/ai/gateway/mutationApprovalService';
+import { AIMutationApprovalCard } from '../components/AIMutationApprovalCard';
 import { Bot, User, ArrowLeft, Send, Loader2, Sparkles, AlertCircle, Wrench } from 'lucide-react';
 
 export const AIChatPage: React.FC = () => {
@@ -8,11 +10,12 @@ export const AIChatPage: React.FC = () => {
   const aiSettings = settings.aiSettings;
 
   const [messages, setMessages] = useState<{role: 'system'|'user'|'assistant', content: string}[]>([
-    { role: 'assistant', content: `Hello! I'm your AI Game Master powered by **${aiSettings?.provider}** (${aiSettings?.model}). Ask me about your habits, quests, or daily progress!` }
+    { role: 'assistant', content: `Hello! I'm your AI Game Master powered by **${aiSettings?.provider}** (${aiSettings?.model}). Ask me to evaluate your progress or design new challenges! (All changes will require your explicit approval).` }
   ]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [activeToolEvent, setActiveToolEvent] = useState<string | null>(null);
+  const [proposals, setProposals] = useState<AIMutationProposal[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const isAppleFoundation = aiSettings?.provider === 'apple-foundation';
@@ -20,8 +23,13 @@ export const AIChatPage: React.FC = () => {
   const isConfigured = Boolean((isAppleFoundation || activeKey) && aiSettings?.enabled !== false);
 
   useEffect(() => {
+    const unsub = mutationApprovalService.subscribe(setProposals);
+    return () => unsub();
+  }, []);
+
+  useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isTyping, activeToolEvent]);
+  }, [messages, isTyping, activeToolEvent, proposals]);
 
   const handleSend = async () => {
     if (!input.trim() || !isConfigured || !aiSettings) return;
@@ -150,6 +158,11 @@ export const AIChatPage: React.FC = () => {
               </div>
             ))}
             
+            {/* Render any pending/recent AI mutation approval proposals */}
+            {proposals.map(prop => (
+              <AIMutationApprovalCard key={prop.id} proposal={prop} />
+            ))}
+
             {activeToolEvent && (
               <div className="flex justify-start my-1">
                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-300 text-xs font-mono animate-pulse">
