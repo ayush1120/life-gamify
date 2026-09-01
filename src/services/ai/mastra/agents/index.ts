@@ -28,16 +28,26 @@ export class MastraAgent {
     try {
       if (this.tools.getUserProgressTool) {
         const progress = await this.tools.getUserProgressTool.execute({}, context);
-        contextualData += `\n[Player Stats]: Level ${progress.level}, Total XP: ${progress.totalXp}, Coins: ${progress.coinBalance}, Streak: ${progress.currentStreak} days`;
+        contextualData += `\n[Player Level & Stats]: Level ${progress.level}, Total XP: ${progress.totalXp}, Coins: ${progress.coinBalance}, Streak: ${progress.currentStreak} days`;
+        if (progress.statsBreakdown) {
+          const breakdown = Object.entries(progress.statsBreakdown)
+            .map(([id, s]: any) => `${s.name || id}: Lv.${s.level}`)
+            .join(', ');
+          contextualData += `\n[Stat Attributes]: ${breakdown}`;
+        }
       }
       if (this.tools.getHabitsTool) {
         const habits = await this.tools.getHabitsTool.execute({ activeOnly: true }, context);
-        contextualData += `\n[Active Habits]: ${habits.map((h: any) => `${h.icon} ${h.name} (${h.rewardValue} coins)`).join(', ')}`;
+        contextualData += `\n[Player Habits]: ${habits.length > 0 ? habits.map((h: any) => `${h.icon || '⚔️'} ${h.name} (${h.rewardValue} coins, ${h.frequency})`).join(', ') : 'No active habits configured'}`;
       }
       if (this.tools.getQuestsTool) {
         const quests = await this.tools.getQuestsTool.execute({ status: 'active' }, context);
-        if (quests.length > 0) {
-          contextualData += `\n[Active Quests]: ${quests.map((q: any) => `${q.title} (${q.xpReward} XP, ${q.coinReward} Coins)`).join(', ')}`;
+        contextualData += `\n[Active Quests]: ${quests.length > 0 ? quests.map((q: any) => `"${q.title}" (${q.difficulty} difficulty: ${q.description}, rewards: +${q.xpReward} XP & +${q.coinReward} Coins)`).join('; ') : 'No active quests currently assigned'}`;
+      }
+      if (this.tools.getBossesTool) {
+        const bosses = await this.tools.getBossesTool.execute({ activeOnly: true }, context);
+        if (bosses.length > 0) {
+          contextualData += `\n[Active Raid Boss]: ${bosses[0].name} (${bosses[0].currentHp}/${bosses[0].maxHp} HP)`;
         }
       }
     } catch (err) {

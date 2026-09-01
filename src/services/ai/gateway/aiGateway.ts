@@ -56,23 +56,8 @@ export class LifeGamifyAIGateway implements LifeGamifyAIService {
   public async chat(request: AIChatRequest): Promise<AIChatResponse> {
     const start = Date.now();
 
-    // 1. Dispatch to Apple Foundation Model if active on iOS
-    const settings = loadStoredSettings();
-    const provider = getLLMProvider(settings.aiSettings);
-    if (provider && (provider as any).model?.toLowerCase().includes('apple')) {
-      const text = await provider.chat([
-        ...(request.history || []),
-        { role: 'user', content: request.message }
-      ]);
-      return {
-        conversationId: request.conversationId,
-        message: text,
-        model: 'Apple Intelligence (On-Device)',
-        latencyMs: Date.now() - start
-      };
-    }
-
-    // 2. Otherwise dispatch to Mastra Chat Agent with contextual tools
+    // Dispatch to Mastra Chat Agent which executes the read data layer
+    // (Player Stats, Habits, Active Quests, Raid Boss) and feeds it to the active provider
     const agent = mastra.getAgent('chat-agent');
     const result = await agent.generate(request.message, {
       userId: request.userId,
