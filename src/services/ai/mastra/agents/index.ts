@@ -1,5 +1,6 @@
 import { LIFE_GAMIFY_TOOLS, MastraToolDefinition } from '../tools';
 import { getLLMProvider } from '../../llmService';
+import { loadStoredSettings } from '../../../storage';
 
 export interface MastraAgentConfig {
   id: string;
@@ -44,7 +45,8 @@ export class MastraAgent {
     }
 
     let responseText = '';
-    const provider = getLLMProvider();
+    const settings = loadStoredSettings();
+    const provider = getLLMProvider(settings.aiSettings);
     if (provider) {
       const messages = [
         { role: 'system' as const, content: `${this.instructions}\n\nContext Data:${contextualData}` },

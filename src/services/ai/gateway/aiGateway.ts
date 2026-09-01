@@ -57,7 +57,8 @@ export class LifeGamifyAIGateway implements LifeGamifyAIService {
     const start = Date.now();
 
     // 1. Dispatch to Apple Foundation Model if active on iOS
-    const provider = getLLMProvider();
+    const settings = loadStoredSettings();
+    const provider = getLLMProvider(settings.aiSettings);
     if (provider && (provider as any).model?.toLowerCase().includes('apple')) {
       const text = await provider.chat([
         ...(request.history || []),

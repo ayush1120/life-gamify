@@ -9,6 +9,7 @@ import {
   convertProposalToAchievement 
 } from '../services/ai/aiValidator';
 import { nativeBridge } from '../services/native/bridge';
+import { aiGateway } from '../services/ai/gateway/aiGateway';
 import { Bot, Key, Cpu, Play, CheckCircle2, AlertCircle, Eye, EyeOff, Loader2, Sparkles, ArrowLeft } from 'lucide-react';
 
 const MODEL_PRESETS: Record<AIProvider, string[]> = {
@@ -324,30 +325,98 @@ export const AISettingsPage: React.FC = () => {
 
       {/* AI Access Point Endpoints Card */}
       <div 
-        className="p-4 rounded-2xl bg-purple-500/10 border border-purple-500/20 space-y-3 text-xs"
+        className="p-4 sm:p-5 rounded-2xl space-y-3.5 text-xs transition-all"
+        style={{
+          background: 'var(--glass-bg)',
+          border: '1px solid var(--glass-border)'
+        }}
       >
-        <div className="flex items-center justify-between">
-          <span className="font-bold font-outfit text-sm text-purple-300 flex items-center gap-1.5">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <span className="font-bold font-outfit text-sm flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
             <Sparkles className="w-4 h-4 text-purple-400" />
             <span>AI Access Point Endpoints</span>
           </span>
-          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-            Mastra Layer Active
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-mono px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              Active Route: {provider === 'apple-foundation' ? '🍏 On-Device (Apple Intelligence)' : `☁️ Mastra (${model || provider})`}
+            </span>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 pt-1">
-          <div className="p-2.5 rounded-xl bg-black/20 border border-white/5 space-y-1">
-            <div className="font-mono font-bold text-[11px] text-purple-300">POST /api/ai/chat</div>
-            <p className="text-[10px] text-gray-400">Game Master Chat Agent + streaming tokens & tool call events.</p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
+          {/* Chat Endpoint */}
+          <div 
+            onClick={() => setActiveTab('ai-chat')}
+            className="p-3.5 rounded-xl border space-y-1.5 cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all group"
+            style={{
+              background: 'var(--pill-badge-bg)',
+              borderColor: 'var(--pill-badge-border)'
+            }}
+          >
+            <div className="flex items-center justify-between">
+              <div className="font-mono font-extrabold text-[12px] text-purple-400 group-hover:text-purple-300">
+                POST /api/ai/chat
+              </div>
+              <span className="text-[10px] px-1.5 py-0.5 rounded font-bold bg-purple-500/20 text-purple-300 font-mono">
+                Live ➔
+              </span>
+            </div>
+            <p className="text-[11px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+              Game Master Chat Agent + streaming tokens & tool call events.
+            </p>
           </div>
-          <div className="p-2.5 rounded-xl bg-black/20 border border-white/5 space-y-1">
-            <div className="font-mono font-bold text-[11px] text-blue-300">POST /api/ai/analyze</div>
-            <p className="text-[10px] text-gray-400">Daily consistency, streak risks & progression evaluator workflow.</p>
+
+          {/* Analyze Endpoint */}
+          <div 
+            onClick={async () => {
+              showToast('Running /api/ai/analyze workflow...');
+              try {
+                const res = await aiGateway.analyzeProgress({});
+                showToast(`✓ Progress Analysis: Level ${res?.steps?.[1]?.data?.level || 1} • Streak ${res?.steps?.[1]?.data?.streak || 0}d`);
+              } catch (e: any) {
+                showToast(`Analysis warning: ${e?.message}`);
+              }
+            }}
+            className="p-3.5 rounded-xl border space-y-1.5 cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all group"
+            style={{
+              background: 'var(--pill-badge-bg)',
+              borderColor: 'var(--pill-badge-border)'
+            }}
+          >
+            <div className="flex items-center justify-between">
+              <div className="font-mono font-extrabold text-[12px] text-blue-400 group-hover:text-blue-300">
+                POST /api/ai/analyze
+              </div>
+              <span className="text-[10px] px-1.5 py-0.5 rounded font-bold bg-blue-500/20 text-blue-300 font-mono">
+                Run ➔
+              </span>
+            </div>
+            <p className="text-[11px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+              Daily consistency, streak risks & progression evaluator workflow.
+            </p>
           </div>
-          <div className="p-2.5 rounded-xl bg-black/20 border border-white/5 space-y-1">
-            <div className="font-mono font-bold text-[11px] text-emerald-300">POST /api/ai/quests</div>
-            <p className="text-[10px] text-gray-400">Adaptive Quest & Boss encounter generator via domain services.</p>
+
+          {/* Quests Endpoint */}
+          <div 
+            onClick={handleGenerateGamePlan}
+            className="p-3.5 rounded-xl border space-y-1.5 cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all group"
+            style={{
+              background: 'var(--pill-badge-bg)',
+              borderColor: 'var(--pill-badge-border)'
+            }}
+          >
+            <div className="flex items-center justify-between">
+              <div className="font-mono font-extrabold text-[12px] text-emerald-400 group-hover:text-emerald-300">
+                POST /api/ai/quests
+              </div>
+              <span className="text-[10px] px-1.5 py-0.5 rounded font-bold bg-emerald-500/20 text-emerald-300 font-mono">
+                Generate ➔
+              </span>
+            </div>
+            <p className="text-[11px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+              Adaptive Quest & Boss encounter generator via domain services.
+            </p>
           </div>
         </div>
       </div>
