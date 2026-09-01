@@ -298,10 +298,10 @@ export const AISettingsPage: React.FC = () => {
           >
             <Bot className="w-5 h-5 text-purple-400" />
           </div>
-          <div>
+            <div>
             <div className="flex items-center gap-2">
               <h3 className="font-outfit text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
-                AI Game Master Configuration
+                AI Access Point & Gateway
               </h3>
               <span 
                 className="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider"
@@ -311,15 +311,45 @@ export const AISettingsPage: React.FC = () => {
                   border: `1px solid ${(apiKeys[provider] || '') ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`
                 }}
               >
-                {(apiKeys[provider] || '') ? 'Configured' : 'No Key Set'}
+                {(apiKeys[provider] || '') ? 'Access Point Ready' : 'No Key Set'}
               </span>
             </div>
             <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-              Powers dynamic quests, boss encounters, and personalized achievements (Phase 13 & 14)
+              Dedicated gateway for Mastra orchestration, domain tools, workflows, and on-device Apple Intelligence.
             </p>
           </div>
         </div>
       </div>
+      </div>
+
+      {/* AI Access Point Endpoints Card */}
+      <div 
+        className="p-4 rounded-2xl bg-purple-500/10 border border-purple-500/20 space-y-3 text-xs"
+      >
+        <div className="flex items-center justify-between">
+          <span className="font-bold font-outfit text-sm text-purple-300 flex items-center gap-1.5">
+            <Sparkles className="w-4 h-4 text-purple-400" />
+            <span>AI Access Point Endpoints</span>
+          </span>
+          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+            Mastra Layer Active
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 pt-1">
+          <div className="p-2.5 rounded-xl bg-black/20 border border-white/5 space-y-1">
+            <div className="font-mono font-bold text-[11px] text-purple-300">POST /api/ai/chat</div>
+            <p className="text-[10px] text-gray-400">Game Master Chat Agent + streaming tokens & tool call events.</p>
+          </div>
+          <div className="p-2.5 rounded-xl bg-black/20 border border-white/5 space-y-1">
+            <div className="font-mono font-bold text-[11px] text-blue-300">POST /api/ai/analyze</div>
+            <p className="text-[10px] text-gray-400">Daily consistency, streak risks & progression evaluator workflow.</p>
+          </div>
+          <div className="p-2.5 rounded-xl bg-black/20 border border-white/5 space-y-1">
+            <div className="font-mono font-bold text-[11px] text-emerald-300">POST /api/ai/quests</div>
+            <p className="text-[10px] text-gray-400">Adaptive Quest & Boss encounter generator via domain services.</p>
+          </div>
+        </div>
       </div>
 
       {/* Form Controls */}
