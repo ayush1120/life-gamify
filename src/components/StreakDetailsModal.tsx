@@ -2,8 +2,9 @@ import React, { useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { X, Flame, Shield, HelpCircle, ChevronRight } from 'lucide-react';
 import { playSound } from '../services/sound';
-import { getStreakCalendarData, evaluateHabitStreakAndFreezes } from '../utils/streakUtils';
+import { evaluateHabitStreakAndFreezes } from '../utils/streakUtils';
 import { getValidHabitLogs } from '../utils/habitAnalytics';
+import { UnifiedActivityCalendar } from './UnifiedActivityCalendar';
 
 export const StreakDetailsModal: React.FC = () => {
   const { 
@@ -25,10 +26,6 @@ export const StreakDetailsModal: React.FC = () => {
     frozenDates: [],
     pendingRepairDates: []
   };
-
-  const calendarDays = useMemo(() => {
-    return getStreakCalendarData(rewardLogs, freezeState.frozenDates, freezeState.pendingRepairDates || [], 28);
-  }, [rewardLogs, freezeState.frozenDates, freezeState.pendingRepairDates]);
 
   // Compute streaks for individual active habits
   const habitStreaks = useMemo(() => {
@@ -145,59 +142,20 @@ export const StreakDetailsModal: React.FC = () => {
             <ChevronRight className="w-5 h-5 text-sky-400 group-hover:translate-x-1 transition-transform" />
           </div>
 
-          {/* Calendar Heatmap Section */}
-          <div className="glass-panel p-5 rounded-2xl border border-white/10 space-y-3">
-            <div className="flex items-center justify-between">
-              <h3 className="font-outfit text-sm font-bold text-slate-200 flex items-center gap-2">
-                <span>Recent Streak Activity</span>
-              </h3>
-              <div className="flex items-center gap-3 text-[11px] text-slate-400 font-medium">
-                <span className="flex items-center gap-1">
-                  <span className="w-2.5 h-2.5 rounded bg-amber-500 inline-block" /> Active
-                </span>
-                <span className="flex items-center gap-1">
-                  <span className="w-2.5 h-2.5 rounded bg-sky-400 inline-block" /> Frozen ❄️
-                </span>
-                <span className="flex items-center gap-1">
-                  <span className="w-2.5 h-2.5 rounded bg-slate-700 inline-block" /> Missed
-                </span>
-              </div>
-            </div>
-
-            {/* 4-Week Calendar Grid */}
-            <div className="grid grid-cols-7 gap-2 pt-2 text-center">
-              {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, idx) => (
-                <div key={idx} className="text-[11px] font-bold text-slate-400 uppercase">
-                  {day}
-                </div>
-              ))}
-              {calendarDays.map((day) => {
-                const isCompleted = day.status === 'completed';
-                const isFrozen = day.status === 'frozen';
-                const isTodayPending = day.status === 'today-pending';
-
-                return (
-                  <div
-                    key={day.dateStr}
-                    title={`${day.dateStr}: ${day.status}`}
-                    className={`aspect-square rounded-xl flex flex-col items-center justify-center text-xs font-bold transition-all relative ${
-                      isCompleted
-                        ? 'bg-gradient-to-tr from-amber-600 to-orange-500 text-white shadow-md shadow-amber-500/20'
-                        : isFrozen
-                        ? 'bg-gradient-to-tr from-sky-500 to-blue-600 text-white shadow-md shadow-sky-500/30'
-                        : isTodayPending
-                        ? 'bg-slate-800 text-amber-400 border border-dashed border-amber-400/50'
-                        : 'bg-slate-800/60 text-slate-500'
-                    }`}
-                  >
-                    <span>{day.dayNumber}</span>
-                    {isFrozen && (
-                      <span className="text-[9px] leading-none absolute -bottom-1 text-sky-200">❄️</span>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+          {/* Centralized Monthly Calendar and Activity Visualization */}
+          <div className="space-y-2">
+            <h3 className="font-outfit text-sm font-bold text-slate-200 px-1">
+              Monthly Streak & Activity Calendar
+            </h3>
+            <UnifiedActivityCalendar
+              mode="global"
+              rewardLogs={rewardLogs}
+              streakFreezeState={freezeState}
+              currentStreak={stats.currentStreak}
+              longestStreak={stats.longestStreak}
+              accentColor="#f59e0b"
+              showStatsHeader={false}
+            />
           </div>
 
           {/* Habit-by-Habit Streak Breakdown */}

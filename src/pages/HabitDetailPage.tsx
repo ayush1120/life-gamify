@@ -9,6 +9,7 @@ import {
 } from '../utils/habitAnalytics';
 import { DEFAULT_STREAK_FREEZE_STATE, evaluateHabitStreakAndFreezes } from '../utils/streakUtils';
 import { STAT_DEFINITIONS, getDefaultHabitMapping } from '../utils/progressionUtils';
+import { UnifiedActivityCalendar } from '../components/UnifiedActivityCalendar';
 
 interface HabitDetailPageProps {
   habitId: string;
@@ -390,6 +391,23 @@ export const HabitDetailPage: React.FC<HabitDetailPageProps> = ({ habitId }) => 
           </div>
         );
       })()}
+
+      {/* Centralized Monthly Habit Calendar & Activity Visualization */}
+      <div className="space-y-3">
+        <h2 className="text-xl font-extrabold font-outfit px-1" style={{ color: 'var(--text-primary)' }}>
+          Habit Activity & Streak Calendar
+        </h2>
+        <UnifiedActivityCalendar
+          mode="habit"
+          habit={habit}
+          rewardLogs={rewardLogs}
+          streakFreezeState={stats.habitStreakFreezeStates?.[habit.id]}
+          currentStreak={currentStreak}
+          longestStreak={bestStreak}
+          accentColor={habit.color}
+          showStatsHeader={true}
+        />
+      </div>
 
       {/* Quest Trail & Reward Compass grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
