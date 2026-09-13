@@ -103,14 +103,14 @@ export const UnifiedActivityCalendar: React.FC<UnifiedActivityCalendarProps> = (
 
   const getDayStatusStyle = (day: UnifiedCalendarDay) => {
     if (day.isPadding) {
-      return 'opacity-25 pointer-events-none text-slate-500 bg-transparent';
+      return 'opacity-25 pointer-events-none text-[var(--text-muted)] bg-transparent';
     }
     if (day.isFuture) {
-      return 'opacity-35 text-slate-500 bg-slate-800/20 cursor-default';
+      return 'opacity-35 text-[var(--text-muted)] bg-[var(--glass-bg)] border border-[var(--glass-border)] cursor-default';
     }
 
     const isSelected = selectedDay?.dateStr === day.dateStr;
-    const selectedRing = isSelected ? 'ring-2 ring-white scale-105 z-10 shadow-lg' : '';
+    const selectedRing = isSelected ? 'ring-2 ring-[var(--text-primary)] scale-105 z-10 shadow-lg' : '';
 
     switch (day.status) {
       case 'completed':
@@ -120,10 +120,10 @@ export const UnifiedActivityCalendar: React.FC<UnifiedActivityCalendarProps> = (
       case 'repair-available':
         return `bg-amber-500/15 border border-amber-400 text-amber-300 animate-pulse font-bold cursor-pointer transition-transform hover:scale-105 ${selectedRing}`;
       case 'today-pending':
-        return `bg-slate-800/80 text-amber-400 border-2 border-dashed border-amber-400/70 font-bold cursor-pointer transition-transform hover:scale-105 ${selectedRing}`;
+        return `bg-[var(--glass-bg)] text-amber-400 border-2 border-dashed border-amber-400/70 font-bold cursor-pointer transition-transform hover:scale-105 ${selectedRing}`;
       case 'missed':
       default:
-        return `bg-slate-800/40 text-slate-400 hover:bg-slate-800/70 cursor-pointer transition-transform hover:scale-105 ${selectedRing}`;
+        return `bg-[var(--glass-bg)] border border-[var(--glass-border)] text-[var(--text-secondary)] hover:brightness-95 cursor-pointer transition-transform hover:scale-105 ${selectedRing}`;
     }
   };
 
@@ -141,7 +141,7 @@ export const UnifiedActivityCalendar: React.FC<UnifiedActivityCalendarProps> = (
               <span className="text-[10px] font-bold uppercase tracking-wider text-amber-300 block truncate">
                 {mode === 'habit' ? 'Habit Streak' : 'Daily Streak'}
               </span>
-              <span className="text-base sm:text-lg font-extrabold font-outfit text-white">
+              <span className="text-base sm:text-lg font-extrabold font-outfit text-[var(--text-primary)]">
                 {currentStreak}d
               </span>
             </div>
@@ -156,7 +156,7 @@ export const UnifiedActivityCalendar: React.FC<UnifiedActivityCalendarProps> = (
               <span className="text-[10px] font-bold uppercase tracking-wider text-orange-300 block truncate">
                 Best Streak
               </span>
-              <span className="text-base sm:text-lg font-extrabold font-outfit text-white">
+              <span className="text-base sm:text-lg font-extrabold font-outfit text-[var(--text-primary)]">
                 {longestStreak}d
               </span>
             </div>
@@ -171,7 +171,7 @@ export const UnifiedActivityCalendar: React.FC<UnifiedActivityCalendarProps> = (
               <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-300 block truncate">
                 Active Days
               </span>
-              <span className="text-base sm:text-lg font-extrabold font-outfit text-white">
+              <span className="text-base sm:text-lg font-extrabold font-outfit text-[var(--text-primary)]">
                 {calendarData.stats.activeDays}/{calendarData.stats.daysElapsed || calendarData.stats.totalDaysInMonth}
               </span>
             </div>
@@ -186,7 +186,7 @@ export const UnifiedActivityCalendar: React.FC<UnifiedActivityCalendarProps> = (
               <span className="text-[10px] font-bold uppercase tracking-wider text-purple-300 block truncate">
                 {mode === 'habit' ? 'Consistency' : 'Month Earned'}
               </span>
-              <span className="text-base sm:text-lg font-extrabold font-outfit text-white">
+              <span className="text-base sm:text-lg font-extrabold font-outfit text-[var(--text-primary)]">
                 {mode === 'habit' ? `${calendarData.stats.completionRate}%` : `+${calendarData.stats.totalCoinsEarned}`}
               </span>
             </div>
@@ -200,19 +200,19 @@ export const UnifiedActivityCalendar: React.FC<UnifiedActivityCalendarProps> = (
           <button
             onClick={handlePrevMonth}
             aria-label="Previous Month"
-            className="w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 text-white flex items-center justify-center transition-colors cursor-pointer border border-white/10 active:scale-95"
+            className="w-8 h-8 rounded-xl bg-[var(--glass-bg)] hover:brightness-95 text-[var(--text-primary)] flex items-center justify-center transition-colors cursor-pointer border border-[var(--glass-border)] active:scale-95"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
 
-          <h3 className="font-outfit font-extrabold text-base sm:text-lg text-white tracking-wide">
+          <h3 className="font-outfit font-extrabold text-base sm:text-lg text-[var(--text-primary)] tracking-wide">
             {calendarData.monthLabel}
           </h3>
 
           <button
             onClick={handleNextMonth}
             aria-label="Next Month"
-            className="w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 text-white flex items-center justify-center transition-colors cursor-pointer border border-white/10 active:scale-95"
+            className="w-8 h-8 rounded-xl bg-[var(--glass-bg)] hover:brightness-95 text-[var(--text-primary)] flex items-center justify-center transition-colors cursor-pointer border border-[var(--glass-border)] active:scale-95"
           >
             <ChevronRight className="w-4 h-4" />
           </button>
@@ -233,7 +233,7 @@ export const UnifiedActivityCalendar: React.FC<UnifiedActivityCalendarProps> = (
       {/* 3. Weekday Labels */}
       <div className="grid grid-cols-7 gap-1.5 sm:gap-2 text-center pt-1">
         {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d, i) => (
-          <div key={i} className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+          <div key={i} className="text-[10px] sm:text-[11px] font-bold text-[var(--text-secondary)] uppercase tracking-wider">
             {d}
           </div>
         ))}
@@ -279,10 +279,10 @@ export const UnifiedActivityCalendar: React.FC<UnifiedActivityCalendarProps> = (
 
       {/* 5. Interactive Day Detail Card */}
       {selectedDay && (
-        <div className="p-4 rounded-2xl bg-slate-900/90 border border-white/15 space-y-2 animate-fade-in">
+        <div className="p-4 rounded-2xl bg-[var(--glass-bg)] border border-[var(--glass-border)] space-y-2 animate-fade-in">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="font-outfit font-extrabold text-sm text-white">
+              <span className="font-outfit font-extrabold text-sm text-[var(--text-primary)]">
                 {selectedDay.date.toLocaleDateString(undefined, {
                   weekday: 'short',
                   month: 'short',
@@ -298,7 +298,7 @@ export const UnifiedActivityCalendar: React.FC<UnifiedActivityCalendarProps> = (
                     ? 'bg-sky-500/20 text-sky-300 border border-sky-500/40'
                     : selectedDay.status === 'today-pending'
                     ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-                    : 'bg-slate-700/50 text-slate-300 border border-slate-600/40'
+                    : 'bg-[var(--glass-bg)] text-[var(--text-primary)] border border-[var(--glass-border)]'
                 }`}
               >
                 {selectedDay.status.replace('-', ' ')}
@@ -307,7 +307,7 @@ export const UnifiedActivityCalendar: React.FC<UnifiedActivityCalendarProps> = (
 
             <button
               onClick={() => setSelectedDay(null)}
-              className="w-6 h-6 rounded-full hover:bg-white/10 text-slate-400 hover:text-white flex items-center justify-center"
+              className="w-6 h-6 rounded-full hover:brightness-95 text-[var(--text-secondary)] hover:text-[var(--text-primary)] flex items-center justify-center"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -319,12 +319,12 @@ export const UnifiedActivityCalendar: React.FC<UnifiedActivityCalendarProps> = (
               {selectedDay.logs.map(log => (
                 <div 
                   key={log.id}
-                  className="flex items-center justify-between p-2 rounded-xl bg-white/5 border border-white/5 text-xs"
+                  className="flex items-center justify-between p-2 rounded-xl bg-[var(--glass-bg)] border border-[var(--glass-border)] text-xs"
                 >
                   <div className="flex items-center gap-2">
                     <span>{log.icon || '✓'}</span>
-                    <span className="font-semibold text-slate-200">{log.habitName}</span>
-                    <span className="text-[10px] text-slate-400">
+                    <span className="font-semibold text-[var(--text-primary)]">{log.habitName}</span>
+                    <span className="text-[10px] text-[var(--text-secondary)]">
                       {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </div>
@@ -335,7 +335,7 @@ export const UnifiedActivityCalendar: React.FC<UnifiedActivityCalendarProps> = (
               ))}
             </div>
           ) : (
-            <p className="text-xs text-slate-400 pt-1">
+            <p className="text-xs text-[var(--text-secondary)] pt-1">
               {selectedDay.status === 'frozen'
                 ? '❄️ Streak freeze was active to protect your streak on this day.'
                 : selectedDay.status === 'today-pending'
@@ -347,7 +347,7 @@ export const UnifiedActivityCalendar: React.FC<UnifiedActivityCalendarProps> = (
       )}
 
       {/* 6. Visual Legend */}
-      <div className="flex items-center justify-between flex-wrap gap-2 pt-2 text-[10px] sm:text-[11px] text-slate-400 border-t border-white/5">
+      <div className="flex items-center justify-between flex-wrap gap-2 pt-2 text-[10px] sm:text-[11px] text-[var(--text-secondary)] border-t border-[var(--glass-border)]">
         <div className="flex items-center gap-3 flex-wrap">
           <span className="flex items-center gap-1.5">
             <span 
@@ -361,7 +361,7 @@ export const UnifiedActivityCalendar: React.FC<UnifiedActivityCalendarProps> = (
             Frozen ❄️
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-md bg-slate-800 border border-slate-700 inline-block" /> 
+            <span className="w-2.5 h-2.5 rounded-md bg-[var(--glass-bg)] border border-[var(--glass-border)] inline-block" /> 
             Missed
           </span>
           <span className="flex items-center gap-1.5">
@@ -370,7 +370,7 @@ export const UnifiedActivityCalendar: React.FC<UnifiedActivityCalendarProps> = (
           </span>
         </div>
 
-        <span className="text-[10px] text-slate-500 italic">
+        <span className="text-[10px] text-[var(--text-muted)] italic">
           Tap any day to inspect
         </span>
       </div>

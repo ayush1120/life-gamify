@@ -62,7 +62,7 @@ export const StreakDetailsModal: React.FC = () => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-fade-in">
       <div 
-        className="relative w-full max-w-lg bg-gradient-to-b from-amber-500/10 via-slate-900 to-slate-950 text-white rounded-[32px] shadow-2xl border border-amber-500/30 overflow-hidden max-h-[90vh] flex flex-col"
+        className="relative w-full max-w-lg bg-[var(--glass-bg)] border text-[var(--text-primary)] rounded-[32px] shadow-2xl border border-[var(--glass-border)] overflow-hidden max-h-[90vh] flex flex-col"
         style={{
           boxShadow: '0 25px 60px -15px rgba(245, 158, 11, 0.3)'
         }}
@@ -85,7 +85,7 @@ export const StreakDetailsModal: React.FC = () => {
           <div className="flex items-center gap-2">
             <button
               onClick={handleClose}
-              className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+              className="w-9 h-9 rounded-full bg-[var(--glass-border)] hover:brightness-95 text-[var(--text-primary)] hover:text-[var(--text-primary)] flex items-center justify-center transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -109,7 +109,7 @@ export const StreakDetailsModal: React.FC = () => {
             <p className="font-outfit text-sm sm:text-base font-bold uppercase tracking-widest text-amber-400/90 mt-1">
               Days Streak Active
             </p>
-            <p className="text-xs text-slate-400 mt-0.5">
+            <p className="text-xs text-[var(--text-secondary)] mt-0.5">
               Personal Best: <span className="text-amber-300 font-bold">{stats.longestStreak} Days</span>
             </p>
           </div>
@@ -132,7 +132,7 @@ export const StreakDetailsModal: React.FC = () => {
                     {freezeState.availableFreezes} of {freezeState.maxFreezes} Ready
                   </span>
                 </div>
-                <p className="text-xs text-slate-300 mt-0.5">
+                <p className="text-xs text-[var(--text-primary)] mt-0.5">
                   {freezeState.availableFreezes > 0 
                     ? 'Protects your streak automatically if you miss a day.' 
                     : `${freezeState.consecutiveDaysCount}/${freezeState.consecutiveDaysForRecovery} active days to regain 1 freeze.`}
@@ -144,7 +144,7 @@ export const StreakDetailsModal: React.FC = () => {
 
           {/* Centralized Monthly Calendar and Activity Visualization */}
           <div className="space-y-2">
-            <h3 className="font-outfit text-sm font-bold text-slate-200 px-1">
+            <h3 className="font-outfit text-sm font-bold text-[var(--text-primary)] px-1">
               Monthly Streak & Activity Calendar
             </h3>
             <UnifiedActivityCalendar
@@ -160,7 +160,7 @@ export const StreakDetailsModal: React.FC = () => {
 
           {/* Habit-by-Habit Streak Breakdown */}
           <div className="space-y-3">
-            <h3 className="font-outfit text-sm font-bold text-slate-200">
+            <h3 className="font-outfit text-sm font-bold text-[var(--text-primary)]">
               Habit Streaks Breakdown
             </h3>
             <div className="grid grid-cols-2 gap-3">
@@ -171,16 +171,16 @@ export const StreakDetailsModal: React.FC = () => {
                     setSelectedHabitForFreezeModal(habit);
                     setIsStreakFreezeModalOpen(true);
                   }}
-                  className="p-3.5 rounded-2xl bg-slate-800/50 border border-slate-700/60 hover:border-slate-500/80 transition-all cursor-pointer flex items-center justify-between"
+                  className="p-3.5 rounded-2xl bg-[var(--glass-bg)] border border border-[var(--glass-border)] hover:border-[var(--glass-border-hover)] transition-all cursor-pointer flex items-center justify-between"
                 >
                   <div className="flex items-center gap-2.5 overflow-hidden">
                     <span className="text-xl shrink-0">{habit.icon}</span>
                     <div className="truncate">
-                      <p className="font-outfit text-xs font-bold text-white truncate">
+                      <p className="font-outfit text-xs font-bold text-[var(--text-primary)] truncate">
                         {habit.name}
                       </p>
                       <div className="flex items-center gap-1.5 mt-0.5">
-                        <span className="text-[10px] text-slate-400">
+                        <span className="text-[10px] text-[var(--text-secondary)]">
                           {habit.category || 'Habit'}
                         </span>
                         <span className="text-[10px] text-sky-400 font-bold">
@@ -201,7 +201,7 @@ export const StreakDetailsModal: React.FC = () => {
         </div>
 
         {/* Modal Footer */}
-        <div className="p-4 bg-slate-950/80 border-t border-slate-800/60 flex items-center justify-between">
+        <div className="p-4 bg-[var(--glass-bg)] border-t border-[var(--glass-border)] flex items-center justify-between">
           <button
             onClick={handleOpenFreezeInfo}
             className="text-xs text-sky-400 hover:text-sky-300 font-bold flex items-center gap-1.5 cursor-pointer"
@@ -211,7 +211,7 @@ export const StreakDetailsModal: React.FC = () => {
           </button>
           <button
             onClick={handleClose}
-            className="px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-outfit text-xs font-bold transition-colors cursor-pointer"
+            className="px-5 py-2 rounded-xl bg-[var(--glass-border)] text-[var(--text-primary)] hover:brightness-95 text-[var(--text-primary)] font-outfit text-xs font-bold transition-colors cursor-pointer"
           >
             Close
           </button>

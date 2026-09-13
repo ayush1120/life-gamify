@@ -115,6 +115,7 @@ export const evaluateStreakAndFreezes = (
         runningConsecutive = 0; // Reset 3-day counter after earning
       }
     } else if (isFrozen) {
+      simulatedFreezes = Math.max(0, simulatedFreezes - 1);
       // Repaired / frozen day preserves streak, but does not count as active completion towards earning next freeze
       runningConsecutive = 0;
     } else {
@@ -126,9 +127,9 @@ export const evaluateStreakAndFreezes = (
   }
 
   // Account for freezes spent on manual repairs:
-  const spentCount = frozenDatesSet.size;
-  const baseFreezes = Math.max(savedFreezeState?.availableFreezes || 0, simulatedFreezes);
-  const netAvailableFreezes = Math.max(0, Math.min(maxFreezes, baseFreezes - spentCount));
+  const netAvailableFreezes = Math.min(maxFreezes, Math.max(savedFreezeState?.availableFreezes || 0, simulatedFreezes));
+  
+  
 
   // --- IDENTIFY MISSED DAYS IN 2-DAY REPAIR WINDOW ---
   // Any missed, non-frozen day in the last 2 days (T-1, T-2) that occurred after the habit was active
@@ -332,15 +333,16 @@ function evaluateWeeklyHabitStreak(
         runningConsecutive = 0;
       }
     } else if (isFrozen) {
+      simulatedFreezes = Math.max(0, simulatedFreezes - 1);
       runningConsecutive = 0;
     } else {
       if (!isCurrentWeek) runningConsecutive = 0;
     }
   }
 
-  const spentCount = frozenWeeksSet.size;
-  const baseFreezes = Math.max(savedFreezeState?.availableFreezes || 0, simulatedFreezes);
-  const netAvailableFreezes = Math.max(0, Math.min(maxFreezes, baseFreezes - spentCount));
+  const netAvailableFreezes = Math.min(maxFreezes, Math.max(savedFreezeState?.availableFreezes || 0, simulatedFreezes));
+  
+  
 
   // Check 2-week repair window for missed past weeks
   const pendingRepairDates: PendingStreakRepair[] = [];
@@ -487,15 +489,16 @@ function evaluateMonthlyHabitStreak(
         runningConsecutive = 0;
       }
     } else if (isFrozen) {
+      simulatedFreezes = Math.max(0, simulatedFreezes - 1);
       runningConsecutive = 0;
     } else {
       if (!isCurrentMonth) runningConsecutive = 0;
     }
   }
 
-  const spentCount = frozenMonthsSet.size;
-  const baseFreezes = Math.max(savedFreezeState?.availableFreezes || 0, simulatedFreezes);
-  const netAvailableFreezes = Math.max(0, Math.min(maxFreezes, baseFreezes - spentCount));
+  const netAvailableFreezes = Math.min(maxFreezes, Math.max(savedFreezeState?.availableFreezes || 0, simulatedFreezes));
+  
+  
 
   // 1-month repair window for last month if missed
   const pendingRepairDates: PendingStreakRepair[] = [];
