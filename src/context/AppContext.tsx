@@ -489,6 +489,37 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Handle incoming native events (Widget Taps, Siri/Assistant Shortcuts, Notifications)
   useEffect(() => {
+    // Check for pending Siri logs when app mounts
+    const checkSiriLogs = async () => {
+      try {
+        const { nativeAssistantService } = await import('../services/native/bridge');
+        const res = await nativeAssistantService.getPendingLogs();
+        if (res && res.logs && res.logs.length > 0) {
+          res.logs.forEach((log: any) => {
+            const habit = habits.find(h => h.name.toLowerCase() === log.habitName.toLowerCase());
+            if (habit) {
+               logHabit(habit.id, undefined, new Date(log.timestamp * 1000));
+            }
+          });
+          await nativeAssistantService.clearPendingLogs();
+        }
+      } catch (e) {
+        console.error('[Siri Logs] Error fetching pending logs:', e);
+      }
+    };
+    checkSiriLogs();
+    
+    // Also check when app comes to foreground
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        checkSiriLogs();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [habits]);
+
+  useEffect(() => {
     const unsub = nativeBridge.onNativeEvent((event) => {
       console.log('[Native Event Received]:', event);
       if (event.type === 'widget_tap') {

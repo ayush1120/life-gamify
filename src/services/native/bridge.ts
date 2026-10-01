@@ -206,6 +206,10 @@ export const nativeBackgroundTaskService = {
 export const nativeAssistantService = {
   registerShortcuts: (shortcuts: AssistantShortcutPayload[]) => 
     nativeBridge.sendRequest<{ success: boolean }>('assistant', 'registerShortcuts', { shortcuts }),
+  getPendingLogs: () => 
+    nativeBridge.sendRequest<{ logs: { habitName: string; timestamp: number }[] }>('assistant', 'getPendingLogs', {}),
+  clearPendingLogs: () => 
+    nativeBridge.sendRequest<{ cleared: boolean }>('assistant', 'clearPendingLogs', {}),
 };
 
 export const nativeOnDeviceAIService = {
