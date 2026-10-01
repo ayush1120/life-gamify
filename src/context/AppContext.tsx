@@ -391,7 +391,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [settings.theme]);
 
   // Save changes to LocalStorage for offline resilience
-  useEffect(() => { saveStoredHabits(habits); }, [habits]);
+  useEffect(() => { 
+    saveStoredHabits(habits); 
+    if (habits.length > 0) {
+      import('../services/native/bridge').then(({ nativeAssistantService }) => {
+        nativeAssistantService.syncHabitVocabulary(habits.filter(h => h.active).map(h => h.name));
+      }).catch(console.error);
+    }
+  }, [habits]);
   useEffect(() => { saveStoredRewards(rewards); }, [rewards]);
   useEffect(() => { saveStoredLogs(rewardLogs); }, [rewardLogs]);
   useEffect(() => { saveStoredRedemptions(redemptions); }, [redemptions]);

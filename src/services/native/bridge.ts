@@ -210,6 +210,8 @@ export const nativeAssistantService = {
     nativeBridge.sendRequest<{ logs: { habitName: string; timestamp: number }[] }>('assistant', 'getPendingLogs', {}),
   clearPendingLogs: () => 
     nativeBridge.sendRequest<{ cleared: boolean }>('assistant', 'clearPendingLogs', {}),
+  syncHabitVocabulary: (habits: string[]) => 
+    nativeBridge.sendRequest<{ success: boolean }>('assistant', 'syncHabitVocabulary', { habits }),
 };
 
 export const nativeOnDeviceAIService = {
