@@ -76,8 +76,8 @@ export const isHabitDueInPeriod = (habit: Habit, logs: RewardLog[], targetDate: 
 /**
  * Calculates current period progress percentage and stats for a habit.
  */
-export const getPeriodProgress = (habit: Habit, logs: RewardLog[]) => {
-  const periodLogs = getLogsInCurrentPeriod(habit, logs);
+export const getPeriodProgress = (habit: Habit, logs: RewardLog[], targetDate: Date = new Date()) => {
+  const periodLogs = getLogsInCurrentPeriod(habit, logs, targetDate);
   const count = periodLogs.length;
   const max = habit.maxPerPeriod ?? habit.maxPerDay ?? 1;
   const percentage = max === 0 ? 100 : Math.min(100, Math.round((count / max) * 100));

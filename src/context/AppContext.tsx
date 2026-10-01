@@ -96,7 +96,7 @@ interface AppContextType {
   logout: () => Promise<void>;
 
   // Actions
-  logHabit: (habitId: string, event?: React.MouseEvent) => void;
+  logHabit: (habitId: string, event?: React.MouseEvent, customDate?: Date) => void;
   purchaseReward: (rewardId: string, note?: string) => boolean;
   
   // Habit CRUD
@@ -541,7 +541,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   // Habit Logging Action
-  const logHabit = (habitId: string, event?: React.MouseEvent) => {
+  const logHabit = (habitId: string, event?: React.MouseEvent, customDate?: Date) => {
     const habit = habits.find(h => h.id === habitId);
     if (!habit || !habit.active) return;
 
@@ -551,7 +551,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
     lastLogTimeRef.current[habitId] = now;
 
-    const attemptTime = new Date(now);
+    const attemptTime = customDate || new Date(now);
 
     if (!isHabitDueInPeriod(habit, rewardLogs, attemptTime)) {
       const label = getPeriodLabel(habit.frequency || 'daily');

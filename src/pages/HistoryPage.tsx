@@ -4,6 +4,7 @@ import { RewardLog, RewardRedemption } from '../types';
 import { DeleteLogModal } from '../components/DeleteLogModal';
 import { DeleteRedemptionModal } from '../components/DeleteRedemptionModal';
 import { Trash2, Search, RefreshCw, AlertCircle, ArrowLeft, ChevronDown, Plus, Clock } from 'lucide-react';
+import { LateLogModal } from "../components/LateLogModal";
 import { CoinToken } from '../components/CoinToken';
 import { formatContextDate, formatTime, getWeekDays, isSameDay } from '../utils/dateUtils';
 
@@ -20,7 +21,8 @@ export const HistoryPage: React.FC = () => {
     return window.location.hash.includes('redemptions') ? 'redemptions' : 'logs';
   };
 
-  const [viewTab, setViewTab] = useState<'logs' | 'redemptions'>(getInitialViewTab);
+  const [viewTab, setViewTab] = useState<"logs" | "redemptions">(getInitialViewTab);
+  const [isLateLogOpen, setIsLateLogOpen] = useState(false);
 
   useEffect(() => {
     const handleHash = () => {
@@ -248,6 +250,16 @@ export const HistoryPage: React.FC = () => {
             Purchases
           </button>
         </div>
+        {isSameDay(selectedDate, new Date(new Date().setDate(new Date().getDate() - 1))) && new Date().getHours() < 16 && viewTab === 'logs' && (
+          <button
+            onClick={() => setIsLateLogOpen(true)}
+            className="flex items-center space-x-1 px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-500/20 text-amber-500 border border-amber-500/30 hover:bg-amber-500/30 cursor-pointer"
+          >
+            <Clock className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Late Log</span>
+            <span className="sm:hidden">Log</span>
+          </button>
+        )}
       </div>
 
       {viewTab === 'logs' ? (
@@ -416,6 +428,7 @@ export const HistoryPage: React.FC = () => {
         onConfirm={handleConfirmRedemptionDelete}
         redemption={redemptionToDelete}
       />
+      <LateLogModal isOpen={isLateLogOpen} onClose={() => setIsLateLogOpen(false)} selectedDate={selectedDate} />
     </div>
   );
 };
