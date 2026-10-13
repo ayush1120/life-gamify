@@ -216,3 +216,58 @@ export const AchievementSchema = z.object({
   source: z.enum(['ai', 'system']).default('system')
 });
 export type AchievementContract = z.infer<typeof AchievementSchema>;
+
+// ==========================================
+// 9. GOAL CONTRACTS
+// ==========================================
+
+export const GoalStatusSchema = z.enum(['active', 'completed', 'archived']);
+export type GoalStatusContract = z.infer<typeof GoalStatusSchema>;
+
+export const GoalMetricTypeSchema = z.enum(['count', 'duration', 'frequency']);
+export type GoalMetricTypeContract = z.infer<typeof GoalMetricTypeSchema>;
+
+export const GoalFrequencyPeriodSchema = z.enum(['daily', 'weekly', 'monthly']);
+export type GoalFrequencyPeriodContract = z.infer<typeof GoalFrequencyPeriodSchema>;
+
+export const GoalMilestoneSchema = z.object({
+  id: z.string().min(1),
+  title: z.string().trim().min(1),
+  description: z.string().optional(),
+  isCompleted: z.boolean().default(false),
+  order: z.number().int().default(0),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  completedAt: z.string().optional()
+});
+export type GoalMilestoneContract = z.infer<typeof GoalMilestoneSchema>;
+
+export const GoalProgressConfigSchema = z.object({
+  type: GoalMetricTypeSchema,
+  label: z.string().trim().min(1),
+  unit: z.string().optional(),
+  targetValue: z.number().positive().optional(),
+  period: GoalFrequencyPeriodSchema.optional()
+});
+export type GoalProgressConfigContract = z.infer<typeof GoalProgressConfigSchema>;
+
+export const GoalSchema = z.object({
+  id: z.string().min(1),
+  title: z.string().trim().min(1),
+  description: z.string().optional(),
+  status: GoalStatusSchema.default('active'),
+  startDate: z.string().optional(),
+  deadline: z.string().optional(),
+  icon: z.string().optional(),
+  color: z.string().optional(),
+  progressConfig: GoalProgressConfigSchema.optional(),
+  currentProgress: z.number().nonnegative().optional(),
+  progressPeriods: z.record(z.string(), z.number().nonnegative()).optional(),
+  milestones: z.array(GoalMilestoneSchema).optional().default([]),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  completedAt: z.string().optional(),
+  archivedAt: z.string().optional()
+});
+export type GoalContract = z.infer<typeof GoalSchema>;
+

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Zap, ShoppingBag, X } from 'lucide-react';
+import { Plus, Zap, ShoppingBag, X, Target } from 'lucide-react';
 import { playSound } from '../services/sound';
 import { useApp } from '../context/AppContext';
+
 
 export const FAB: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -54,6 +55,16 @@ export const FAB: React.FC = () => {
         }`}
       >
         <button
+          onClick={() => handleAction('goals', 'btn-add-goal')}
+          className="flex items-center space-x-3 bg-white text-zinc-900 px-4 py-3 rounded-2xl shadow-xl shadow-black/20 hover:bg-zinc-50 border border-zinc-200 transition-transform active:scale-95 cursor-pointer group"
+        >
+          <span className="font-outfit font-bold text-sm">Add Goal</span>
+          <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <Target className="w-4 h-4" />
+          </div>
+        </button>
+
+        <button
           onClick={() => handleAction('store', 'btn-add-reward')}
           className="flex items-center space-x-3 bg-white text-zinc-900 px-4 py-3 rounded-2xl shadow-xl shadow-black/20 hover:bg-zinc-50 border border-zinc-200 transition-transform active:scale-95 cursor-pointer group"
         >
@@ -73,6 +84,7 @@ export const FAB: React.FC = () => {
           </div>
         </button>
       </div>
+
 
       {/* Primary FAB Button */}
       <button

@@ -2,6 +2,8 @@ import React from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import { Navbar } from './components/Navbar';
 import { Dashboard } from './pages/Dashboard';
+import { GoalsPage } from './pages/GoalsPage';
+import { GoalDetailPage } from './pages/GoalDetailPage';
 import { LogActivityPage } from './pages/LogActivityPage';
 import { StorePage } from './pages/StorePage';
 import { HabitsPage } from './pages/HabitsPage';
@@ -46,6 +48,8 @@ const MainContent: React.FC = () => {
 
           <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8">
             {activeTab === 'dashboard' && <Dashboard />}
+            {activeTab === 'goals' && <GoalsPage />}
+            {activeTab.startsWith('goals/') && <GoalDetailPage goalId={decodeURIComponent(activeTab.split('/')[1])} />}
             {activeTab === 'adventure' && <AdventurePage />}
             {activeTab === 'log-activity' && <LogActivityPage />}
             {activeTab === 'store' && <StorePage />}
@@ -59,6 +63,7 @@ const MainContent: React.FC = () => {
             {activeTab === 'overlay-demo' && <OverlayDemoPage />}
             {activeTab === 'devtools' && <DevToolsPage />}
           </main>
+
 
           {/* Footer */}
           <footer className="py-6 text-center text-xs pb-[90px] md:pb-6" style={{ borderTop: '1px solid var(--glass-border)', color: 'var(--text-muted)' }}>

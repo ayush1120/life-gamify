@@ -249,3 +249,45 @@ export interface HabitStats {
   habitStreakFreezeStates?: Record<string, StreakFreezeState>;
 }
 
+export type GoalStatus = 'active' | 'completed' | 'archived';
+export type GoalMetricType = 'count' | 'duration' | 'frequency';
+export type GoalFrequencyPeriod = 'daily' | 'weekly' | 'monthly';
+
+export interface GoalMilestone {
+  id: string;
+  title: string;
+  description?: string;
+  isCompleted: boolean;
+  order: number;
+  createdAt: string;
+  updatedAt: string;
+  completedAt?: string;
+}
+
+export interface GoalProgressConfig {
+  type: GoalMetricType;
+  label: string;
+  unit?: string;
+  targetValue?: number;
+  period?: GoalFrequencyPeriod;
+}
+
+export interface Goal {
+  id: string;
+  title: string;
+  description?: string;
+  status: GoalStatus;
+  startDate?: string;
+  deadline?: string;
+  icon?: string;
+  color?: string;
+  progressConfig?: GoalProgressConfig;
+  currentProgress?: number;
+  progressPeriods?: Record<string, number>;
+  milestones?: GoalMilestone[];
+  createdAt: string;
+  updatedAt: string;
+  completedAt?: string;
+  archivedAt?: string;
+}
+

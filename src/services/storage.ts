@@ -9,7 +9,8 @@ import {
   BossDefinition, 
   AchievementDefinition, 
   GameNotification,
-  StreakFreezeState
+  StreakFreezeState,
+  Goal
 } from '../types';
 
 const STORAGE_KEYS = {
@@ -24,7 +25,8 @@ const STORAGE_KEYS = {
   ACHIEVEMENTS: 'life_gamify_achievements_v2',
   NOTIFICATIONS: 'life_gamify_notifications_v2',
   STREAK_FREEZES: 'life_gamify_streak_freezes_v2',
-  HABIT_STREAK_FREEZES: 'life_gamify_habit_streak_freezes_v2'
+  HABIT_STREAK_FREEZES: 'life_gamify_habit_streak_freezes_v2',
+  GOALS: 'life_gamify_goals_v2'
 };
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -442,6 +444,25 @@ export const saveStoredHabitStreakFreezes = (states: Record<string, StreakFreeze
   }
 };
 
+export const loadStoredGoals = (): Goal[] => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.GOALS);
+    if (!raw) return [];
+    return JSON.parse(raw);
+  } catch (e) {
+    console.error('Failed loading goals from local storage', e);
+    return [];
+  }
+};
+
+export const saveStoredGoals = (goals: Goal[]): void => {
+  try {
+    localStorage.setItem(STORAGE_KEYS.GOALS, JSON.stringify(goals));
+  } catch (e) {
+    console.error('Failed saving goals to local storage', e);
+  }
+};
+
 export const exportAllData = () => {
   return {
     habits: loadStoredHabits(),
@@ -455,6 +476,7 @@ export const exportAllData = () => {
     achievements: loadStoredAchievements(),
     notifications: loadStoredNotifications(),
     streakFreezes: loadStoredStreakFreezes(),
+    goals: loadStoredGoals(),
     exportedAt: new Date().toISOString()
   };
 };
@@ -473,10 +495,12 @@ export const importAllData = (jsonString: string): boolean => {
     if (data.achievements) saveStoredAchievements(data.achievements);
     if (data.notifications) saveStoredNotifications(data.notifications);
     if (data.streakFreezes) saveStoredStreakFreezes(data.streakFreezes);
+    if (data.goals && Array.isArray(data.goals)) saveStoredGoals(data.goals);
     return true;
   } catch (e) {
     console.error('Failed importing data', e);
     return false;
   }
 };
+
 

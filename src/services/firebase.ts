@@ -12,7 +12,7 @@ import {
   query, 
   Firestore 
 } from 'firebase/firestore';
-import { Settings, Habit, RewardLog, RewardRedemption, UserProfile, StoreReward } from '../types';
+import { Settings, Habit, RewardLog, RewardRedemption, UserProfile, StoreReward, Goal } from '../types';
 
 const DEFAULT_FIREBASE_CONFIG = {
   apiKey: "AIzaSyDFG3dnqB_4iphC1wjTOpNW07W7VMs0zeA",
@@ -587,4 +587,68 @@ export const deleteFirestoreNotification = async (userId: string, notifId: strin
     console.error('Error deleting notification from Firestore:', e);
   }
 };
+
+// --- GOALS PERSISTENCE & SYNC ---
+export const subscribeFirestoreGoals = (
+  userId: string,
+  callback: (goals: Goal[]) => void
+) => {
+  if (!firestoreDb) return () => {};
+  try {
+    const q = query(collection(firestoreDb, `users/${userId}/goals`));
+    return onSnapshot(q, (snapshot) => {
+      const goals: Goal[] = [];
+      snapshot.forEach(docSnap => goals.push(docSnap.data() as Goal));
+      goals.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      callback(goals);
+    }, (err) => console.error('Goals snapshot error:', err));
+  } catch (e) {
+    console.error('Error in subscribeFirestoreGoals:', e);
+    return () => {};
+  }
+};
+
+export const syncFirestoreGoal = async (userId: string, goal: Goal) => {
+  if (!firestoreDb || !goal.id) return;
+  try {
+    await setDoc(doc(firestoreDb, `users/${userId}/goals`, goal.id), cleanUndefined(goal));
+  } catch (e) {
+    console.error('Error syncing goal to Firestore:', e);
+  }
+};
+
+export const syncFirestoreGoals = async (userId: string, goals: Goal[]) => {
+  if (!firestoreDb) return;
+  try {
+    const db = firestoreDb;
+    const batchList = goals.map(goal =>
+      setDoc(doc(db, `users/${userId}/goals`, goal.id), cleanUndefined(goal))
+    );
+    await Promise.all(batchList);
+  } catch (e) {
+    console.error('Error syncing goals to Firestore:', e);
+  }
+};
+
+export const deleteFirestoreGoal = async (userId: string, goalId: string) => {
+  if (!firestoreDb) return;
+  try {
+    await deleteDoc(doc(firestoreDb, `users/${userId}/goals`, goalId));
+  } catch (e) {
+    console.error('Error deleting goal from Firestore:', e);
+  }
+};
+
+export const fetchFirestoreGoals = async (userId: string): Promise<Goal[]> => {
+  if (!firestoreDb) return [];
+  try {
+    const q = query(collection(firestoreDb, `users/${userId}/goals`));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(docSnap => docSnap.data() as Goal);
+  } catch (e) {
+    console.error('Error fetching goals from Firestore:', e);
+    return [];
+  }
+};
+
 

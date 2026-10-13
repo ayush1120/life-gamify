@@ -10,9 +10,12 @@ import {
   ActivityMapping,
   QuestDefinition,
   BossDefinition,
-  AchievementDefinition,
+  AchievementDefinition, 
   GameNotification,
-  StreakFreezeState
+  StreakFreezeState,
+  Goal,
+  GoalStatus,
+  GoalMilestone
 } from '../types';
 import { 
   loadStoredHabits, saveStoredHabits,
@@ -26,7 +29,8 @@ import {
   loadStoredAchievements, saveStoredAchievements,
   loadStoredNotifications, saveStoredNotifications,
   loadStoredStreakFreezes, saveStoredStreakFreezes,
-  loadStoredHabitStreakFreezes, saveStoredHabitStreakFreezes
+  loadStoredHabitStreakFreezes, saveStoredHabitStreakFreezes,
+  loadStoredGoals, saveStoredGoals
 } from '../services/storage';
 import { DEFAULT_STREAK_FREEZE_STATE, applyStreakRepair, formatDateKey } from '../utils/streakUtils';
 import { playSound } from '../services/sound';
@@ -63,10 +67,16 @@ import {
   subscribeFirestoreNotifications,
   syncFirestoreNotification,
   deleteFirestoreNotification,
+  subscribeFirestoreGoals,
+  syncFirestoreGoal,
+  syncFirestoreGoals,
+  deleteFirestoreGoal,
   syncFirestoreUserProfile,
   signInWithGoogle as firebaseGoogleSignIn,
   logoutFirebase
 } from '../services/firebase';
+import { validateGoalTitle, validateMilestoneTitle } from '../utils/goalUtils';
+
 
 
 import { computeLedgerStats, calculateKarmaSurcharge, calculateMistakeFee, isHabitLogGracePeriod } from '../services/ledger';
@@ -131,6 +141,20 @@ interface AppContextType {
   deleteRedemption: (redemptionId: string) => void;
   updateSettings: (newSettings: Partial<Settings>) => void;
   
+  // Goals State & CRUD
+  goals: Goal[];
+  addGoal: (goalData: Partial<Goal>) => Goal;
+  updateGoal: (goal: Goal) => void;
+  deleteGoal: (id: string) => void;
+  setGoalStatus: (id: string, status: GoalStatus) => void;
+  addGoalMilestone: (goalId: string, title: string, description?: string) => void;
+  toggleGoalMilestone: (goalId: string, milestoneId: string) => void;
+  deleteGoalMilestone: (goalId: string, milestoneId: string) => void;
+  updateGoalMilestone: (goalId: string, milestoneId: string, updates: Partial<GoalMilestone>) => void;
+  reorderGoalMilestones: (goalId: string, milestones: GoalMilestone[]) => void;
+  updateGoalProgress: (goalId: string, options: { amount: number; isDelta?: boolean; periodKey?: string }) => void;
+
+  
   // Modals & FX State
   flyingReward: { habitName: string; icon: string; amount: number; x: number; y: number } | null;
   setFlyingReward: (val: { habitName: string; icon: string; amount: number; x: number; y: number } | null) => void;
@@ -161,13 +185,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [bosses, setBosses] = useState<BossDefinition[]>(loadStoredBosses);
   const [achievements, setAchievements] = useState<AchievementDefinition[]>(loadStoredAchievements);
   const [notifications, setNotifications] = useState<GameNotification[]>(loadStoredNotifications);
+  const [goals, setGoals] = useState<Goal[]>(loadStoredGoals);
 
   const getInitialTab = (): string => {
     const hash = window.location.hash.replace('#', '').trim();
     const pathname = window.location.pathname.replace(/^\//, '').trim();
-    const validTabs = ['dashboard', 'adventure', 'log-activity', 'store', 'habits', 'history', 'analytics', 'settings', 'overlay-demo', 'devtools'];
-    if (validTabs.includes(hash) || hash.startsWith('habits/')) return hash;
-    if (validTabs.includes(pathname) || pathname.startsWith('habits/')) return pathname;
+    const validTabs = ['dashboard', 'goals', 'adventure', 'log-activity', 'store', 'habits', 'history', 'analytics', 'settings', 'overlay-demo', 'devtools'];
+    if (validTabs.includes(hash) || hash.startsWith('habits/') || hash.startsWith('goals/')) return hash;
+    if (validTabs.includes(pathname) || pathname.startsWith('habits/') || pathname.startsWith('goals/')) return pathname;
     return 'dashboard';
   };
 
@@ -196,10 +221,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const handleHashOrPathChange = () => {
       const hash = window.location.hash.replace('#', '').trim();
       const pathname = window.location.pathname.replace(/^\//, '').trim();
-      const validTabs = ['dashboard', 'adventure', 'log-activity', 'store', 'habits', 'history', 'analytics', 'settings', 'ai-settings', 'ai-chat', 'overlay-demo', 'devtools'];
-      if (validTabs.includes(hash) || hash.startsWith('habits/')) {
+      const validTabs = ['dashboard', 'goals', 'adventure', 'log-activity', 'store', 'habits', 'history', 'analytics', 'settings', 'ai-settings', 'ai-chat', 'overlay-demo', 'devtools'];
+      if (validTabs.includes(hash) || hash.startsWith('habits/') || hash.startsWith('goals/')) {
         setActiveTabState(hash);
-      } else if (validTabs.includes(pathname) || pathname.startsWith('habits/')) {
+      } else if (validTabs.includes(pathname) || pathname.startsWith('habits/') || pathname.startsWith('goals/')) {
         setActiveTabState(pathname);
       }
     };
@@ -210,6 +235,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       window.removeEventListener('popstate', handleHashOrPathChange);
     };
   }, []);
+
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
@@ -340,6 +366,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           }
         });
 
+        // 11. Live Goals Subscription
+        const unsubGoals = subscribeFirestoreGoals(authUser.uid, (cloudGoals) => {
+          if (cloudGoals.length > 0) {
+            setGoals(cloudGoals);
+            saveStoredGoals(cloudGoals);
+          } else {
+            const localGoals = loadStoredGoals();
+            if (localGoals.length > 0) {
+              syncFirestoreGoals(authUser.uid, localGoals);
+            }
+          }
+        });
+
         unsubs.push(
           unsubHabits, 
           unsubLogs, 
@@ -350,7 +389,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           unsubQuests,
           unsubBosses,
           unsubAchievements,
-          unsubNotifs
+          unsubNotifs,
+          unsubGoals
         );
         showToast(`Welcome, ${authUser.displayName || 'User'}! ☁️ Live Cloud Synced`);
       }
@@ -435,6 +475,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [rewardLogs, user]);
   useEffect(() => { saveStoredAchievements(achievements); }, [achievements]);
   useEffect(() => { saveStoredNotifications(notifications); }, [notifications]);
+  useEffect(() => { saveStoredGoals(goals); }, [goals]);
 
   // Calculate Coin Economy & Multi-Stat Progression Statistics using pure deterministic ledger service
   const stats: HabitStats = useMemo(() => {
@@ -875,6 +916,165 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     showToast('Settings saved');
   };
 
+  // --- GOAL ACTIONS ---
+  const addGoal = (goalData: Partial<Goal>): Goal => {
+    const validTitle = validateGoalTitle(goalData.title);
+    const now = new Date().toISOString();
+    const newGoal: Goal = {
+      id: goalData.id || `goal-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      title: validTitle,
+      description: goalData.description?.trim() || undefined,
+      status: goalData.status || 'active',
+      startDate: goalData.startDate || undefined,
+      deadline: goalData.deadline || undefined,
+      icon: goalData.icon || '🎯',
+      color: goalData.color || '#f59e0b',
+      progressConfig: goalData.progressConfig || undefined,
+      currentProgress: goalData.currentProgress !== undefined ? Math.max(0, goalData.currentProgress) : (goalData.progressConfig ? 0 : undefined),
+      progressPeriods: goalData.progressPeriods || (goalData.progressConfig?.type === 'frequency' ? {} : undefined),
+      milestones: goalData.milestones || [],
+      createdAt: now,
+      updatedAt: now
+    };
+    const updated = [newGoal, ...goals];
+    setGoals(updated);
+    if (user) syncFirestoreGoal(user.uid, newGoal);
+    showToast(`Created goal "${newGoal.title}" 🎯`);
+    return newGoal;
+  };
+
+  const updateGoal = (updatedGoal: Goal) => {
+    const now = new Date().toISOString();
+    const current = goals.find(g => g.id === updatedGoal.id);
+    let completedAt = updatedGoal.completedAt;
+    let archivedAt = updatedGoal.archivedAt;
+
+    if (current && updatedGoal.status !== current.status) {
+      if (updatedGoal.status === 'completed') completedAt = now;
+      else if (updatedGoal.status === 'active' && current.status === 'completed') completedAt = undefined;
+
+      if (updatedGoal.status === 'archived') completedAt = completedAt; // preserve
+      if (updatedGoal.status === 'archived') archivedAt = now;
+      else if (current.status === 'archived') archivedAt = undefined;
+
+    }
+
+    const merged: Goal = {
+      ...updatedGoal,
+      title: validateGoalTitle(updatedGoal.title),
+      completedAt,
+      archivedAt,
+      updatedAt: now
+    };
+    const nextList = goals.map(g => g.id === merged.id ? merged : g);
+    setGoals(nextList);
+    if (user) syncFirestoreGoal(user.uid, merged);
+    showToast(`Updated goal "${merged.title}"`);
+  };
+
+  const deleteGoal = (id: string) => {
+    const target = goals.find(g => g.id === id);
+    const nextList = goals.filter(g => g.id !== id);
+    setGoals(nextList);
+    if (user) deleteFirestoreGoal(user.uid, id);
+    showToast(`Deleted goal "${target?.title || ''}"`);
+  };
+
+  const setGoalStatus = (id: string, status: GoalStatus) => {
+    const target = goals.find(g => g.id === id);
+    if (!target) return;
+    updateGoal({ ...target, status });
+  };
+
+  const addGoalMilestone = (goalId: string, title: string, description?: string) => {
+    const target = goals.find(g => g.id === goalId);
+    if (!target) return;
+    const validTitle = validateMilestoneTitle(title);
+    const now = new Date().toISOString();
+    const existing = target.milestones || [];
+    const newMs: GoalMilestone = {
+      id: `ms-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      title: validTitle,
+      description: description?.trim() || undefined,
+      isCompleted: false,
+      order: existing.length,
+      createdAt: now,
+      updatedAt: now
+    };
+    updateGoal({ ...target, milestones: [...existing, newMs] });
+  };
+
+  const toggleGoalMilestone = (goalId: string, milestoneId: string) => {
+    const target = goals.find(g => g.id === goalId);
+    if (!target) return;
+    const now = new Date().toISOString();
+    const updatedMs = (target.milestones || []).map(m => {
+      if (m.id === milestoneId) {
+        const nextCompleted = !m.isCompleted;
+        return {
+          ...m,
+          isCompleted: nextCompleted,
+          completedAt: nextCompleted ? now : undefined,
+          updatedAt: now
+        };
+      }
+      return m;
+    });
+    updateGoal({ ...target, milestones: updatedMs });
+  };
+
+  const deleteGoalMilestone = (goalId: string, milestoneId: string) => {
+    const target = goals.find(g => g.id === goalId);
+    if (!target) return;
+    const filtered = (target.milestones || []).filter(m => m.id !== milestoneId).map((m, idx) => ({ ...m, order: idx }));
+    updateGoal({ ...target, milestones: filtered });
+  };
+
+  const updateGoalMilestone = (goalId: string, milestoneId: string, updates: Partial<GoalMilestone>) => {
+    const target = goals.find(g => g.id === goalId);
+    if (!target) return;
+    const now = new Date().toISOString();
+    const updatedMs = (target.milestones || []).map(m => {
+      if (m.id === milestoneId) {
+        return {
+          ...m,
+          ...updates,
+          title: updates.title !== undefined ? validateMilestoneTitle(updates.title) : m.title,
+          updatedAt: now
+        };
+      }
+      return m;
+    });
+    updateGoal({ ...target, milestones: updatedMs });
+  };
+
+  const reorderGoalMilestones = (goalId: string, reordered: GoalMilestone[]) => {
+    const target = goals.find(g => g.id === goalId);
+    if (!target) return;
+    const now = new Date().toISOString();
+    const normalized = reordered.map((m, idx) => ({ ...m, order: idx, updatedAt: now }));
+    updateGoal({ ...target, milestones: normalized });
+  };
+
+  const updateGoalProgress = (goalId: string, options: { amount: number; isDelta?: boolean; periodKey?: string }) => {
+    const target = goals.find(g => g.id === goalId);
+    if (!target || !target.progressConfig) return;
+    const { amount, isDelta = false, periodKey } = options;
+
+    if (target.progressConfig.type === 'frequency') {
+      if (!periodKey) return;
+      const periods = { ...(target.progressPeriods || {}) };
+      const currentVal = periods[periodKey] || 0;
+      const nextVal = isDelta ? Math.max(0, currentVal + amount) : Math.max(0, amount);
+      periods[periodKey] = nextVal;
+      updateGoal({ ...target, progressPeriods: periods });
+      return;
+    }
+
+    const currentVal = target.currentProgress || 0;
+    const nextVal = isDelta ? Math.max(0, currentVal + amount) : Math.max(0, amount);
+    updateGoal({ ...target, currentProgress: nextVal });
+  };
 
   return (
     <AppContext.Provider
@@ -891,6 +1091,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         bosses,
         achievements,
         notifications,
+        goals,
+        addGoal,
+        updateGoal,
+        deleteGoal,
+        setGoalStatus,
+        addGoalMilestone,
+        toggleGoalMilestone,
+        deleteGoalMilestone,
+        updateGoalMilestone,
+        reorderGoalMilestones,
+        updateGoalProgress,
         activeTab,
         setActiveTab,
         toastMessage,

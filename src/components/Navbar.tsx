@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { CoinToken } from './CoinToken';
 import { LogoutModal } from './LogoutModal';
-import { LayoutDashboard, ShoppingBag, CheckSquare, History, BarChart3, Settings as SettingsIcon, Flame, Sun, Moon, LogIn, LogOut, User, Zap, Compass } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, CheckSquare, History, BarChart3, Settings as SettingsIcon, Flame, Sun, Moon, LogIn, LogOut, User, Zap, Compass, Target } from 'lucide-react';
+
 import { playSound } from '../services/sound';
 
 export const Navbar: React.FC = () => {
@@ -49,6 +50,7 @@ export const Navbar: React.FC = () => {
 
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'goals', label: 'Goals', icon: Target },
     { id: 'adventure', label: 'Adventure', icon: Compass },
     { id: 'log-activity', label: 'Log Activity', icon: Zap },
     { id: 'store', label: 'Reward Store', icon: ShoppingBag },
@@ -57,6 +59,7 @@ export const Navbar: React.FC = () => {
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
     { id: 'settings', label: 'Settings', icon: SettingsIcon },
   ];
+
 
 
   return (
@@ -212,7 +215,7 @@ export const Navbar: React.FC = () => {
         >
           {tabs.map((tab) => {
             const Icon = tab.icon;
-            const isActive = activeTab === tab.id || (tab.id === 'habits' && activeTab.startsWith('habits/'));
+            const isActive = activeTab === tab.id || (tab.id === 'habits' && activeTab.startsWith('habits/')) || (tab.id === 'goals' && activeTab.startsWith('goals/'));
             return (
               <button
                 key={tab.id}

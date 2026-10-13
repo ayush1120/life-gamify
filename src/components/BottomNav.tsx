@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import { LayoutDashboard, ShoppingBag, CheckSquare, Zap, Menu, History, BarChart2, Settings, Compass } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, CheckSquare, Zap, Menu, History, BarChart2, Settings, Compass, Target } from 'lucide-react';
 import { playSound } from '../services/sound';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -31,10 +31,9 @@ export const BottomNav: React.FC = () => {
 
   const navItems = [
     { id: 'dashboard', label: 'Home', icon: LayoutDashboard },
-    { id: 'adventure', label: 'Adventure', icon: Compass },
+    { id: 'goals', label: 'Goals', icon: Target },
     { id: 'log-activity', label: 'Log', icon: Zap },
     { id: 'store', label: 'Store', icon: ShoppingBag },
-    { id: 'habits', label: 'Habits', icon: CheckSquare },
     { id: 'more', label: 'More', icon: Menu },
   ];
 
@@ -56,7 +55,7 @@ export const BottomNav: React.FC = () => {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 50, scale: 0.9 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="md:hidden fixed right-4 z-40 w-48 rounded-2xl p-2 shadow-2xl origin-bottom-right"
+              className="md:hidden fixed right-4 z-40 w-52 rounded-2xl p-2 shadow-2xl origin-bottom-right"
               style={{ 
                 bottom: 'calc(var(--bottom-nav-total) + 10px)',
                 background: 'var(--glass-bg)', 
@@ -65,13 +64,15 @@ export const BottomNav: React.FC = () => {
             >
               <div className="flex flex-col space-y-1">
                 {[
+                  { id: 'habits', label: 'Habits', icon: CheckSquare },
+                  { id: 'adventure', label: 'Adventure', icon: Compass },
                   { id: 'history', label: 'History Ledger', icon: History },
                   { id: 'analytics', label: 'Analytics', icon: BarChart2 },
                   { id: 'settings', label: 'Settings', icon: Settings }
                 ].map(item => {
 
                   const Icon = item.icon;
-                  const isActive = activeTab === item.id;
+                  const isActive = activeTab === item.id || (item.id === 'habits' && activeTab.startsWith('habits/'));
                   return (
                     <button
                       key={item.id}
@@ -108,7 +109,11 @@ export const BottomNav: React.FC = () => {
           <div className="flex justify-around items-center h-[58px] px-1">
             {navItems.map((item) => {
               const Icon = item.icon;
-              const isActive = activeTab === item.id || (item.id === 'habits' && activeTab.startsWith('habits/')) || (item.id === 'more' && ['history', 'analytics', 'settings'].includes(activeTab)) || (item.id === 'more' && isMoreOpen);
+              const moreSubTabs = ['habits', 'adventure', 'history', 'analytics', 'settings'];
+              const isMoreActive = (item.id === 'more' && (moreSubTabs.includes(activeTab) || activeTab.startsWith('habits/'))) || (item.id === 'more' && isMoreOpen);
+              const isGoalsActive = item.id === 'goals' && (activeTab === 'goals' || activeTab.startsWith('goals/'));
+              const isActive = activeTab === item.id || isGoalsActive || isMoreActive;
+
               
               return (
                 <button

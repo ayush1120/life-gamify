@@ -26,6 +26,7 @@ import {
   deleteFirestoreLog,
   deleteFirestoreRedemption,
   deleteFirestoreReward,
+  deleteFirestoreGoal,
   initFirebase,
   syncFirestoreHabit,
   syncFirestoreHabits,
@@ -33,9 +34,11 @@ import {
   syncFirestoreReward,
   syncFirestoreRewardLog,
   syncFirestoreRewards,
-  syncFirestoreSettings
+  syncFirestoreSettings,
+  syncFirestoreGoal,
+  syncFirestoreGoals
 } from '../firebase';
-import { Habit, RewardLog, RewardRedemption, Settings, StoreReward } from '../../types';
+import { Habit, RewardLog, RewardRedemption, Settings, StoreReward, Goal } from '../../types';
 
 const userId = 'user-123';
 const habit: Habit = {
@@ -59,6 +62,11 @@ const settings: Settings = {
   theme: 'dark', celebrationStyle: 'confetti', soundEnabled: true,
   currencySymbol: '🪙', currencyName: 'Coins', firebaseApiKey: 'secret'
 };
+const goal: Goal = {
+  id: 'goal-1', title: 'Learn Spanish', status: 'active',
+  createdAt: '2026-10-14T00:00:00.000Z', updatedAt: '2026-10-14T00:00:00.000Z'
+};
+
 
 describe('Firestore write helpers', () => {
   beforeEach(() => {
@@ -71,7 +79,8 @@ describe('Firestore write helpers', () => {
     ['habit', syncFirestoreHabit, habit, `users/${userId}/activities`, habit.id],
     ['reward', syncFirestoreReward, reward, `users/${userId}/rewards`, reward.id],
     ['reward log', syncFirestoreRewardLog, log, `users/${userId}/rewardLogs`, log.id],
-    ['redemption', syncFirestoreRedemption, redemption, `users/${userId}/rewardRedemptions`, redemption.id]
+    ['redemption', syncFirestoreRedemption, redemption, `users/${userId}/rewardRedemptions`, redemption.id],
+    ['goal', syncFirestoreGoal, goal, `users/${userId}/goals`, goal.id]
   ] as const)('writes a %s to its expected document path', async (_entity, sync, value, collectionPath, id) => {
     await (sync as (id: string, value: unknown) => Promise<void>)(userId, value);
 
@@ -79,12 +88,14 @@ describe('Firestore write helpers', () => {
     expect(mocks.setDoc).toHaveBeenCalledWith(expect.objectContaining({ path: [collectionPath, id] }), value);
   });
 
-  it('writes every habit and reward in bulk sync', async () => {
+  it('writes every habit, reward, and goal in bulk sync', async () => {
     await syncFirestoreHabits(userId, [habit]);
     await syncFirestoreRewards(userId, [reward]);
+    await syncFirestoreGoals(userId, [goal]);
 
     expect(mocks.setDoc).toHaveBeenCalledWith(expect.objectContaining({ path: [`users/${userId}/activities`, habit.id] }), habit);
     expect(mocks.setDoc).toHaveBeenCalledWith(expect.objectContaining({ path: [`users/${userId}/rewards`, reward.id] }), reward);
+    expect(mocks.setDoc).toHaveBeenCalledWith(expect.objectContaining({ path: [`users/${userId}/goals`, goal.id] }), goal);
   });
 
   it('removes each deletable entity from its expected document path', async () => {
@@ -92,12 +103,15 @@ describe('Firestore write helpers', () => {
     await deleteFirestoreReward(userId, reward.id);
     await deleteFirestoreLog(userId, log.id);
     await deleteFirestoreRedemption(userId, redemption.id);
+    await deleteFirestoreGoal(userId, goal.id);
 
     expect(mocks.deleteDoc).toHaveBeenCalledWith(expect.objectContaining({ path: [`users/${userId}/activities`, habit.id] }));
     expect(mocks.deleteDoc).toHaveBeenCalledWith(expect.objectContaining({ path: [`users/${userId}/rewards`, reward.id] }));
     expect(mocks.deleteDoc).toHaveBeenCalledWith(expect.objectContaining({ path: [`users/${userId}/rewardLogs`, log.id] }));
     expect(mocks.deleteDoc).toHaveBeenCalledWith(expect.objectContaining({ path: [`users/${userId}/rewardRedemptions`, redemption.id] }));
+    expect(mocks.deleteDoc).toHaveBeenCalledWith(expect.objectContaining({ path: [`users/${userId}/goals`, goal.id] }));
   });
+
 
   it('writes settings without Firebase credentials', async () => {
     await syncFirestoreSettings(userId, settings);
