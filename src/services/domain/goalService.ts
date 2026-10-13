@@ -5,8 +5,8 @@ import { Goal, GoalMilestone, GoalStatus } from '../../types';
 import { validateGoalTitle, validateMilestoneTitle } from '../../utils/goalUtils';
 
 export class GoalService {
-  public static async getGoals(_userId?: string): Promise<Goal[]> {
-    return loadStoredGoals();
+  public static async getGoals(userId?: string): Promise<Goal[]> {
+    return loadStoredGoals(userId);
   }
 
   public static async getGoalById(id: string, userId?: string): Promise<Goal | undefined> {
@@ -21,6 +21,7 @@ export class GoalService {
 
     const newGoal: Goal = {
       id: goalData.id || `goal-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      userId: userId || goalData.userId,
       title: validTitle,
       description: goalData.description?.trim() || undefined,
       status: goalData.status || 'active',
@@ -38,7 +39,7 @@ export class GoalService {
 
     const validated = GoalSchema.parse(newGoal) as Goal;
     const updatedList = [validated, ...goals];
-    saveStoredGoals(updatedList);
+    saveStoredGoals(updatedList, userId);
 
     if (userId) {
       await syncFirestoreGoal(userId, validated);
@@ -89,7 +90,7 @@ export class GoalService {
 
     const validated = GoalSchema.parse(merged) as Goal;
     goals[index] = validated;
-    saveStoredGoals(goals);
+    saveStoredGoals(goals, userId);
 
     if (userId) {
       await syncFirestoreGoal(userId, validated);
@@ -100,7 +101,7 @@ export class GoalService {
   public static async deleteGoal(id: string, userId?: string): Promise<void> {
     const goals = await this.getGoals(userId);
     const filtered = goals.filter(g => g.id !== id);
-    saveStoredGoals(filtered);
+    saveStoredGoals(filtered, userId);
 
     if (userId) {
       await deleteFirestoreGoal(userId, id);

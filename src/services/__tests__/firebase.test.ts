@@ -63,7 +63,7 @@ const settings: Settings = {
   currencySymbol: '🪙', currencyName: 'Coins', firebaseApiKey: 'secret'
 };
 const goal: Goal = {
-  id: 'goal-1', title: 'Learn Spanish', status: 'active',
+  id: 'goal-1', userId, title: 'Learn Spanish', status: 'active',
   createdAt: '2026-10-14T00:00:00.000Z', updatedAt: '2026-10-14T00:00:00.000Z'
 };
 

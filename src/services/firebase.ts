@@ -611,7 +611,8 @@ export const subscribeFirestoreGoals = (
 export const syncFirestoreGoal = async (userId: string, goal: Goal) => {
   if (!firestoreDb || !goal.id) return;
   try {
-    await setDoc(doc(firestoreDb, `users/${userId}/goals`, goal.id), cleanUndefined(goal));
+    const payload = goal.userId ? goal : { ...goal, userId };
+    await setDoc(doc(firestoreDb, `users/${userId}/goals`, goal.id), cleanUndefined(payload));
   } catch (e) {
     console.error('Error syncing goal to Firestore:', e);
   }
@@ -621,9 +622,10 @@ export const syncFirestoreGoals = async (userId: string, goals: Goal[]) => {
   if (!firestoreDb) return;
   try {
     const db = firestoreDb;
-    const batchList = goals.map(goal =>
-      setDoc(doc(db, `users/${userId}/goals`, goal.id), cleanUndefined(goal))
-    );
+    const batchList = goals.map(goal => {
+      const payload = goal.userId ? goal : { ...goal, userId };
+      return setDoc(doc(db, `users/${userId}/goals`, goal.id), cleanUndefined(payload));
+    });
     await Promise.all(batchList);
   } catch (e) {
     console.error('Error syncing goals to Firestore:', e);

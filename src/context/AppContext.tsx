@@ -30,7 +30,8 @@ import {
   loadStoredNotifications, saveStoredNotifications,
   loadStoredStreakFreezes, saveStoredStreakFreezes,
   loadStoredHabitStreakFreezes, saveStoredHabitStreakFreezes,
-  loadStoredGoals, saveStoredGoals
+  loadStoredGoals, saveStoredGoals,
+  getLastAuthenticatedUserId, setLastAuthenticatedUserId
 } from '../services/storage';
 import { DEFAULT_STREAK_FREEZE_STATE, applyStreakRepair, formatDateKey } from '../utils/streakUtils';
 import { playSound } from '../services/sound';
@@ -69,7 +70,6 @@ import {
   deleteFirestoreNotification,
   subscribeFirestoreGoals,
   syncFirestoreGoal,
-  syncFirestoreGoals,
   deleteFirestoreGoal,
   syncFirestoreUserProfile,
   signInWithGoogle as firebaseGoogleSignIn,
@@ -185,7 +185,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [bosses, setBosses] = useState<BossDefinition[]>(loadStoredBosses);
   const [achievements, setAchievements] = useState<AchievementDefinition[]>(loadStoredAchievements);
   const [notifications, setNotifications] = useState<GameNotification[]>(loadStoredNotifications);
-  const [goals, setGoals] = useState<Goal[]>(loadStoredGoals);
+  const [goals, setGoals] = useState<Goal[]>(() => {
+    const lastUid = getLastAuthenticatedUserId();
+    return loadStoredGoals(lastUid);
+  });
+  const activeUserIdRef = React.useRef<string | null>(getLastAuthenticatedUserId());
 
   const getInitialTab = (): string => {
     const hash = window.location.hash.replace('#', '').trim();
@@ -263,6 +267,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setUser(authUser);
 
       if (authUser) {
+        setLastAuthenticatedUserId(authUser.uid);
+        activeUserIdRef.current = authUser.uid;
+        // Immediately switch goals to this user's local cache
+        setGoals(loadStoredGoals(authUser.uid));
+
         // Sync user profile (displayName, email, photoURL) to Firestore
         syncFirestoreUserProfile(authUser);
 
@@ -366,17 +375,30 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           }
         });
 
-        // 11. Live Goals Subscription
+        // 11. Live Goals Subscription (strictly scoped to authUser.uid)
         const unsubGoals = subscribeFirestoreGoals(authUser.uid, (cloudGoals) => {
-          if (cloudGoals.length > 0) {
-            setGoals(cloudGoals);
-            saveStoredGoals(cloudGoals);
-          } else {
-            const localGoals = loadStoredGoals();
-            if (localGoals.length > 0) {
-              syncFirestoreGoals(authUser.uid, localGoals);
+          // Filter to only goals that belong to this user (or legacy goals missing userId)
+          const validGoals = cloudGoals.filter(g => !g.userId || g.userId === authUser.uid);
+
+          // Proactively remove any foreign goals from this account's Firestore if contaminated
+          cloudGoals.forEach(g => {
+            if (g.userId && g.userId !== authUser.uid) {
+              deleteFirestoreGoal(authUser.uid, g.id);
             }
-          }
+          });
+
+          // Stamp any legacy goals missing userId with this user's uid
+          const stampedGoals = validGoals.map(g => {
+            if (!g.userId) {
+              const stamped = { ...g, userId: authUser.uid };
+              syncFirestoreGoal(authUser.uid, stamped);
+              return stamped;
+            }
+            return g;
+          });
+
+          setGoals(stampedGoals);
+          saveStoredGoals(stampedGoals, authUser.uid);
         });
 
         unsubs.push(
@@ -393,6 +415,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           unsubGoals
         );
         showToast(`Welcome, ${authUser.displayName || 'User'}! ☁️ Live Cloud Synced`);
+      } else {
+        setLastAuthenticatedUserId(null);
+        activeUserIdRef.current = null;
+        // Unauthenticated / logged out: reset to guest goals
+        setGoals(loadStoredGoals(null));
       }
     }, settings);
 
@@ -416,7 +443,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const logout = async () => {
     try {
       await logoutFirebase();
+      setLastAuthenticatedUserId(null);
+      activeUserIdRef.current = null;
       setUser(null);
+      setGoals(loadStoredGoals(null));
       showToast('Signed out of Google account');
     } catch (e) {
       console.error('Logout error:', e);
@@ -475,7 +505,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [rewardLogs, user]);
   useEffect(() => { saveStoredAchievements(achievements); }, [achievements]);
   useEffect(() => { saveStoredNotifications(notifications); }, [notifications]);
-  useEffect(() => { saveStoredGoals(goals); }, [goals]);
+  useEffect(() => { saveStoredGoals(goals, activeUserIdRef.current); }, [goals]);
 
   // Calculate Coin Economy & Multi-Stat Progression Statistics using pure deterministic ledger service
   const stats: HabitStats = useMemo(() => {
@@ -922,6 +952,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const now = new Date().toISOString();
     const newGoal: Goal = {
       id: goalData.id || `goal-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      userId: user?.uid,
       title: validTitle,
       description: goalData.description?.trim() || undefined,
       status: goalData.status || 'active',
@@ -961,6 +992,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const merged: Goal = {
       ...updatedGoal,
+      userId: updatedGoal.userId || user?.uid,
       title: validateGoalTitle(updatedGoal.title),
       completedAt,
       archivedAt,

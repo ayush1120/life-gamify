@@ -274,6 +274,7 @@ export interface GoalProgressConfig {
 
 export interface Goal {
   id: string;
+  userId?: string;
   title: string;
   description?: string;
   status: GoalStatus;

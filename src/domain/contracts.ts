@@ -253,6 +253,7 @@ export type GoalProgressConfigContract = z.infer<typeof GoalProgressConfigSchema
 
 export const GoalSchema = z.object({
   id: z.string().min(1),
+  userId: z.string().optional(),
   title: z.string().trim().min(1),
   description: z.string().optional(),
   status: GoalStatusSchema.default('active'),

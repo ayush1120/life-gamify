@@ -6,6 +6,10 @@ import {
   saveStoredRewards,
   saveStoredSettings,
   saveStoredGoals,
+  loadStoredGoals,
+  getGoalsStorageKey,
+  setLastAuthenticatedUserId,
+  getLastAuthenticatedUserId,
   exportAllData,
   importAllData
 } from '../storage';
@@ -84,6 +88,49 @@ describe('LocalStorage persistence', () => {
     setItem.mockClear();
     const olderPayload = JSON.stringify({ habits: [habit] });
     expect(importAllData(olderPayload)).toBe(true);
+  });
+
+  it('scopes goal storage keys per authenticated user', () => {
+    expect(getGoalsStorageKey('user-A')).toBe('life_gamify_goals_v2_user-A');
+    expect(getGoalsStorageKey('user-B')).toBe('life_gamify_goals_v2_user-B');
+    expect(getGoalsStorageKey(null)).toBe('life_gamify_goals_v2');
+    expect(getGoalsStorageKey()).toBe('life_gamify_goals_v2');
+  });
+
+  it('saves and loads goals strictly isolated between accounts', () => {
+    const goalA: Goal = { ...goal, id: 'goal-A', userId: 'user-A', title: 'User A Goal' };
+    const goalB: Goal = { ...goal, id: 'goal-B', userId: 'user-B', title: 'User B Goal' };
+
+    saveStoredGoals([goalA], 'user-A');
+    expect(setItem).toHaveBeenCalledWith('life_gamify_goals_v2_user-A', JSON.stringify([goalA]));
+
+    saveStoredGoals([goalB], 'user-B');
+    expect(setItem).toHaveBeenCalledWith('life_gamify_goals_v2_user-B', JSON.stringify([goalB]));
+
+    getItem.mockImplementation((key: string) => {
+      if (key === 'life_gamify_goals_v2_user-A') return JSON.stringify([goalA]);
+      if (key === 'life_gamify_goals_v2_user-B') return JSON.stringify([goalB]);
+      return null;
+    });
+
+    expect(loadStoredGoals('user-A')).toEqual([goalA]);
+    expect(loadStoredGoals('user-B')).toEqual([goalB]);
+    expect(loadStoredGoals('user-C')).toEqual([]);
+    expect(loadStoredGoals(null)).toEqual([]);
+  });
+
+  it('tracks and clears last authenticated user id', () => {
+    const removeItem = vi.fn();
+    vi.stubGlobal('localStorage', { setItem, getItem, removeItem });
+
+    setLastAuthenticatedUserId('user-A');
+    expect(setItem).toHaveBeenCalledWith('life_gamify_last_auth_user_id', 'user-A');
+
+    getItem.mockReturnValue('user-A');
+    expect(getLastAuthenticatedUserId()).toBe('user-A');
+
+    setLastAuthenticatedUserId(null);
+    expect(removeItem).toHaveBeenCalledWith('life_gamify_last_auth_user_id');
   });
 });
 

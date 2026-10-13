@@ -444,9 +444,17 @@ export const saveStoredHabitStreakFreezes = (states: Record<string, StreakFreeze
   }
 };
 
-export const loadStoredGoals = (): Goal[] => {
+export const getGoalsStorageKey = (userId?: string | null): string => {
+  if (userId) {
+    return `${STORAGE_KEYS.GOALS}_${userId}`;
+  }
+  return STORAGE_KEYS.GOALS;
+};
+
+export const loadStoredGoals = (userId?: string | null): Goal[] => {
   try {
-    const raw = localStorage.getItem(STORAGE_KEYS.GOALS);
+    const key = getGoalsStorageKey(userId);
+    const raw = localStorage.getItem(key);
     if (!raw) return [];
     return JSON.parse(raw);
   } catch (e) {
@@ -455,15 +463,47 @@ export const loadStoredGoals = (): Goal[] => {
   }
 };
 
-export const saveStoredGoals = (goals: Goal[]): void => {
+export const saveStoredGoals = (goals: Goal[], userId?: string | null): void => {
   try {
-    localStorage.setItem(STORAGE_KEYS.GOALS, JSON.stringify(goals));
+    const key = getGoalsStorageKey(userId);
+    localStorage.setItem(key, JSON.stringify(goals));
   } catch (e) {
     console.error('Failed saving goals to local storage', e);
   }
 };
 
-export const exportAllData = () => {
+export const clearStoredGoals = (userId?: string | null): void => {
+  try {
+    const key = getGoalsStorageKey(userId);
+    localStorage.removeItem(key);
+  } catch (e) {
+    console.error('Failed clearing goals from local storage', e);
+  }
+};
+
+const LAST_AUTH_USER_KEY = 'life_gamify_last_auth_user_id';
+
+export const getLastAuthenticatedUserId = (): string | null => {
+  try {
+    return localStorage.getItem(LAST_AUTH_USER_KEY);
+  } catch {
+    return null;
+  }
+};
+
+export const setLastAuthenticatedUserId = (userId: string | null): void => {
+  try {
+    if (userId) {
+      localStorage.setItem(LAST_AUTH_USER_KEY, userId);
+    } else {
+      localStorage.removeItem(LAST_AUTH_USER_KEY);
+    }
+  } catch {
+    // Ignore storage errors
+  }
+};
+
+export const exportAllData = (userId?: string | null) => {
   return {
     habits: loadStoredHabits(),
     storeRewards: loadStoredRewards(),
@@ -476,12 +516,12 @@ export const exportAllData = () => {
     achievements: loadStoredAchievements(),
     notifications: loadStoredNotifications(),
     streakFreezes: loadStoredStreakFreezes(),
-    goals: loadStoredGoals(),
+    goals: loadStoredGoals(userId),
     exportedAt: new Date().toISOString()
   };
 };
 
-export const importAllData = (jsonString: string): boolean => {
+export const importAllData = (jsonString: string, userId?: string | null): boolean => {
   try {
     const data = JSON.parse(jsonString);
     if (data.habits) saveStoredHabits(data.habits);
@@ -495,7 +535,7 @@ export const importAllData = (jsonString: string): boolean => {
     if (data.achievements) saveStoredAchievements(data.achievements);
     if (data.notifications) saveStoredNotifications(data.notifications);
     if (data.streakFreezes) saveStoredStreakFreezes(data.streakFreezes);
-    if (data.goals && Array.isArray(data.goals)) saveStoredGoals(data.goals);
+    if (data.goals && Array.isArray(data.goals)) saveStoredGoals(data.goals, userId);
     return true;
   } catch (e) {
     console.error('Failed importing data', e);
